@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+*.so
+
+# Training outputs (large files)
+logs_std_train/
+logs_std_test/
+logs_marl_train/
+runs/
+checkpoints/
+
+# Data files (large, downloaded separately)
+data/
+
+# Graphs (generated outputs)
+graphs/
+
+# Chat/meeting notes (personal)
+chats/
+
+# IDE / Tools
+.vscode/
+.idea/
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.pkl
+*.zip
+*.onnx
+*.npz
