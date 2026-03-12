@@ -1,0 +1,30 @@
+# Core RL frameworks
+stable-baselines3>=2.1.0
+omnisafe>=0.6.0
+ray[rllib]==2.10.0
+pettingzoo>=1.24.0
+
+# Environment dependencies
+gymnasium>=0.29.0
+sustaingym>=0.1.0
+numpy>=1.24.0
+scipy>=1.10.0
+scikit-learn>=1.2.0
+
+# EV Charging
+acnportal>=1.2.0
+cvxpy>=1.3.0
+mosek>=10.0
+
+# Cogen
+onnxruntime>=1.15.0
+
+# Building
+pvlib>=0.10.0
+
+# Utilities
+torch>=2.0.0
+tensorboard>=2.14.0
+matplotlib>=3.7.0
+pandas>=2.0.0
+tqdm>=4.65.0

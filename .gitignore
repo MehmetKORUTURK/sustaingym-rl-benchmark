@@ -24,6 +24,9 @@ graphs/
 # Chat/meeting notes (personal)
 chats/
 
+# Legacy/unused files
+_legacy/
+
 # IDE / Tools
 .vscode/
 .idea/
