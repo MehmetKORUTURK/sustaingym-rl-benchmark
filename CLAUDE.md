@@ -8,7 +8,7 @@ This is a **Master's thesis research project** by Mehmet Koruturk (Virginia Tech
 2. **Safe RL** - constrained optimization via OmniSafe (CMDP formulation)
 3. **Multi-Agent RL** - single-agent vs multi-agent comparison via Ray RLlib + PettingZoo
 
-**Repo**: `MehmetKORUTURK/RL_Benchmark` | **Branch**: `main` | **Runtime**: Virginia Tech ARC HPC (SLURM, A100/H200 GPUs)
+**Repo**: `MehmetKORUTURK/sustaingym-rl-benchmark` | **Branch**: `main` | **Runtime**: Virginia Tech ARC HPC (SLURM, A100/H200 GPUs)
 
 ---
 
@@ -56,14 +56,14 @@ This is a **Master's thesis research project** by Mehmet Koruturk (Virginia Tech
 ### Training Scripts
 | File | Purpose | Framework | Algorithms |
 |------|---------|-----------|------------|
-| `stdrl_training.py` | Standard single-agent training | Stable-Baselines3 | PPO, SAC, TD3 |
-| `stdrl_testing.py` | Model evaluation/testing | Stable-Baselines3 | PPO, SAC, TD3 |
-| `marl_training.py` | MARL training - unified | Ray RLlib | PPO, SAC, APPO, IMPALA |
-| `marl_tr_ev.py` | MARL training - EVCharging | Ray RLlib | PPO, SAC, APPO, IMPALA |
-| `marl_tr_bu.py` | MARL training - Building | Ray RLlib | PPO, SAC, APPO, IMPALA |
-| `marl_tr_co.py` | MARL training - Cogen | Ray RLlib | PPO, APPO, IMPALA |
-| `saferl_training.py` | Safe RL - all envs (unified) | OmniSafe | PPOLag, CPO, OnCRPO, FOCOPS |
-| `arc_saferl_all.sh` | Safe RL run commands (48 runs) | OmniSafe | 4 algo x 3 env x 4 climit |
+| `scripts/train/stdrl_training.py` | Standard single-agent training | Stable-Baselines3 | PPO, SAC, TD3 |
+| `scripts/test/stdrl_testing.py` | Model evaluation/testing | Stable-Baselines3 | PPO, SAC, TD3 |
+| `scripts/train/marl_training.py` | MARL training - unified | Ray RLlib | PPO, SAC, APPO, IMPALA |
+| `scripts/train/marl_tr_ev.py` | MARL training - EVCharging | Ray RLlib | PPO, SAC, APPO, IMPALA |
+| `scripts/train/marl_tr_bu.py` | MARL training - Building | Ray RLlib | PPO, SAC, APPO, IMPALA |
+| `scripts/train/marl_tr_co.py` | MARL training - Cogen | Ray RLlib | PPO, APPO, IMPALA |
+| `scripts/train/saferl_training.py` | Safe RL - all envs (unified) | OmniSafe | PPOLag, CPO, OnCRPO, FOCOPS |
+| `scripts/slurm/arc_saferl_all.sh` | Safe RL run commands (48 runs) | OmniSafe | 4 algo x 3 env x 4 climit |
 
 ### Environment Files
 | File | Description |
@@ -85,33 +85,33 @@ This is a **Master's thesis research project** by Mehmet Koruturk (Virginia Tech
 ### SLURM Scripts (Training)
 | File | Env | Notes |
 |------|-----|-------|
-| `arc_slurm_ev.sh` | EVCharging | Conda env: `stdrl_train`, partition: `normal_q`, constraint: `intel&avx512`, 48 CPUs, 40G RAM, 3-day limit |
-| `arc_slurm_bu.sh` | Building | Conda env: `stdrl_train`, partition: `normal_q`, constraint: `intel&avx512`, 48 CPUs, 40G RAM, 3-day limit |
-| `arc_slurm_co.sh` | Cogen | Conda env: `stdrl_train_co`, partition: `normal_q`, constraint: `intel&avx512`, 48 CPUs, 40G RAM, 3-day limit |
+| `scripts/slurm/arc_slurm_ev.sh` | EVCharging | Conda env: `stdrl_train`, partition: `normal_q`, constraint: `intel&avx512`, 48 CPUs, 40G RAM, 3-day limit |
+| `scripts/slurm/arc_slurm_bu.sh` | Building | Conda env: `stdrl_train`, partition: `normal_q`, constraint: `intel&avx512`, 48 CPUs, 40G RAM, 3-day limit |
+| `scripts/slurm/arc_slurm_co.sh` | Cogen | Conda env: `stdrl_train_co`, partition: `normal_q`, constraint: `intel&avx512`, 48 CPUs, 40G RAM, 3-day limit |
 
 ### SLURM Scripts (Testing) - to be created on ARC
 | File | Env | Notes |
 |------|-----|-------|
-| `arc_slurm_test_ev.sh` | EVCharging | Part A: noise-trained at matching noise, Part B: baseline robustness |
-| `arc_slurm_test_bu.sh` | Building | Part A: noise-trained at matching noise, Part B: baseline robustness |
-| `arc_slurm_test_co.sh` | Cogen | Part A: noise-trained at matching noise, Part B: baseline robustness |
+| `scripts/slurm/arc_slurm_test_ev.sh` | EVCharging | Part A: noise-trained at matching noise, Part B: baseline robustness |
+| `scripts/slurm/arc_slurm_test_bu.sh` | Building | Part A: noise-trained at matching noise, Part B: baseline robustness |
+| `scripts/slurm/arc_slurm_test_co.sh` | Cogen | Part A: noise-trained at matching noise, Part B: baseline robustness |
 
 ### Plot Scripts
 | File | Env/Purpose | Output Dir |
 |------|-------------|------------|
-| `ttp/stdrl_plot_ev.py` | EVCharging training curves (DS/DA/DE) | `./graphs/C_STDRL/` |
-| `ttp/stdrl_plot_bu.py` | Building training curves (DS/DA/DE) | `./graphs/C_STDRL/` |
-| `ttp/stdrl_plot_co.py` | Cogen training curves (DS/DA/DE) | `./graphs/C_STDRL/` |
-| `ttp/stdrl_post_plot.py` | Post-training bar/line/heatmap charts | `./graphs/C_POST/` |
-| `ttp/omni_plot.py` | OmniSafe Safe RL dual-panel (reward+cost) | `./graphs/C_SRL/{env}/` |
-| `ttp/marl_plot.py` | MARL training curves | `./graphs/C_MARL/` |
+| `scripts/plot/stdrl_plot_ev.py` | EVCharging training curves (DS/DA/DE) | `./graphs/C_STDRL/` |
+| `scripts/plot/stdrl_plot_bu.py` | Building training curves (DS/DA/DE) | `./graphs/C_STDRL/` |
+| `scripts/plot/stdrl_plot_co.py` | Cogen training curves (DS/DA/DE) | `./graphs/C_STDRL/` |
+| `scripts/plot/stdrl_post_plot.py` | Post-training bar/line/heatmap charts | `./graphs/C_POST/` |
+| `scripts/plot/omni_plot.py` | OmniSafe Safe RL dual-panel (reward+cost) | `./graphs/C_SRL/{env}/` |
+| `scripts/plot/marl_plot.py` | MARL training curves | `./graphs/C_MARL/` |
 
 **Plot usage**:
 ```bash
-python ttp/stdrl_plot_bu.py --algo PPO --dt DE --auto_ylim
-python ttp/stdrl_post_plot.py --env evcharging --algo SAC --noise-type obs --plot all
-python ttp/omni_plot.py --env building --t_steps 20000 --w_size 500 --climit 5
-python ttp/marl_plot.py --env evcharging --t_steps 32000 --w_size 500 --auto_ylim
+python scripts/plot/stdrl_plot_bu.py --algo PPO --dt DE --auto_ylim
+python scripts/plot/stdrl_post_plot.py --env evcharging --algo SAC --noise-type obs --plot all
+python scripts/plot/omni_plot.py --env building --t_steps 20000 --w_size 500 --climit 5
+python scripts/plot/marl_plot.py --env evcharging --t_steps 32000 --w_size 500 --auto_ylim
 ```
 
 ---
@@ -121,19 +121,19 @@ python ttp/marl_plot.py --env evcharging --t_steps 32000 --w_size 500 --auto_yli
 ### Standard RL Training
 ```bash
 # Basic training
-python stdrl_training.py --env evcharging --algo SAC --seed 42
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --seed 42
 
 # With observation noise
-python stdrl_training.py --env evcharging --algo SAC --noise 0.1 --seed 42
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --noise 0.1 --seed 42
 
 # With action noise
-python stdrl_training.py --env building --algo PPO --noise-action 0.05 --seed 42
+python scripts/train/stdrl_training.py --env building --algo PPO --noise-action 0.05 --seed 42
 
 # With VecNormalize (recommended)
-python stdrl_training.py --env building --algo SAC --use-vecnormalize --noise 0.1 --seed 42
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --noise 0.1 --seed 42
 
 # Quick test (10k steps)
-python stdrl_training.py --env cogen --algo PPO --quick-test
+python scripts/train/stdrl_training.py --env cogen --algo PPO --quick-test
 ```
 
 **Key args**: `--env {cogen,evcharging,building}`, `--algo {PPO,SAC,TD3}`, `--noise FLOAT`, `--noise-action FLOAT`, `--noise-env FLOAT`, `--use-vecnormalize`, `--norm-reward`, `--seed INT`, `--quick-test`, `--no-eval`, `--rm INT` (cogen), `--eval-freq INT`, `--n-eval-episodes INT`, `--checkpoint-freq INT`
@@ -141,15 +141,15 @@ python stdrl_training.py --env cogen --algo PPO --quick-test
 ### MARL Training (Ray RLlib)
 ```bash
 # Unified script (like saferl_training.py)
-python marl_training.py --env evcharging --algo APPO --seed 42
-python marl_training.py --env building --algo SAC --num-iterations 32000
-python marl_training.py --env cogen --algo IMPALA --rm 300
-python marl_training.py --env evcharging --algo PPO --shared-policy  # MAPPO
+python scripts/train/marl_training.py --env evcharging --algo APPO --seed 42
+python scripts/train/marl_training.py --env building --algo SAC --num-iterations 32000
+python scripts/train/marl_training.py --env cogen --algo IMPALA --rm 300
+python scripts/train/marl_training.py --env evcharging --algo PPO --shared-policy  # MAPPO
 
 # Individual scripts
-python marl_tr_ev.py --algo APPO --seed 42 --num-iterations 32000
-python marl_tr_bu.py --algo SAC --shared-policy  # MASAC
-python marl_tr_co.py --algo PPO --rm 300 --num-iterations 750
+python scripts/train/marl_tr_ev.py --algo APPO --seed 42 --num-iterations 32000
+python scripts/train/marl_tr_bu.py --algo SAC --shared-policy  # MASAC
+python scripts/train/marl_tr_co.py --algo PPO --rm 300 --num-iterations 750
 ```
 
 **Key args**: `--env {cogen,evcharging,building}`, `--algo`, `--seed INT`, `--num-iterations INT`, `--num-workers INT`, `--checkpoint-freq INT`, `--num-gpus INT`, `--lr FLOAT`, `--rm INT` (cogen only), `--shared-policy` (EV/Building only)
@@ -159,13 +159,13 @@ python marl_tr_co.py --algo PPO --rm 300 --num-iterations 750
 ### Safe RL Training (OmniSafe)
 ```bash
 # Unified script for all environments (4 algos x 3 envs x 4 climit = 48 runs)
-python saferl_training.py --env evcharging --algo PPOLag --climit 1 --seed 42
-python saferl_training.py --env building --algo OnCRPO --climit 50 --seed 42
-python saferl_training.py --env cogen --algo OnCRPO --climit 25 --seed 42
+python scripts/train/saferl_training.py --env evcharging --algo PPOLag --climit 1 --seed 42
+python scripts/train/saferl_training.py --env building --algo OnCRPO --climit 50 --seed 42
+python scripts/train/saferl_training.py --env cogen --algo OnCRPO --climit 25 --seed 42
 
 # With noise
-python saferl_training.py --env evcharging --algo FOCOPS --noise 0.1 --climit 1
-python saferl_training.py --env evcharging --algo CPO --noise_act 0.1 --noise_env 0.05 --climit 1
+python scripts/train/saferl_training.py --env evcharging --algo FOCOPS --noise 0.1 --climit 1
+python scripts/train/saferl_training.py --env evcharging --algo CPO --noise_act 0.1 --noise_env 0.05 --climit 1
 ```
 
 **Key args**: `--env {cogen,evcharging,building}`, `--algo {PPOLag,CPO,OnCRPO,FOCOPS}` (SACLag removed — see negative finding), `--noise FLOAT`, `--noise_act FLOAT`, `--noise_env FLOAT`, `--climit FLOAT`, `--tsteps INT`, `--seed INT`, `--cost_scale FLOAT`, `--rm INT` (cogen only)
@@ -173,19 +173,19 @@ python saferl_training.py --env evcharging --algo CPO --noise_act 0.1 --noise_en
 ### Model Testing
 ```bash
 # Basic testing (100 episodes default)
-python stdrl_testing.py --env evcharging --model_path path/to/model.zip --algo SAC --n-eval 100
+python scripts/test/stdrl_testing.py --env evcharging --model_path path/to/model.zip --algo SAC --n-eval 100
 
 # With noise injection (test robustness of baseline model)
-python stdrl_testing.py --env evcharging --model_path path/to/model.zip --algo SAC --noise 0.1
+python scripts/test/stdrl_testing.py --env evcharging --model_path path/to/model.zip --algo SAC --noise 0.1
 
 # With VecNormalize (auto-detected from model directory, or explicit path)
-python stdrl_testing.py --env building --model_path path/to/model.zip --algo SAC --vec-normalize-path path/to/vec_normalize.pkl
+python scripts/test/stdrl_testing.py --env building --model_path path/to/model.zip --algo SAC --vec-normalize-path path/to/vec_normalize.pkl
 
 # With environment noise
-python stdrl_testing.py --env cogen --model_path path/to/model.zip --algo PPO --noise-env 2.0
+python scripts/test/stdrl_testing.py --env cogen --model_path path/to/model.zip --algo PPO --noise-env 2.0
 
 # Collect per-step trajectories
-python stdrl_testing.py --env evcharging --model_path path/to/model.zip --algo SAC --collect-trajectories
+python scripts/test/stdrl_testing.py --env evcharging --model_path path/to/model.zip --algo SAC --collect-trajectories
 ```
 
 **Key args**: `--env`, `--model_path`, `--algo`, `--noise FLOAT`, `--noise-action FLOAT`, `--noise-env FLOAT`, `--n-eval INT`, `--vec-normalize-path PATH`, `--reward-beta FLOAT` (building), `--rm INT` (cogen), `--collect-trajectories`, `--stochastic`, `--seed INT`
@@ -224,7 +224,7 @@ Each environment supports three independent noise channels:
 Model noise is the dominant component: multiplicative perturbation on all 29 ONNX model outputs, directly affecting fuel costs, power/steam delivery, and constraint boundaries.
 
 ### Building Environment Noise Scaling (`--noise-env` per unit)
-Scalar `noise_env` converted to dict in `stdrl_training.py`:
+Scalar `noise_env` converted to dict in `scripts/train/stdrl_training.py`:
 | Component | Scale | noise_env=0.1 | noise_env=0.3 | What it affects |
 |-----------|-------|---------------|---------------|-----------------|
 | Out temp | 1.0 C | 0.1 C std | 0.3 C std | Outdoor temperature |
@@ -382,5 +382,5 @@ runs/omnisafe_{env}/{algo}_CL_{climit}_{noise}_{timestamp}/
 9. **OmniSafe double normalization**: Do NOT enable `reward_normalize` or `cost_normalize` for Building/Cogen — BuildingEnv already normalizes reward to [-1,0] and Cogen reward is already scaled by 1e7. Double normalization causes severe training instability
 10. **OmniSafe steps_per_epoch**: Must be large enough to collect meaningful gradient estimates. `steps_per_epoch=288` (1 episode) causes extreme variance; use 2000+ for all envs
 11. **OmniSafe loose constraint divergence**: Trust-region CMDP algorithms (CPO, OnCRPO) can diverge with very loose cost limits (e.g., climit=1000). When constraint is nearly inactive, trust-region update becomes unstable. PPOLag handles this gracefully (lambda→0 = unconstrained PPO). Avoid cost limits >4x initial episode cost for trust-region methods.
-12. **omni_plot.py filenames**: PNG filenames include unique algo names extracted from experiment labels (e.g., `PPOLag_CPO` not `PPOLag_1_PPOLag_5`)
+12. **scripts/plot/omni_plot.py filenames**: PNG filenames include unique algo names extracted from experiment labels (e.g., `PPOLag_CPO` not `PPOLag_1_PPOLag_5`)
 13. **Building HVAC ramping cost**: Building Safe RL uses `_prev_action` tracking initialized to zeros in `reset()`. Cost = `mean(|action - prev_action| * ac_map) * cost_scale`. Previous cost (temp_error) had partial overlap with reward's comfort term, causing PPOLag to show no limit differentiation.
