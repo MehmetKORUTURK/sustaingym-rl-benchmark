@@ -2,8 +2,11 @@ import os
 import sys
 from pathlib import Path
 
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(_REPO_ROOT))
+
 env = sys.argv[1] if len(sys.argv) > 1 else None
-root = Path("runs")
+root = _REPO_ROOT / "runs"
 
 search_dirs = []
 if env:

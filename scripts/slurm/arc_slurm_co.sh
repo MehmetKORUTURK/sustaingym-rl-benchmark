@@ -70,36 +70,36 @@ python -c "import scipy, sklearn; print('scipy', scipy.__version__, 'sklearn', s
 # 5) Run
 # ----------------------------------------------------------
 # Baseline
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo TD3 --use-vecnormalize --noise 0.0 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo TD3 --use-vecnormalize --noise 0.0 --seed 42
 
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo SAC --use-vecnormalize --noise 10 --seed 42  
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo SAC --use-vecnormalize --noise 10 --seed 42  
 # # Medium noise
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo SAC --use-vecnormalize --noise 12 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo SAC --use-vecnormalize --noise 17 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo SAC --use-vecnormalize --noise 20 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo SAC --use-vecnormalize --noise 25 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo SAC --use-vecnormalize --noise 12 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo SAC --use-vecnormalize --noise 17 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo SAC --use-vecnormalize --noise 20 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo SAC --use-vecnormalize --noise 25 --seed 42
 # # Heavy noise
 
 # # Progressive noise suite
 # # Low noise
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo TD3 --use-vecnormalize --noise-action 0.05 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo TD3 --use-vecnormalize --noise-action 0.05 --seed 42
 # # Medium noise
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo TD3 --use-vecnormalize --noise-action 0.1 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo TD3 --use-vecnormalize --noise-action 0.15 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo TD3 --use-vecnormalize --noise-action 0.2 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo TD3 --use-vecnormalize --noise-action 0.3 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo TD3 --use-vecnormalize --noise-action 0.1 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo TD3 --use-vecnormalize --noise-action 0.15 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo TD3 --use-vecnormalize --noise-action 0.2 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo TD3 --use-vecnormalize --noise-action 0.3 --seed 42
 # # Heavy noise
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo TD3 --use-vecnormalize --noise-action 0.4 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo TD3 --use-vecnormalize --noise-action 0.4 --seed 42
 
 # "========== Cogen noise_env sweep =========="
 
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo PPO --use-vecnormalize --noise-env 0.00 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo PPO --use-vecnormalize --noise-env 0.25 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo PPO --use-vecnormalize --noise-env 0.50 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo PPO --use-vecnormalize --noise-env 1.00 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo PPO --use-vecnormalize --noise-env 1.50 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo PPO --use-vecnormalize --noise-env 2.00 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env cogen --algo PPO --use-vecnormalize --noise-env 3.00 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo PPO --use-vecnormalize --noise-env 0.00 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo PPO --use-vecnormalize --noise-env 0.25 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo PPO --use-vecnormalize --noise-env 0.50 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo PPO --use-vecnormalize --noise-env 1.00 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo PPO --use-vecnormalize --noise-env 1.50 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo PPO --use-vecnormalize --noise-env 2.00 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env cogen --algo PPO --use-vecnormalize --noise-env 3.00 --seed 42
 
 
 

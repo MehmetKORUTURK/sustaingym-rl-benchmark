@@ -50,40 +50,40 @@ export CUBLAS_WORKSPACE_CONFIG=:4096:8
 # ============================================================================
 echo "========== EVCharging - Independent Policies =========="
 
-python marl_training.py --env evcharging --algo PPO --seed 42
-python marl_training.py --env evcharging --algo SAC --seed 42
-python marl_training.py --env evcharging --algo APPO --seed 42
-python marl_training.py --env evcharging --algo IMPALA --seed 42
+python scripts/train/marl_training.py --env evcharging --algo PPO --seed 42
+python scripts/train/marl_training.py --env evcharging --algo SAC --seed 42
+python scripts/train/marl_training.py --env evcharging --algo APPO --seed 42
+python scripts/train/marl_training.py --env evcharging --algo IMPALA --seed 42
 
 # ============================================================================
 # EVCharging - Shared Policies (4 runs)
 # ============================================================================
 echo "========== EVCharging - Shared Policies =========="
 
-python marl_training.py --env evcharging --algo PPO --shared-policy --seed 42
-python marl_training.py --env evcharging --algo SAC --shared-policy --seed 42
-python marl_training.py --env evcharging --algo APPO --shared-policy --seed 42
-python marl_training.py --env evcharging --algo IMPALA --shared-policy --seed 42
+python scripts/train/marl_training.py --env evcharging --algo PPO --shared-policy --seed 42
+python scripts/train/marl_training.py --env evcharging --algo SAC --shared-policy --seed 42
+python scripts/train/marl_training.py --env evcharging --algo APPO --shared-policy --seed 42
+python scripts/train/marl_training.py --env evcharging --algo IMPALA --shared-policy --seed 42
 
 # ============================================================================
 # Building - Independent Policies (4 runs)
 # ============================================================================
 echo "========== Building - Independent Policies =========="
 
-python marl_training.py --env building --algo PPO --seed 42
-python marl_training.py --env building --algo SAC --seed 42
-python marl_training.py --env building --algo APPO --seed 42
-python marl_training.py --env building --algo IMPALA --seed 42
+python scripts/train/marl_training.py --env building --algo PPO --seed 42
+python scripts/train/marl_training.py --env building --algo SAC --seed 42
+python scripts/train/marl_training.py --env building --algo APPO --seed 42
+python scripts/train/marl_training.py --env building --algo IMPALA --seed 42
 
 # ============================================================================
 # Building - Shared Policies (4 runs)
 # ============================================================================
 echo "========== Building - Shared Policies =========="
 
-python marl_training.py --env building --algo PPO --shared-policy --seed 42
-python marl_training.py --env building --algo SAC --shared-policy --seed 42
-python marl_training.py --env building --algo APPO --shared-policy --seed 42
-python marl_training.py --env building --algo IMPALA --shared-policy --seed 42
+python scripts/train/marl_training.py --env building --algo PPO --shared-policy --seed 42
+python scripts/train/marl_training.py --env building --algo SAC --shared-policy --seed 42
+python scripts/train/marl_training.py --env building --algo APPO --shared-policy --seed 42
+python scripts/train/marl_training.py --env building --algo IMPALA --shared-policy --seed 42
 
 # ============================================================================
 # Cogen - Independent Policies Only (3 runs)
@@ -91,6 +91,6 @@ python marl_training.py --env building --algo IMPALA --shared-policy --seed 42
 # ============================================================================
 echo "========== Cogen - Independent Policies =========="
 
-python marl_training.py --env cogen --algo PPO --rm 300 --seed 42
-python marl_training.py --env cogen --algo APPO --rm 300 --seed 42
-python marl_training.py --env cogen --algo IMPALA --rm 300 --seed 42
+python scripts/train/marl_training.py --env cogen --algo PPO --rm 300 --seed 42
+python scripts/train/marl_training.py --env cogen --algo APPO --rm 300 --seed 42
+python scripts/train/marl_training.py --env cogen --algo IMPALA --rm 300 --seed 42

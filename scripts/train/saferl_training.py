@@ -7,6 +7,10 @@ Usage:
     python saferl_training.py --env cogen      --algo OnCRPO --rm 300 --climit 1
 """
 from __future__ import annotations
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
 import torch
 import numpy as np
 import argparse

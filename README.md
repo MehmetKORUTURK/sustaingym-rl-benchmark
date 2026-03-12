@@ -97,13 +97,13 @@ data/
 
 ```bash
 # PPO on EVCharging (baseline, no noise)
-python stdrl_training.py --env evcharging --algo PPO --seed 42
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --seed 42
 
 # SAC on Building with observation noise
-python stdrl_training.py --env building --algo SAC --noise 0.1 --use-vecnormalize --seed 42
+python scripts/train/stdrl_training.py --env building --algo SAC --noise 0.1 --use-vecnormalize --seed 42
 
 # TD3 on Cogen with all noise channels
-python stdrl_training.py --env cogen --algo TD3 --noise 1.0 --noise-action 0.5 --noise-env 2.0 --seed 42
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --noise 1.0 --noise-action 0.5 --noise-env 2.0 --seed 42
 ```
 
 **Algorithms**: PPO, SAC, TD3
@@ -112,13 +112,13 @@ python stdrl_training.py --env cogen --algo TD3 --noise 1.0 --noise-action 0.5 -
 
 ```bash
 # PPOLag on EVCharging with cost limit 5
-python saferl_training.py --env evcharging --algo PPOLag --climit 5 --seed 42
+python scripts/train/saferl_training.py --env evcharging --algo PPOLag --climit 5 --seed 42
 
 # OnCRPO on Building with cost limit 50
-python saferl_training.py --env building --algo OnCRPO --climit 50 --seed 42
+python scripts/train/saferl_training.py --env building --algo OnCRPO --climit 50 --seed 42
 
 # CPO on Cogen with cost limit 25
-python saferl_training.py --env cogen --algo CPO --climit 25 --seed 42
+python scripts/train/saferl_training.py --env cogen --algo CPO --climit 25 --seed 42
 ```
 
 **Algorithms**: PPOLag, CPO, OnCRPO, FOCOPS
@@ -127,13 +127,13 @@ python saferl_training.py --env cogen --algo CPO --climit 25 --seed 42
 
 ```bash
 # APPO on EVCharging (independent policies)
-python marl_training.py --env evcharging --algo APPO --seed 42
+python scripts/train/marl_training.py --env evcharging --algo APPO --seed 42
 
 # MAPPO on Building (shared policy)
-python marl_training.py --env building --algo PPO --shared-policy --seed 42
+python scripts/train/marl_training.py --env building --algo PPO --shared-policy --seed 42
 
 # PPO on Cogen
-python marl_training.py --env cogen --algo PPO --seed 42
+python scripts/train/marl_training.py --env cogen --algo PPO --seed 42
 ```
 
 **Algorithms**: PPO, SAC, APPO, IMPALA
@@ -142,10 +142,10 @@ python marl_training.py --env cogen --algo PPO --seed 42
 
 ```bash
 # Test a trained model
-python stdrl_testing.py --env evcharging --model_path logs_std_train/evcharging_SAC/.../best_model.zip --algo SAC
+python scripts/test/stdrl_testing.py --env evcharging --model_path logs_std_train/evcharging_SAC/.../best_model.zip --algo SAC
 
 # Test robustness: apply noise to a baseline model
-python stdrl_testing.py --env evcharging --model_path path/to/model.zip --algo SAC --noise 0.2
+python scripts/test/stdrl_testing.py --env evcharging --model_path path/to/model.zip --algo SAC --noise 0.2
 ```
 
 ## Output Structure
@@ -170,43 +170,52 @@ logs_marl_train/{env}_{algo}/{timestamp}/
 
 ```bash
 # Standard RL training curves
-python ttp/stdrl_plot_bu.py --algo PPO --dt DE --auto_ylim
+python scripts/plot/stdrl_plot_bu.py --algo PPO --dt DE --auto_ylim
 
 # Post-training analysis (bar charts, heatmaps)
-python ttp/stdrl_post_plot.py --env evcharging --algo SAC --noise-type obs --plot all
+python scripts/plot/stdrl_post_plot.py --env evcharging --algo SAC --noise-type obs --plot all
 
 # Safe RL dual-panel (reward + cost)
-python ttp/omni_plot.py --env building --t_steps 20000 --w_size 500 --climit 5
+python scripts/plot/omni_plot.py --env building --t_steps 20000 --w_size 500 --climit 5
 
 # MARL training curves
-python ttp/marl_plot.py --env evcharging --t_steps 32000 --w_size 500 --auto_ylim
+python scripts/plot/marl_plot.py --env evcharging --t_steps 32000 --w_size 500 --auto_ylim
 ```
 
 ## HPC (SLURM)
 
 SLURM scripts are provided for Virginia Tech ARC:
-- `arc_slurm_ev.sh` / `arc_slurm_bu.sh` / `arc_slurm_co.sh` — Standard RL training
-- `arc_saferl_all.sh` — Safe RL batch commands (48 runs)
-- `arc_marl_all.sh` — MARL batch commands
+
+- `scripts/slurm/arc_slurm_ev.sh` / `arc_slurm_bu.sh` / `arc_slurm_co.sh` — Standard RL training
+- `scripts/slurm/arc_saferl_all.sh` — Safe RL batch commands (48 runs)
+- `scripts/slurm/arc_marl_all.sh` — MARL batch commands
 
 ## Project Structure
 
 ```
 sustaingym-rl-benchmark/
-├── envs/                          # Environment implementations
-│   ├── evcharging/                # EV charging (single + multi-agent)
-│   ├── building/                  # Building HVAC (single + multi-agent)
-│   └── cogen/                     # Cogeneration plant (single + multi-agent)
-├── algorithms/                    # Baseline algorithms (MPC, greedy)
-├── ttp/                           # Plotting scripts
-├── stdrl_training.py              # Standard RL training (SB3)
-├── stdrl_testing.py               # Model evaluation
-├── saferl_training.py             # Safe RL training (OmniSafe)
-├── marl_training.py               # Multi-agent RL training (RLlib)
-├── marl_tr_ev.py / _bu.py / _co.py  # Per-env MARL scripts
-├── arc_slurm_*.sh                 # SLURM job scripts
+├── envs/                              # Environment implementations
+│   ├── evcharging/                    # EV charging (single + multi-agent)
+│   ├── building/                      # Building HVAC (single + multi-agent)
+│   └── cogen/                         # Cogeneration plant (single + multi-agent)
+├── algorithms/                        # Baseline algorithms (MPC, greedy)
+├── scripts/
+│   ├── train/                         # Training scripts
+│   │   ├── stdrl_training.py          # Standard RL (SB3: PPO, SAC, TD3)
+│   │   ├── saferl_training.py         # Safe RL (OmniSafe: PPOLag, CPO, OnCRPO, FOCOPS)
+│   │   ├── marl_training.py           # Multi-agent RL (RLlib, unified)
+│   │   └── marl_tr_ev/bu/co.py       # Per-env MARL scripts
+│   ├── test/
+│   │   └── stdrl_testing.py           # Model evaluation
+│   ├── plot/                          # Plotting scripts
+│   │   ├── stdrl_plot_ev/bu/co.py     # Training curves
+│   │   ├── stdrl_post_plot.py         # Post-training analysis
+│   │   ├── omni_plot.py               # Safe RL plots
+│   │   └── marl_plot.py               # MARL plots
+│   └── slurm/                         # SLURM job scripts (Virginia Tech ARC)
 ├── requirements.txt
-└── setup.py
+├── setup.py
+└── LICENSE
 ```
 
 ## Citation

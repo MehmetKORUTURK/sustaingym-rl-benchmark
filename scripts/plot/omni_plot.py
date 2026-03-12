@@ -18,8 +18,11 @@ Usage:
 """
 
 import os
+import sys
 import argparse
 import datetime
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from typing import List, Tuple, Optional
 
 import pandas as pd

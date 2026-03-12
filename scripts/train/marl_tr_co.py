@@ -12,6 +12,9 @@ SAC cannot handle. Parameter sharing (--shared-policy) is also not
 supported because agents have different action spaces.
 """
 from __future__ import annotations
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import argparse
 import json

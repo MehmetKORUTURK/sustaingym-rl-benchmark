@@ -14,6 +14,8 @@ import json
 import argparse
 import datetime
 import time
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import numpy as np
 import pandas as pd
@@ -32,7 +34,7 @@ from envs.evcharging import EVChargingEnv, GMMsTraceGenerator
 from sustaingym.envs.cogen import CogenEnv
 from envs.cogen.MyCogenEnv import MyCogenEnv
 from envs.building import BuildingEnv, ParameterGenerator
-from ttp.colored import color_text, Colors
+from scripts.plot.colored import color_text, Colors
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

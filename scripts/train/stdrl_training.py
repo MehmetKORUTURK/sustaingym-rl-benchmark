@@ -1,4 +1,8 @@
 import os
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
 from sustaingym.envs.cogen import CogenEnv
 from envs.cogen.MyCogenEnv import MyCogenEnv
 from envs.evcharging import EVChargingEnv, GMMsTraceGenerator
@@ -8,7 +12,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv, sync_envs_normalizatio
 from envs.building import BuildingEnv, ParameterGenerator
 import numpy as np
 import argparse
-from ttp.colored import color_text, Colors
+from scripts.plot.colored import color_text, Colors
 import datetime
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, BaseCallback

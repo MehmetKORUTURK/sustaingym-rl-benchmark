@@ -27,10 +27,12 @@ Usage:
 """
 
 import os
+import sys
 import json
 import argparse
 import datetime
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from typing import List, Dict, Optional, Tuple
 
 import numpy as np

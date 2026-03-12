@@ -70,29 +70,29 @@ python -c "import scipy, sklearn; print('scipy', scipy.__version__, 'sklearn', s
 # 5) Run
 # ----------------------------------------------------------
 # Baseline
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env building --algo PPO --use-vecnormalize --noise 0.0 --seed 42 
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env building --algo PPO --use-vecnormalize --noise 0.0 --seed 42 
 # # Temperature-focused suite 
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-action 0.01 --seed 42 
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-action 0.03 --seed 42 
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-action 0.05 --seed 42 
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-action 0.10 --seed 42 
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-action 0.01 --seed 42 
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-action 0.03 --seed 42 
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-action 0.05 --seed 42 
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-action 0.10 --seed 42 
 
 # # Heavy noise
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-action 0.15 --seed 42 
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-action 0.20 --seed 42 
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-action 0.30 --seed 42 
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-action 0.40 --seed 42 
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-action 0.15 --seed 42 
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-action 0.20 --seed 42 
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-action 0.30 --seed 42 
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-action 0.40 --seed 42 
 
 
 # ========== Building noise_env sweep ==========
 
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-env 0.1 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-env 0.3 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-env 0.5 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-env 1.0 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-env 1.5 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-env 2.0 --seed 42
-# python "${SLURM_SUBMIT_DIR}/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-env 3.0 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-env 0.1 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-env 0.3 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-env 0.5 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-env 1.0 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-env 1.5 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-env 2.0 --seed 42
+# python "${SLURM_SUBMIT_DIR}/scripts/train/stdrl_training.py" --env building --algo SAC --use-vecnormalize --noise-env 3.0 --seed 42
 
 echo
 echo "========================================"

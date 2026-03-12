@@ -1,13 +1,16 @@
 """
-MARL training script for EVCharging using Ray RLlib.
+MARL training script for Building using Ray RLlib.
 
 Usage:
-    python marl_tr_ev.py --algo APPO --seed 42 --num-iterations 32000
-    python marl_tr_ev.py --algo PPO --shared-policy  # MAPPO
-    python marl_tr_ev.py --algo IMPALA --num-workers 10
-    python marl_tr_ev.py --algo IMPALA --num-iterations 32000
+    python marl_tr_bu.py --algo SAC --seed 42 --num-iterations 32000
+    python marl_tr_bu.py --algo PPO --shared-policy  # MAPPO
+    python marl_tr_bu.py --algo IMPALA --num-workers 4
+    python marl_tr_bu.py --algo IMPALA --num-iterations 32000
 """
 from __future__ import annotations
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import argparse
 import json
@@ -25,20 +28,20 @@ from ray.rllib.algorithms.sac import SACConfig
 from ray.rllib.env.wrappers.pettingzoo_env import ParallelPettingZooEnv
 from ray.tune.registry import register_env
 
-from envs.evcharging import GMMsTraceGenerator, MultiAgentEVChargingEnv
+from envs.building import MultiAgentBuildingEnv, ParameterGenerator
 
 # ── CLI Arguments ────────────────────────────────────────────────────────
 
-parser = argparse.ArgumentParser(description="MARL training for EVCharging (Ray RLlib)")
-parser.add_argument("--algo", type=str, default="APPO",
+parser = argparse.ArgumentParser(description="MARL training for Building (Ray RLlib)")
+parser.add_argument("--algo", type=str, default="SAC",
                     choices=["PPO", "SAC", "APPO", "IMPALA"],
-                    help="RLlib algorithm (default: APPO)")
+                    help="RLlib algorithm (default: SAC)")
 parser.add_argument("--seed", type=int, default=42,
                     help="Random seed for reproducibility")
 parser.add_argument("--num-iterations", type=int, default=32_000,
                     help="Number of training iterations (default: 32000)")
-parser.add_argument("--num-workers", type=int, default=10,
-                    help="Number of rollout workers (default: 10)")
+parser.add_argument("--num-workers", type=int, default=4,
+                    help="Number of rollout workers (default: 4)")
 parser.add_argument("--checkpoint-freq", type=int, default=10,
                     help="Save checkpoint every N iterations (default: 10)")
 parser.add_argument("--num-gpus", type=int, default=None,
@@ -67,7 +70,7 @@ if num_gpus == 0:
 
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 shared_str = "_SHARED" if args.shared_policy else ""
-log_dir = f"./logs_marl_train/evcharging_{args.algo}{shared_str}/{timestamp}_NOISE_0_ACT_0_ENV_0"
+log_dir = f"./logs_marl_train/building_{args.algo}{shared_str}/{timestamp}_NOISE_0_ACT_0_ENV_0"
 os.makedirs(log_dir, exist_ok=True)
 
 # ── Configuration Summary ────────────────────────────────────────────────
@@ -82,7 +85,7 @@ elif args.algo == "IMPALA":
     actual_lr = 5e-5
 
 print("\n" + "=" * 70)
-print("MARL TRAINING CONFIGURATION - EVCharging")
+print("MARL TRAINING CONFIGURATION - Building")
 print("=" * 70)
 print(f"  Algorithm:        {args.algo}")
 print(f"  Policy mode:      {policy_mode}")
@@ -101,26 +104,22 @@ np.random.seed(args.seed)
 
 
 def env_creator(env_config):
-    """Create a ParallelPettingZoo-wrapped EVCharging environment."""
-    trace_gen = GMMsTraceGenerator('caltech', 'Summer 2019')
-    env = MultiAgentEVChargingEnv(
-        trace_gen,
-        periods_delay=0,
-        moer_forecast_steps=36,
-        project_action_in_env=True,
-        discrete=False,
-        verbose=0,
+    """Create a ParallelPettingZoo-wrapped Building environment."""
+    params = ParameterGenerator(
+        building='OfficeSmall', weather='Hot_Dry', location='Tucson',
+        reward_beta=0.5,
     )
+    env = MultiAgentBuildingEnv(params)
     return ParallelPettingZooEnv(env)
 
 
-register_env("multi_agent_evcharging", env_creator)
+register_env("multi_agent_building", env_creator)
 
-# Extract spaces from a sample env
-sample_env = MultiAgentEVChargingEnv(
-    GMMsTraceGenerator('caltech', 'Summer 2019'),
-    project_action_in_env=True,
+sample_params = ParameterGenerator(
+    building='OfficeSmall', weather='Hot_Dry', location='Tucson',
+    reward_beta=0.5,
 )
+sample_env = MultiAgentBuildingEnv(sample_params)
 agent_ids = sample_env.possible_agents
 
 if args.shared_policy:
@@ -165,47 +164,10 @@ common_multi_agent = {
     "policies_to_train": policy_ids,
 }
 
-if args.algo == "APPO":
-    config = (
-        APPOConfig()
-        .environment(env="multi_agent_evcharging", env_config={},
-                     disable_env_checking=True)
-        .framework("torch")
-        .resources(num_gpus=min(1, num_gpus), num_gpus_per_worker=0)
-        .multi_agent(**common_multi_agent)
-        .rollouts(num_rollout_workers=args.num_workers,
-                  rollout_fragment_length=288, enable_connectors=True)
-        .training(
-            train_batch_size=2880, num_sgd_iter=10, lr=1e-4,
-            gamma=0.99, lambda_=0.95, clip_param=0.2,
-            entropy_coeff=0.005, grad_clip=40.0,
-            model={"fcnet_hiddens": [64, 64]},
-        )
-        .debugging(seed=args.seed)
-    )
-elif args.algo == "PPO":
-    config = (
-        PPOConfig()
-        .environment(env="multi_agent_evcharging", env_config={},
-                     disable_env_checking=True)
-        .framework("torch")
-        .resources(num_gpus=min(1, num_gpus), num_gpus_per_worker=0)
-        .multi_agent(**common_multi_agent)
-        .rollouts(num_rollout_workers=args.num_workers,
-                  rollout_fragment_length=288, enable_connectors=True)
-        .training(
-            train_batch_size=2880, sgd_minibatch_size=1024,
-            num_sgd_iter=10, lr=args.lr,
-            gamma=0.99, lambda_=0.95, clip_param=0.2,
-            entropy_coeff=0.005, grad_clip=0.5,
-            model={"fcnet_hiddens": [64, 64]},
-        )
-        .debugging(seed=args.seed)
-    )
-elif args.algo == "SAC":
+if args.algo == "SAC":
     config = (
         SACConfig()
-        .environment(env="multi_agent_evcharging", env_config={},
+        .environment(env="multi_agent_building", env_config={},
                      disable_env_checking=True)
         .framework("torch")
         .resources(num_gpus=min(1, num_gpus), num_gpus_per_worker=0)
@@ -219,10 +181,10 @@ elif args.algo == "SAC":
         )
         .debugging(seed=args.seed)
     )
-elif args.algo == "IMPALA":
+elif args.algo == "PPO":
     config = (
-        ImpalaConfig()
-        .environment(env="multi_agent_evcharging", env_config={},
+        PPOConfig()
+        .environment(env="multi_agent_building", env_config={},
                      disable_env_checking=True)
         .framework("torch")
         .resources(num_gpus=min(1, num_gpus), num_gpus_per_worker=0)
@@ -230,8 +192,45 @@ elif args.algo == "IMPALA":
         .rollouts(num_rollout_workers=args.num_workers,
                   rollout_fragment_length=288, enable_connectors=True)
         .training(
-            train_batch_size=2880, lr=5e-5,
-            gamma=0.99, entropy_coeff=0.005,
+            train_batch_size=1152, sgd_minibatch_size=128,
+            num_sgd_iter=10, lr=args.lr,
+            gamma=0.99, lambda_=0.95, clip_param=0.2,
+            entropy_coeff=0.01, grad_clip=0.5,
+            model={"fcnet_hiddens": [64, 64]},
+        )
+        .debugging(seed=args.seed)
+    )
+elif args.algo == "APPO":
+    config = (
+        APPOConfig()
+        .environment(env="multi_agent_building", env_config={},
+                     disable_env_checking=True)
+        .framework("torch")
+        .resources(num_gpus=min(1, num_gpus), num_gpus_per_worker=0)
+        .multi_agent(**common_multi_agent)
+        .rollouts(num_rollout_workers=args.num_workers,
+                  rollout_fragment_length=288, enable_connectors=True)
+        .training(
+            train_batch_size=1152, num_sgd_iter=10, lr=1e-4,
+            gamma=0.99, lambda_=0.95, clip_param=0.2,
+            entropy_coeff=0.01, grad_clip=40.0,
+            model={"fcnet_hiddens": [64, 64]},
+        )
+        .debugging(seed=args.seed)
+    )
+elif args.algo == "IMPALA":
+    config = (
+        ImpalaConfig()
+        .environment(env="multi_agent_building", env_config={},
+                     disable_env_checking=True)
+        .framework("torch")
+        .resources(num_gpus=min(1, num_gpus), num_gpus_per_worker=0)
+        .multi_agent(**common_multi_agent)
+        .rollouts(num_rollout_workers=args.num_workers,
+                  rollout_fragment_length=288, enable_connectors=True)
+        .training(
+            train_batch_size=1152, lr=5e-5,
+            gamma=0.99, entropy_coeff=0.01,
             vtrace=True, vtrace_clip_rho_threshold=1.0,
             vtrace_clip_pg_rho_threshold=1.0,
             grad_clip=5.0,
@@ -242,7 +241,7 @@ elif args.algo == "IMPALA":
 # ── Save Config JSON ─────────────────────────────────────────────────────
 
 run_config = {
-    "env": "evcharging",
+    "env": "building",
     "algo": args.algo,
     "shared_policy": args.shared_policy,
     "policy_mode": policy_mode,
@@ -323,7 +322,7 @@ finally:
     total_time = time.time() - start_time
     completed = len(metrics_history)
     print("\n" + "=" * 70)
-    print(f"TRAINING COMPLETE - EVCharging MARL ({args.algo}, {policy_mode})")
+    print(f"TRAINING COMPLETE - Building MARL ({args.algo}, {policy_mode})")
     print("=" * 70)
     print(f"  Iterations completed: {completed}/{args.num_iterations}")
     print(f"  Training duration:    {total_time/60:.1f} minutes "
