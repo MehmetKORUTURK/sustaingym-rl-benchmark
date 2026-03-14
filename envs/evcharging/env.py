@@ -317,9 +317,12 @@ class EVChargingEnv(Env):
             observation = {key: val.copy() for key, val in observation.items()}
             active = observation['demands'] > 0  # Single source of truth for "active sessions"
 
-            # Previous MOER (absolute noise, bounded [0,1])
+            # Previous MOER (multiplicative noise, bounded [0,1])
+            # Multiplicative avoids clipping bias: additive noise on low MOER values
+            # gets clipped at 0, creating systematic upward bias
             eps_prev = self.np_random.normal(0, self.noise, size=observation['prev_moer'].shape)
-            observation['prev_moer'] = np.clip(observation['prev_moer'] + eps_prev, 0, 1)
+            mult_prev = np.clip(1 + eps_prev, 0.5, 1.5)
+            observation['prev_moer'] = np.clip(observation['prev_moer'] * mult_prev, 0, 1)
 
             # Estimated departures (scaled absolute noise, bounded [-288, 288])
             # Scale by 50 to match departure time range (±24 hours in 5-min periods)
@@ -340,9 +343,11 @@ class EVChargingEnv(Env):
                 self.data_generator.requested_energy_cap
             )
 
-            # Forecasted MOER (absolute noise, bounded [0,1])
+            # Forecasted MOER (multiplicative noise, bounded [0,1])
+            # Multiplicative avoids clipping bias on bounded [0,1] values
             eps_f = self.np_random.normal(0, self.noise, size=observation['forecasted_moer'].shape)
-            observation['forecasted_moer'] = np.clip(observation['forecasted_moer'] + eps_f, 0, 1)
+            mult_f = np.clip(1 + eps_f, 0.5, 1.5)
+            observation['forecasted_moer'] = np.clip(observation['forecasted_moer'] * mult_f, 0, 1)
 
         reward = self._get_reward(schedule)
         info = self._get_info()

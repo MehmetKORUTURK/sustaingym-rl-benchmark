@@ -62,8 +62,8 @@ def parse_arguments():
     parser.add_argument("--noise-env", type=float, default=0.0,
                         help="Environment noise level. "
                              "EVCharging: MOER disturbance std. "
-                             "Cogen: applied uniformly to TAMB/PAMB/RHAMB. "
-                             "Building: not supported.")
+                             "Cogen: scales TAMB/PAMB/RHAMB + ONNX model noise. "
+                             "Building: scales out_temp/ground_temp/ghi noise.")
 
     # Evaluation
     parser.add_argument("--n-eval", type=int, default=100,
@@ -161,13 +161,21 @@ def create_test_environment(env_type, noise=0.0, noise_action=0.0, noise_env=0.0
                             noise_env=noise_env if noise_env > 0 else None)
 
     elif env_type == "building":
+        # Convert scalar noise_env to dict (matching stdrl_training.py scaling)
+        building_noise_env = None
         if noise_env > 0:
-            print(color_text("[WARNING] --noise-env is not supported for Building env, ignored.", Colors.YELLOW))
+            building_noise_env = {
+                "out_temp": 1.0 * noise_env,      # 1 °C std dev per unit
+                "ground_temp": 0.5 * noise_env,    # 0.5 °C std dev per unit
+                "ghi": 50.0 * noise_env,           # 50 W/m² std dev per unit
+            }
+            print(color_text(f"[INFO] Building environment noise config: {building_noise_env}", Colors.GREEN))
         params = ParameterGenerator(building='OfficeSmall', weather='Hot_Dry',
                                     location='Tucson', reward_beta=reward_beta)
         env = BuildingEnv(params,
                           noise=noise if noise > 0 else None,
-                          noise_action=noise_action if noise_action > 0 else None)
+                          noise_action=noise_action if noise_action > 0 else None,
+                          noise_env=building_noise_env)
     else:
         print(color_text(f"Error: Unknown environment '{env_type}'", Colors.RED))
         sys.exit(1)
