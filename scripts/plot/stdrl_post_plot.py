@@ -161,17 +161,41 @@ def _get_ls(algo: str) -> str:
     return ALGO_LINESTYLES.get(algo, "-")
 
 
-def _save(plot_type: str, env: str, noise_type: str, algo: str = None):
-    """Save current figure to OUTPUT_DIR as PNG, PDF, and SVG."""
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-    parts = [timestamp, env, plot_type, noise_type]
-    if algo:
-        parts.insert(2, algo)
-    filename = "_".join(parts)
+# Global: set by main() from --formats arg
+SAVE_FORMATS = ["png"]
 
-    for ext in ["png", "pdf", "svg"]:
-        path = os.path.join(OUTPUT_DIR, f"{filename}.{ext}")
+
+def _save(plot_type: str, env: str, noise_type: str, algo: str = None):
+    """Save figure into organized folder structure:
+
+    graphs/C_POST/
+      {env}/
+        {algo}/                     # algo-specific plots (bar, heatmap, violin, breakdown)
+          {noise_type}_{plot_type}.{ext}
+        comparison/                 # multi-algo plots (line, norm — no algo filter)
+          {noise_type}_{plot_type}.{ext}
+        panel.{ext}                 # noise panel (all noise types, top level)
+
+    Latest run overwrites previous files (no timestamp clutter).
+    Formats controlled by --formats flag (default: png only).
+    """
+    # Determine subfolder
+    if plot_type == "panel":
+        subdir = os.path.join(OUTPUT_DIR, env)
+        if algo:
+            subdir = os.path.join(subdir, algo)
+        filename = "panel"
+    elif algo:
+        subdir = os.path.join(OUTPUT_DIR, env, algo)
+        filename = f"{noise_type}_{plot_type}"
+    else:
+        subdir = os.path.join(OUTPUT_DIR, env, "comparison")
+        filename = f"{noise_type}_{plot_type}"
+
+    os.makedirs(subdir, exist_ok=True)
+
+    for ext in SAVE_FORMATS:
+        path = os.path.join(subdir, f"{filename}.{ext}")
         plt.savefig(path, dpi=300, bbox_inches="tight")
         print(f"  Saved: {path}")
 
@@ -767,8 +791,15 @@ def main():
     parser.add_argument("--figsize", type=float, nargs=2, default=None,
                         metavar=("W", "H"),
                         help="Override figure size (width height)")
+    parser.add_argument("--formats", nargs="+", default=["png"],
+                        choices=["png", "pdf", "svg"],
+                        help="Output formats (default: png). E.g. --formats png pdf svg")
 
     args = parser.parse_args()
+
+    # Set global save formats
+    global SAVE_FORMATS
+    SAVE_FORMATS = args.formats
 
     # Load data
     if args.csv_dirs:
