@@ -227,11 +227,12 @@ class CogenEnv(gym.Env):
                 b, providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
 
         # randomly pick a day for the episode
-        # subtract 1 as temporary fix to make sure we don't go over the number of days with lookahead window
+        # Exclude last day (n_days-1) because _forecast_from_time may need
+        # day+1 for lookahead, which would be out of range on the last day.
         if seed is None:
             self.current_day = self.np_random.integers(low=0, high=self.n_days-1)
         else:
-            self.current_day = seed % self.n_days
+            self.current_day = seed % (self.n_days - 1)
 
         self.t = 0  # keeps track of which timestep we are on
 

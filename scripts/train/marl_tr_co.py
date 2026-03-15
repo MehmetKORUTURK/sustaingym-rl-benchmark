@@ -41,7 +41,7 @@ parser.add_argument("--algo", type=str, default="PPO",
                     help="RLlib algorithm (default: PPO, only on-policy algos for Dict action space)")
 parser.add_argument("--seed", type=int, default=42,
                     help="Random seed for reproducibility")
-parser.add_argument("--num-iterations", type=int, default=750,
+parser.add_argument("--num-iterations", type=int, default=3_000,
                     help="Number of training iterations (default: 100)")
 parser.add_argument("--num-workers", type=int, default=4,
                     help="Number of rollout workers (default: 4)")
@@ -80,7 +80,7 @@ os.makedirs(log_dir, exist_ok=True)
 # Compute actual lr (APPO/IMPALA use hardcoded values, not args.lr)
 actual_lr = args.lr
 if args.algo == "APPO":
-    actual_lr = 1e-4
+    actual_lr = 5e-5
 elif args.algo == "IMPALA":
     actual_lr = 1e-4
 
@@ -179,9 +179,9 @@ elif args.algo == "APPO":
         .rollouts(num_rollout_workers=args.num_workers,
                   rollout_fragment_length=200, enable_connectors=True)
         .training(
-            train_batch_size=4000, num_sgd_iter=10, lr=1e-4,
+            train_batch_size=4000, num_sgd_iter=5, lr=5e-5,
             gamma=0.99, lambda_=0.95, clip_param=0.2,
-            entropy_coeff=0.01, grad_clip=40.0,
+            entropy_coeff=0.01, grad_clip=5.0,
             model={"fcnet_hiddens": [64, 64]},
         )
         .debugging(seed=args.seed)

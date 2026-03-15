@@ -819,6 +819,19 @@ def main():
 
     env = args.env or runs[0]["env"]
 
+    # Filter: when plotting a specific noise type, exclude runs where OTHER
+    # noise channels are non-zero. E.g., --noise-type action should exclude
+    # obs-noise-only runs (noise_obs>0, noise_action=0) that would pollute
+    # the noise=0 baseline group.
+    if args.plot != "panel":
+        noise_keys = {"obs": "noise_obs", "action": "noise_action", "env": "noise_env"}
+        other_keys = [v for k, v in noise_keys.items() if k != args.noise_type]
+        before = len(runs)
+        runs = [r for r in runs if all(r[ok] == 0 for ok in other_keys)]
+        if len(runs) < before:
+            print(f"Filtered {before - len(runs)} runs with non-zero noise "
+                  f"on other channels (kept {len(runs)})")
+
     # Print summary table
     df = build_summary_table(runs, args.noise_type)
     print(f"\n{'='*60}")

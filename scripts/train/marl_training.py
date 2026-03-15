@@ -57,7 +57,7 @@ ENV_DEFAULTS = {
     "cogen": {
         "algo": "PPO",
         "algos": ["PPO", "APPO", "IMPALA"],
-        "num_iterations": 750,
+        "num_iterations": 3_000,
         "num_workers": 4,
         "supports_shared": False,  # agents have different action spaces
     },
@@ -137,7 +137,7 @@ policy_mode = "shared" if args.shared_policy else "independent"
 # Compute actual lr (APPO/IMPALA use hardcoded values, not args.lr)
 actual_lr = args.lr
 if args.algo == "APPO":
-    actual_lr = 1e-4
+    actual_lr = 5e-5 if args.env == "cogen" else 1e-4
 elif args.algo == "IMPALA":
     actual_lr = 5e-5 if args.env in ("evcharging", "building") else 1e-4
 
@@ -294,9 +294,9 @@ if args.algo == "APPO":
         rollout_frag = 288
     elif args.env == "cogen":
         appo_params = dict(
-            train_batch_size=4000, num_sgd_iter=10, lr=1e-4,
+            train_batch_size=4000, num_sgd_iter=5, lr=5e-5,
             gamma=0.99, lambda_=0.95, clip_param=0.2,
-            entropy_coeff=0.01, grad_clip=40.0,
+            entropy_coeff=0.01, grad_clip=5.0,
             model={"fcnet_hiddens": [64, 64]},
         )
         rollout_frag = 200

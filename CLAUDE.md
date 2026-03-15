@@ -251,7 +251,7 @@ Scalar `noise_env` converted to dict in `scripts/train/stdrl_training.py`:
 ### MARL Hyperparameters (Ray RLlib)
 - **EVCharging**: PPO/SAC/APPO/IMPALA (default APPO), train_batch=2880, rollout_fragment=288, 10 workers, 32k iterations, entropy_coeff=0.005, sgd_minibatch=1024 (PPO)
 - **Building**: PPO/SAC/APPO/IMPALA (default SAC), train_batch=1152 (PPO/APPO/IMPALA), rollout_fragment=288, 4 workers, 32k iterations, entropy_coeff=0.01, sgd_minibatch=128 (PPO), reward_beta=0.5
-- **Cogen**: PPO/APPO/IMPALA (default PPO), train_batch=4000, rollout_fragment=200, 4 workers, 750 iterations, entropy_coeff=0.01, sgd_minibatch=128 (PPO)
+- **Cogen**: PPO/APPO/IMPALA (default PPO), train_batch=4000, rollout_fragment=200, 4 workers, 3000 iterations, entropy_coeff=0.01, sgd_minibatch=128 (PPO)
 - **PPO**: lr=3e-4 (from --lr), grad_clip=0.5, num_sgd_iter=10, gamma=0.99, lambda=0.95, clip=0.2
 - **SAC**: lr=3e-4 (from --lr), train_batch=256, n_step=1, grad_clip=1.0, rollout_fragment="auto", model=[64,64]
 - **APPO**: lr=1e-4 (hardcoded), grad_clip=40.0, num_sgd_iter=10, gamma=0.99, lambda=0.95, clip=0.2
