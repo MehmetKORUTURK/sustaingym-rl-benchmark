@@ -286,9 +286,9 @@ if args.algo == "APPO":
         rollout_frag = 288
     elif args.env == "building":
         appo_params = dict(
-            train_batch_size=1152, num_sgd_iter=10, lr=1e-4,
+            train_batch_size=1152, num_sgd_iter=3, lr=1e-4,
             gamma=0.99, lambda_=0.95, clip_param=0.2,
-            entropy_coeff=0.01, grad_clip=40.0,
+            entropy_coeff=0.05, grad_clip=40.0,
             model={"fcnet_hiddens": [64, 64]},
         )
         rollout_frag = 288
@@ -333,9 +333,9 @@ elif args.algo == "PPO":
         ppo_params = dict(
             train_batch_size=2880 if args.env == "evcharging" else 1152,
             sgd_minibatch_size=1024 if args.env == "evcharging" else 128,
-            num_sgd_iter=10,
+            num_sgd_iter=10 if args.env == "evcharging" else 3,
             lr=args.lr, gamma=0.99, lambda_=0.95, clip_param=0.2,
-            entropy_coeff=0.005 if args.env == "evcharging" else 0.01,
+            entropy_coeff=0.005 if args.env == "evcharging" else 0.05,
             grad_clip=0.5,
             model={"fcnet_hiddens": [64, 64]},
         )
@@ -391,7 +391,7 @@ elif args.algo == "IMPALA":
     elif args.env == "building":
         impala_params = dict(
             train_batch_size=1152, lr=5e-5,
-            gamma=0.99, entropy_coeff=0.01,
+            gamma=0.99, entropy_coeff=0.05,
             vtrace=True, vtrace_clip_rho_threshold=1.0,
             vtrace_clip_pg_rho_threshold=1.0,
             grad_clip=5.0,

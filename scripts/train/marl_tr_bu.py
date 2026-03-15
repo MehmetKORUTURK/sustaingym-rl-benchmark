@@ -193,9 +193,9 @@ elif args.algo == "PPO":
                   rollout_fragment_length=288, enable_connectors=True)
         .training(
             train_batch_size=1152, sgd_minibatch_size=128,
-            num_sgd_iter=10, lr=args.lr,
+            num_sgd_iter=3, lr=args.lr,
             gamma=0.99, lambda_=0.95, clip_param=0.2,
-            entropy_coeff=0.01, grad_clip=0.5,
+            entropy_coeff=0.05, grad_clip=0.5,
             model={"fcnet_hiddens": [64, 64]},
         )
         .debugging(seed=args.seed)
@@ -211,9 +211,9 @@ elif args.algo == "APPO":
         .rollouts(num_rollout_workers=args.num_workers,
                   rollout_fragment_length=288, enable_connectors=True)
         .training(
-            train_batch_size=1152, num_sgd_iter=10, lr=1e-4,
+            train_batch_size=1152, num_sgd_iter=3, lr=1e-4,
             gamma=0.99, lambda_=0.95, clip_param=0.2,
-            entropy_coeff=0.01, grad_clip=40.0,
+            entropy_coeff=0.05, grad_clip=40.0,
             model={"fcnet_hiddens": [64, 64]},
         )
         .debugging(seed=args.seed)
@@ -230,7 +230,7 @@ elif args.algo == "IMPALA":
                   rollout_fragment_length=288, enable_connectors=True)
         .training(
             train_batch_size=1152, lr=5e-5,
-            gamma=0.99, entropy_coeff=0.01,
+            gamma=0.99, entropy_coeff=0.05,
             vtrace=True, vtrace_clip_rho_threshold=1.0,
             vtrace_clip_pg_rho_threshold=1.0,
             grad_clip=5.0,
