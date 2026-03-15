@@ -235,8 +235,8 @@ elif args.algo == "IMPALA":
         .training(
             train_batch_size=2880, lr=5e-5,
             gamma=0.99, entropy_coeff=0.005,
-            vtrace=True, vtrace_clip_rho_threshold=1.0,
-            vtrace_clip_pg_rho_threshold=1.0,
+            vtrace=True, vtrace_clip_rho_threshold=0.5,
+            vtrace_clip_pg_rho_threshold=0.5,
             grad_clip=5.0,
             model={"fcnet_hiddens": [64, 64]},
         )
