@@ -193,8 +193,8 @@ elif args.algo == "PPO":
                   rollout_fragment_length=288, enable_connectors=True)
         .training(
             train_batch_size=1152, sgd_minibatch_size=128,
-            num_sgd_iter=3, lr=args.lr,
-            gamma=0.99, lambda_=0.95, clip_param=0.2,
+            num_sgd_iter=3, lr=1e-4,
+            gamma=0.99, lambda_=0.95, clip_param=0.1,
             entropy_coeff=0.05, grad_clip=0.5,
             model={"fcnet_hiddens": [64, 64]},
         )

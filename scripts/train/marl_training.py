@@ -327,16 +327,23 @@ elif args.algo == "PPO":
             model={"fcnet_hiddens": [64, 64]},
         )
         rollout_frag = 200
-    else:
-        # train_batch_size must be divisible by (num_workers * rollout_fragment)
-        # EVCharging: 10 workers * 288 = 2880, Building: 4 workers * 288 = 1152
+    elif args.env == "evcharging":
+        # 10 workers * 288 = 2880
         ppo_params = dict(
-            train_batch_size=2880 if args.env == "evcharging" else 1152,
-            sgd_minibatch_size=1024 if args.env == "evcharging" else 128,
-            num_sgd_iter=10 if args.env == "evcharging" else 3,
+            train_batch_size=2880, sgd_minibatch_size=1024,
+            num_sgd_iter=10,
             lr=args.lr, gamma=0.99, lambda_=0.95, clip_param=0.2,
-            entropy_coeff=0.005 if args.env == "evcharging" else 0.05,
-            grad_clip=0.5,
+            entropy_coeff=0.005, grad_clip=0.5,
+            model={"fcnet_hiddens": [64, 64]},
+        )
+        rollout_frag = 288
+    elif args.env == "building":
+        # 4 workers * 288 = 1152
+        ppo_params = dict(
+            train_batch_size=1152, sgd_minibatch_size=128,
+            num_sgd_iter=3,
+            lr=1e-4, gamma=0.99, lambda_=0.95, clip_param=0.1,
+            entropy_coeff=0.05, grad_clip=0.5,
             model={"fcnet_hiddens": [64, 64]},
         )
         rollout_frag = 288
