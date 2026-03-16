@@ -129,7 +129,7 @@ class MultiAgentCogenEnv(ParallelEnv):
         if self.single_env.current_day >= self.single_env.n_days - 1:
             self.single_env.current_day = self.single_env.current_day % (self.single_env.n_days - 1)
             self.single_env.obs = self.single_env._get_obs()
-            obs = self.single_env._apply_env_noise(self.single_env.obs)
+            obs = self.single_env.obs
 
         flat_obs = spaces.flatten(self.single_env.observation_space, obs)
         assert isinstance(flat_obs, np.ndarray)

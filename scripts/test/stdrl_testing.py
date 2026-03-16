@@ -643,7 +643,7 @@ if __name__ == "__main__":
     print(color_text("[2/4] Loading trained model...", Colors.GREEN))
     try:
         algo_class = ALGO_CLASSES[ALGO]
-        model = algo_class.load(args.model_path, env=model_env)
+        model = algo_class.load(args.model_path, env=model_env, device="cpu")
         print(color_text(f"  Model loaded: {ALGO} from {args.model_path}", Colors.GREEN))
     except Exception as e:
         print(color_text(f"Error loading model: {e}", Colors.RED))

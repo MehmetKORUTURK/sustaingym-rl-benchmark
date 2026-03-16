@@ -104,9 +104,10 @@ class MyCogenEnv(Wrapper):
         # Clamp to n_days-2 to match the seed=None branch (high=n_days-1, exclusive).
         if self.env.current_day >= self.env.n_days - 1:
             self.env.current_day = self.env.current_day % (self.env.n_days - 1)
-            # Re-fetch obs with corrected day
+            # Re-fetch obs with corrected day (use _get_obs which exists in
+            # both local and package CogenEnv; env noise not needed at reset)
             self.env.obs = self.env._get_obs()
-            obs = self.env._apply_env_noise(self.env.obs)
+            obs = self.env.obs
 
         # Reset verbose flag for new episode
         self._verbose_printed = False
