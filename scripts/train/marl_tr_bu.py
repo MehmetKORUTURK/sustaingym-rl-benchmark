@@ -174,7 +174,7 @@ if args.algo == "SAC":
         .resources(num_gpus=min(1, num_gpus), num_gpus_per_worker=0)
         .multi_agent(**common_multi_agent)
         .rollouts(num_rollout_workers=args.num_workers,
-                  rollout_fragment_length="auto", enable_connectors=True)
+                  rollout_fragment_length="auto", observation_filter="MeanStdFilter", enable_connectors=True)
         .training(
             train_batch_size=256, n_step=1,
             lr=args.lr, gamma=0.99, grad_clip=1.0,
@@ -191,7 +191,7 @@ elif args.algo == "PPO":
         .resources(num_gpus=min(1, num_gpus), num_gpus_per_worker=0)
         .multi_agent(**common_multi_agent)
         .rollouts(num_rollout_workers=args.num_workers,
-                  rollout_fragment_length=288, enable_connectors=True)
+                  rollout_fragment_length=288, observation_filter="MeanStdFilter", enable_connectors=True)
         .training(
             train_batch_size=1152, sgd_minibatch_size=128,
             num_sgd_iter=3, lr=3e-5,
@@ -210,7 +210,7 @@ elif args.algo == "APPO":
         .resources(num_gpus=min(1, num_gpus), num_gpus_per_worker=0)
         .multi_agent(**common_multi_agent)
         .rollouts(num_rollout_workers=args.num_workers,
-                  rollout_fragment_length=288, enable_connectors=True)
+                  rollout_fragment_length=288, observation_filter="MeanStdFilter", enable_connectors=True)
         .training(
             train_batch_size=1152, num_sgd_iter=3, lr=1e-5,
             gamma=0.99, lambda_=0.95, clip_param=0.2,
@@ -228,7 +228,7 @@ elif args.algo == "IMPALA":
         .resources(num_gpus=min(1, num_gpus), num_gpus_per_worker=0)
         .multi_agent(**common_multi_agent)
         .rollouts(num_rollout_workers=args.num_workers,
-                  rollout_fragment_length=288, enable_connectors=True)
+                  rollout_fragment_length=288, observation_filter="MeanStdFilter", enable_connectors=True)
         .training(
             train_batch_size=1152, lr=1e-5,
             gamma=0.99, entropy_coeff=0.05,

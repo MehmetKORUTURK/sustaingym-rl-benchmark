@@ -278,6 +278,10 @@ common_multi_agent = {
     "policies_to_train": policy_ids,
 }
 
+# Observation normalization: Building has large scale differences
+# (temps ~20 vs GHI/Occupower ~1000), so MeanStdFilter is critical
+obs_filter = "MeanStdFilter" if args.env == "building" else "NoFilter"
+
 # Algorithm-specific hyperparameters per environment
 # Follows CLAUDE.md recommended defaults
 
@@ -319,7 +323,7 @@ if args.algo == "APPO":
         .multi_agent(**common_multi_agent)
         .rollouts(num_rollout_workers=args.num_workers,
                   rollout_fragment_length=rollout_frag,
-                  enable_connectors=True)
+                  observation_filter=obs_filter, enable_connectors=True)
         .training(**appo_params)
         .debugging(seed=args.seed)
     )
@@ -367,7 +371,7 @@ elif args.algo == "PPO":
         .multi_agent(**common_multi_agent)
         .rollouts(num_rollout_workers=args.num_workers,
                   rollout_fragment_length=rollout_frag,
-                  enable_connectors=True)
+                  observation_filter=obs_filter, enable_connectors=True)
         .training(**ppo_params)
         .debugging(seed=args.seed)
     )
@@ -383,7 +387,7 @@ elif args.algo == "SAC":
         .multi_agent(**common_multi_agent)
         .rollouts(num_rollout_workers=args.num_workers,
                   rollout_fragment_length="auto",
-                  enable_connectors=True)
+                  observation_filter=obs_filter, enable_connectors=True)
         .training(
             train_batch_size=256, n_step=1,
             lr=args.lr, gamma=0.99, grad_clip=1.0,
@@ -436,7 +440,7 @@ elif args.algo == "IMPALA":
         .multi_agent(**common_multi_agent)
         .rollouts(num_rollout_workers=args.num_workers,
                   rollout_fragment_length=rollout_frag,
-                  enable_connectors=True)
+                  observation_filter=obs_filter, enable_connectors=True)
         .training(**impala_params)
         .debugging(seed=args.seed)
     )
