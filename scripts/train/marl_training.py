@@ -134,12 +134,19 @@ os.makedirs(log_dir, exist_ok=True)
 
 policy_mode = "shared" if args.shared_policy else "independent"
 
-# Compute actual lr (APPO/IMPALA use hardcoded values, not args.lr)
+# Compute actual lr (some algos/envs use hardcoded values, not args.lr)
 actual_lr = args.lr
 if args.algo == "APPO":
-    actual_lr = 5e-5  # all envs use conservative lr for async stability
+    actual_lr = 1e-5 if args.env == "building" else 5e-5
 elif args.algo == "IMPALA":
-    actual_lr = 5e-5 if args.env in ("evcharging", "building") else 1e-4
+    if args.env == "building":
+        actual_lr = 1e-5
+    elif args.env == "evcharging":
+        actual_lr = 5e-5
+    else:
+        actual_lr = 1e-4
+elif args.algo == "PPO" and args.env == "building":
+    actual_lr = 3e-5
 
 print("\n" + "=" * 70)
 print(f"MARL TRAINING CONFIGURATION - {args.env.upper()}")
@@ -286,8 +293,9 @@ if args.algo == "APPO":
         )
         rollout_frag = 288
     elif args.env == "building":
+        # lr reduced for unnormalized reward (~15x larger magnitude)
         appo_params = dict(
-            train_batch_size=1152, num_sgd_iter=3, lr=5e-5,
+            train_batch_size=1152, num_sgd_iter=3, lr=1e-5,
             gamma=0.99, lambda_=0.95, clip_param=0.2,
             entropy_coeff=0.05, grad_clip=5.0,
             model={"fcnet_hiddens": [64, 64]},
@@ -340,10 +348,11 @@ elif args.algo == "PPO":
         rollout_frag = 288
     elif args.env == "building":
         # 4 workers * 288 = 1152
+        # lr reduced for unnormalized reward (~15x larger magnitude)
         ppo_params = dict(
             train_batch_size=1152, sgd_minibatch_size=128,
             num_sgd_iter=3,
-            lr=1e-4, gamma=0.99, lambda_=0.95, clip_param=0.1,
+            lr=3e-5, gamma=0.99, lambda_=0.95, clip_param=0.1,
             entropy_coeff=0.05, grad_clip=0.5,
             model={"fcnet_hiddens": [64, 64]},
         )
@@ -397,8 +406,9 @@ elif args.algo == "IMPALA":
         )
         rollout_frag = 288
     elif args.env == "building":
+        # lr reduced for unnormalized reward (~15x larger magnitude)
         impala_params = dict(
-            train_batch_size=1152, lr=5e-5,
+            train_batch_size=1152, lr=1e-5,
             gamma=0.99, entropy_coeff=0.05,
             vtrace=True, vtrace_clip_rho_threshold=1.0,
             vtrace_clip_pg_rho_threshold=1.0,
