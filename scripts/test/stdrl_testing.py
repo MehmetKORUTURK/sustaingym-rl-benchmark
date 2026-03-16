@@ -31,7 +31,7 @@ except ImportError:
     VecNormalize = None
 
 from envs.evcharging import EVChargingEnv, GMMsTraceGenerator
-from sustaingym.envs.cogen import CogenEnv
+from envs.cogen.env import CogenEnv
 from envs.cogen.MyCogenEnv import MyCogenEnv
 from envs.building import BuildingEnv, ParameterGenerator
 from scripts.plot.colored import color_text, Colors

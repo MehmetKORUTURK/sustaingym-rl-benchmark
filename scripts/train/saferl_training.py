@@ -194,7 +194,7 @@ class SustaingymCogenCMDP(CMDP):
     def __init__(self, env_id: str, num_envs: int = 1,
                  device: torch.device = DEVICE_CPU, **kwargs: Any) -> None:
         super().__init__(env_id)
-        from sustaingym.envs.cogen import CogenEnv
+        from envs.cogen.env import CogenEnv
         from envs.cogen.MyCogenEnv import MyCogenEnv
         self._env = MyCogenEnv(
             CogenEnv(renewables_magnitude=args.rm),

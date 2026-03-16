@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from sustaingym.envs.cogen import CogenEnv
+from envs.cogen.env import CogenEnv
 from envs.cogen.MyCogenEnv import MyCogenEnv
 from envs.evcharging import EVChargingEnv, GMMsTraceGenerator
 from stable_baselines3 import PPO, SAC, TD3
