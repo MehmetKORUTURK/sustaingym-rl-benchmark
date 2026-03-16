@@ -123,6 +123,14 @@ class MultiAgentCogenEnv(ParallelEnv):
               ) -> tuple[dict[str, np.ndarray], dict[str, dict[str, Any]]]:
         """Resets the environment."""
         obs, info = self.single_env.reset(seed=seed, options=options)
+
+        # Fix: CogenEnv uses seed % n_days which can select the last day,
+        # causing IndexError in _forecast_from_time when it needs day+1.
+        if self.single_env.current_day >= self.single_env.n_days - 1:
+            self.single_env.current_day = self.single_env.current_day % (self.single_env.n_days - 1)
+            self.single_env.obs = self.single_env._get_obs()
+            obs = self.single_env._apply_env_noise(self.single_env.obs)
+
         flat_obs = spaces.flatten(self.single_env.observation_space, obs)
         assert isinstance(flat_obs, np.ndarray)
 
