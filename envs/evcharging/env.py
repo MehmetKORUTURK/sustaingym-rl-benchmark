@@ -297,11 +297,12 @@ class EVChargingEnv(Env):
         self.t += 1
 
         # Apply action noise BEFORE action projection (more realistic)
-        # This simulates noisy policy outputs that the projection will then correct
+        # Multiplicative noise avoids clipping bias: additive noise on [0,1]
+        # bounded actions creates upward bias when actions are near 0.
         if self.noise_action is not None:
-            noise = self.np_random.normal(0, self.noise_action, size=action.shape)
-            action = action + noise
-            # Action will be clipped and projected next, so no need to clip here yet
+            eps = self.np_random.normal(0, self.noise_action, size=action.shape)
+            mult = np.clip(1 + eps, 0.5, 1.5)
+            action = action * mult
         action = np.clip(action, 0, 1)
         # Step internal simulator
         schedule = self._to_schedule(action)  # transform action to pilot signals
