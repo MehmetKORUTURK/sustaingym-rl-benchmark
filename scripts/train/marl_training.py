@@ -193,6 +193,7 @@ elif args.env == "building":
             building='OfficeSmall', weather='Hot_Dry', location='Tucson',
             reward_beta=0.5,
         )
+        params["normalize_reward"] = False  # raw reward for stronger gradient signal
         env = MultiAgentBuildingEnv(params)
         return ParallelPettingZooEnv(env)
 
