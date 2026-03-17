@@ -37,48 +37,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
-# ============================================================================
-# Publication-quality style
-# ============================================================================
-plt.rcParams.update({
-    # Figure
-    "figure.dpi": 150,
-    "savefig.dpi": 300,
-    "figure.facecolor": "white",
-    "savefig.facecolor": "white",
-    "savefig.bbox": "tight",
-    "savefig.pad_inches": 0.05,
-    # Font — serif for paper, with LaTeX math
-    "font.family": "serif",
-    "font.serif": ["Times New Roman", "DejaVu Serif", "Computer Modern Roman"],
-    "font.size": 11,
-    "mathtext.fontset": "cm",
-    # Axes
-    "axes.labelsize": 13,
-    "axes.titlesize": 14,
-    "axes.titleweight": "bold",
-    "axes.labelweight": "bold",
-    "axes.linewidth": 0.8,
-    "axes.spines.top": False,
-    "axes.spines.right": False,
-    "axes.grid": False,
-    # Ticks
-    "xtick.labelsize": 10,
-    "ytick.labelsize": 10,
-    "xtick.major.width": 0.8,
-    "ytick.major.width": 0.8,
-    "xtick.direction": "out",
-    "ytick.direction": "out",
-    # Legend
-    "legend.fontsize": 10,
-    "legend.framealpha": 0.9,
-    "legend.edgecolor": "0.7",
-    "legend.fancybox": True,
-    # PDF / PS
-    "pdf.fonttype": 42,
-    "ps.fonttype": 42,
-})
+from style import (ALGO_COLORS, ALGO_MARKERS, ALGO_LINESTYLES,
+                   get_color, get_marker, get_linestyle,
+                   ENV_TITLES as _ENV_TITLES, style_axis)
+# style.py auto-applies rcParams on import
 
 
 # ============================================================================
@@ -87,6 +49,7 @@ plt.rcParams.update({
 OUTPUT_DIR = "./graphs/C_POST/"
 TEST_LOG_ROOT = "./logs_std_test"
 
+# Post-plot uses longer display names for titles
 ENV_TITLES = {
     "evcharging": "EV Charging",
     "building": "Building",
@@ -103,28 +66,6 @@ NOISE_SHORT = {
     "obs": "Obs",
     "action": "Act",
     "env": "Env",
-}
-
-# Consistent colors per algorithm — colorblind-safe (Okabe-Ito inspired)
-ALGO_COLORS = {
-    "PPO":  "#0072B2",  # blue
-    "SAC":  "#E69F00",  # amber
-    "TD3":  "#009E73",  # teal
-    "APPO": "#CC79A7",  # pink
-}
-
-ALGO_MARKERS = {
-    "PPO": "o",
-    "SAC": "s",
-    "TD3": "^",
-    "APPO": "D",
-}
-
-ALGO_LINESTYLES = {
-    "PPO": "-",
-    "SAC": "--",
-    "TD3": "-.",
-    "APPO": ":",
 }
 
 # Environment-specific metric configs for breakdown plots
@@ -148,17 +89,12 @@ ENV_METRICS = {
 
 
 # ============================================================================
-# Helpers
+# Helpers (delegating to style.py)
 # ============================================================================
 
-def _get_color(algo: str) -> str:
-    return ALGO_COLORS.get(algo, "#555555")
-
-def _get_marker(algo: str) -> str:
-    return ALGO_MARKERS.get(algo, "o")
-
-def _get_ls(algo: str) -> str:
-    return ALGO_LINESTYLES.get(algo, "-")
+_get_color = get_color
+_get_marker = get_marker
+_get_ls = get_linestyle
 
 
 # Global: set by main() from --formats arg

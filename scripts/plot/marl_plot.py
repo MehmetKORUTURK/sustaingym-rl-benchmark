@@ -21,34 +21,12 @@ from datetime import datetime
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
 
-# ── Publication-quality Matplotlib settings ──────────────────────────────
+from style import (COLORS_INDEXED, LINE_STYLES, MARKERS,
+                   MARK_EVERY_FRAC, FILL_ALPHA, ENV_TITLES, style_axis)
+# style.py auto-applies rcParams on import
 
-plt.rcParams["figure.dpi"] = 150
-plt.rcParams["savefig.dpi"] = 300
-plt.rcParams["font.family"] = "serif"
-plt.rcParams["font.serif"] = ["Times New Roman", "DejaVu Serif"]
-plt.rcParams["font.size"] = 11
-plt.rcParams["axes.labelsize"] = 12
-plt.rcParams["axes.titlesize"] = 14
-plt.rcParams["legend.fontsize"] = 10
-plt.rcParams["pdf.fonttype"] = 42  # TrueType in PDFs
-
-# ── Style constants ─────────────────────────────────────────────────────
-
-COLORS = sns.color_palette("tab10", n_colors=10)
-LINE_STYLES = ["-", "--", "-.", ":", "-", "--", "-.", ":", "-", "--"]
-MARKERS = ["o", "s", "^", "D", "v", "P", "X", "*", "h", "<"]
-MARK_EVERY_FRAC = 0.08  # ~12 markers per curve
 FILL_FACTOR = 0.5       # band width: mean +/- 0.5 * std
-FILL_ALPHA = 0.12
-
-ENV_TITLES = {
-    "evcharging": "EVCharging-v0",
-    "building": "Building-v0",
-    "cogen": "Cogen-v0",
-}
 
 # ── Configuration: (csv_path, label) tuples per environment ─────────────
 # Update these paths after each training run on ARC.
@@ -154,23 +132,24 @@ for i, (csv_path, label) in enumerate(entries):
     n_rows = len(df)
     mark_every = max(1, int(n_rows * MARK_EVERY_FRAC))
 
-    color = COLORS[i % len(COLORS)]
+    color = COLORS_INDEXED[i % len(COLORS_INDEXED)]
     marker = MARKERS[i % len(MARKERS)]
     ls = LINE_STYLES[i % len(LINE_STYLES)]
 
     ax.plot(x, mean, label=label, color=color, linestyle=ls,
             linewidth=1.8, marker=marker, markersize=4,
-            markevery=mark_every, markeredgewidth=0.5)
+            markevery=mark_every, markeredgewidth=0.5,
+            markeredgecolor="white")
     ax.fill_between(x, mean - FILL_FACTOR * std, mean + FILL_FACTOR * std,
                     alpha=FILL_ALPHA, color=color)
 
 # ── Styling ─────────────────────────────────────────────────────────────
 
-ax.set_title(ENV_TITLES[args.env], fontsize=16, weight="bold")
+ax.set_title(ENV_TITLES[args.env])
 ax.set_xlabel("Training Iteration")
 ax.set_ylabel("Mean Episode Reward")
-ax.grid(True, alpha=0.3, linestyle="--")
-ax.legend(loc="lower right", frameon=True, shadow=True, fancybox=True)
+style_axis(ax)
+ax.legend(loc="lower right", frameon=True)
 
 if args.ylim:
     ax.set_ylim(args.ylim)

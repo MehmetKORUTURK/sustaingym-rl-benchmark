@@ -6,7 +6,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO_ROOT))
 
 env = sys.argv[1] if len(sys.argv) > 1 else None
-root = _REPO_ROOT / "runs"
+root = _REPO_ROOT / "logs_saferl_train"
 
 search_dirs = []
 if env:
