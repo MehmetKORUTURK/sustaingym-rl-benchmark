@@ -149,9 +149,10 @@ class SustaingymBuildingCMDP(CMDP):
         self._action_space = self._env.action_space
         self._observation_space = self._env.observation_space
 
+    _DEADBAND = 1.0  # °C — temp errors below this are "free"
+
     def reset(self, seed=None, options=None):
         obs, info = self._env.reset(seed=seed, options=options)
-        self._prev_action = np.zeros(self._action_space.shape, dtype=np.float32)
         return torch.as_tensor(obs, dtype=torch.float32, device=self._device), info
 
     @property
@@ -170,13 +171,14 @@ class SustaingymBuildingCMDP(CMDP):
     def step(self, action):
         act_np = action.detach().cpu().numpy()
         obs, reward, terminated, truncated, info = self._env.step(act_np)
-        # Cost = mean HVAC ramping (action change rate) across AC-enabled zones
-        # Fully orthogonal to reward: reward measures energy + comfort,
-        # but CMDP cost penalizes rapid HVAC switching (equipment wear)
-        ramp = np.abs(act_np - self._prev_action) * self._env.ac_map
+        # Cost = mean deadband temperature violation across AC-enabled zones
+        # Only temp errors > DEADBAND (1°C) count as violations.
+        # Orthogonal to reward: reward penalizes ALL temp error + energy,
+        # CMDP cost enforces a hard comfort boundary (no zone > 1°C from target)
+        temp_error = np.abs(self._env.X_new - self._env.target) * self._env.ac_map
+        violation = np.maximum(0.0, temp_error - self._DEADBAND)
         num_zones = max(1, int(self._env.ac_map.sum()))
-        cost = float(ramp.sum() / num_zones) * COST_SCALE
-        self._prev_action = act_np.copy()
+        cost = float(violation.sum() / num_zones) * COST_SCALE
         obs, reward, cost, terminated, truncated = (
             torch.as_tensor(x, dtype=torch.float32, device=self._device)
             for x in (obs, reward, cost, terminated, truncated))
@@ -250,7 +252,7 @@ ENV_ID_MAP = {
 env_id = ENV_ID_MAP[args.env]
 noise_str = f"DS_{args.noise}_DA_{args.noise_act}_DE_{args.noise_env}"
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-log_dir = os.path.join("runs", f"omnisafe_{args.env}", f"{timestamp}_{args.algo}_CL_{args.climit}")
+log_dir = os.path.join("logs_saferl_train", f"omnisafe_{args.env}", f"{timestamp}_{args.algo}_CL_{args.climit}")
 
 print(f"[SafeRL] env={args.env}  algo={args.algo}  noise={noise_str}  "
       f"cost_limit={args.climit}  cost_scale={COST_SCALE}  "

@@ -1,0 +1,957 @@
+% ============================================================
+% Chapter 4: Methodology — The SustainRL-Bench Framework
+% ============================================================
+\chapter{Methodology --- The SustainRL-Bench Framework}
+\label{ch:methodology}
+
+This chapter presents the core technical contribution of this thesis: the SustainRL-Bench framework for comprehensive RL benchmarking across sustainable energy environments. We begin with a framework overview (\Cref{sec:framework}), then describe each environment in detail (\Cref{sec:environments}), present the noise injection framework (\Cref{sec:noise_framework}), safe RL formulations (\Cref{sec:safe_rl}), multi-agent decompositions (\Cref{sec:marl_formulation}), and the experimental design (\Cref{sec:experimental_design}).
+
+% ============================================================
+\section{Framework Overview}
+\label{sec:framework}
+
+SustainRL-Bench is a unified benchmarking framework that evaluates reinforcement learning algorithms across three axes---noise robustness, safety constraints, and multi-agent coordination---on three sustainable energy environments. The framework is built on top of the SustainGym environment suite~\citep{yeh2023sustaingym} and integrates three RL frameworks:
+
+\begin{enumerate}
+    \item \textbf{Stable-Baselines3 (SB3)} for single-agent standard RL (PPO, SAC, TD3),
+    \item \textbf{OmniSafe}~\citep{ji2023omnisafe} for safe RL via Constrained MDPs (OnCRPO, CPO, PPO-Lagrangian), and
+    \item \textbf{Ray RLlib}~\citep{liang2018rllib} with \textbf{PettingZoo}~\citep{terry2021pettingzoo} for multi-agent RL (MAPPO, MASAC, APPO).
+\end{enumerate}
+
+The framework architecture consists of four layers:
+
+\begin{description}
+    \item[Environment Layer.] Provides the three SustainGym environments (EVChargingEnv, BuildingEnv, CogenEnv via MyCogenEnv wrapper), each implementing the Gymnasium interface with configurable noise parameters.
+
+    \item[Noise Injection Layer.] Implements three independent noise channels---observation noise (sensor uncertainty), action noise (actuator imprecision), and environment noise (stochastic dynamics)---that can be activated individually or in combination.
+
+    \item[Training Layer.] Integrates the three RL frameworks: SB3 for standard single-agent RL, OmniSafe for CMDP-based safe RL, and Ray RLlib for multi-agent RL with PettingZoo environments.
+
+    \item[Evaluation Layer.] Performs statistical analysis following~\citet{agarwal2021deep}, computing interquartile mean (IQM) with stratified bootstrap 95\% confidence intervals, normalized performance metrics, and cross-environment comparisons.
+\end{description}
+
+\textbf{[Figure~4.1: SustainRL-Bench framework architecture diagram showing the four-layer design with data flow between layers.]}
+
+% ============================================================
+\section{Environment Descriptions and System Models}
+\label{sec:environments}
+
+% ------------------------------------------------------------
+\subsection{Electric Vehicle Charging Environment}
+\label{sec:ev_env}
+
+The EV charging environment simulates a real-world charging network based on the Adaptive Charging Network (ACN) at Caltech. The environment models a 24-hour day of charging operations across $n = 54$ Electric Vehicle Supply Equipment (EVSE) stations.
+
+\subsubsection{Physical Model}
+
+The environment is built on the ACN-Sim simulator, which models the electrical characteristics of a Level~2 AC charging network. Each EVSE station $i \in [n]$ has a maximum pilot signal capacity of $\bar{I} = 32$ Amperes at voltage $V = 208$ Volts.
+
+\paragraph{Charging dynamics.} At each timestep $t$, the actual charging rate for station $i$ depends on the pilot signal $I_i^{\text{pilot}}(t)$ and the vehicle's Battery Management System (BMS):
+\begin{equation}
+    I_i^{\text{actual}}(t) = \min\!\left(I_i^{\text{pilot}}(t), \, I_i^{\text{BMS}}(t)\right),
+    \label{eq:ev_bms}
+\end{equation}
+where $I_i^{\text{BMS}}(t)$ is the maximum charging rate accepted by the vehicle's BMS at time $t$. The energy delivered in one timestep ($\Delta t = 5$ minutes) is:
+\begin{equation}
+    E_i(t) = I_i^{\text{actual}}(t) \cdot V \cdot \frac{\Delta t}{60} \cdot \frac{1}{1000} = I_i^{\text{actual}}(t) \cdot \underbrace{0.01733}_{\kappa_E} \; \text{kWh}.
+    \label{eq:ev_energy}
+\end{equation}
+
+\paragraph{Network constraints.} The charging network has capacity constraints arising from the electrical infrastructure (transformers, switchgear, wiring). These constraints are expressed as:
+\begin{equation}
+    \left|\tilde{A} \cdot \mathbf{I}^{\text{pilot}}(t)\right| \leq \mathbf{m},
+    \label{eq:ev_network}
+\end{equation}
+where $\tilde{A} \in \mathbb{C}^{p \times n}$ is the constraint matrix encoding the network topology, with $\tilde{A}_{jk} = A_{jk} e^{j\phi_{jk}}$ incorporating complex phase angles for three-phase AC networks, $\mathbf{I}^{\text{pilot}}(t) \in \R^n$ is the vector of pilot signals (scaled to Amperes), and $\mathbf{m} \in \R^p$ is the vector of magnitude constraints (branch current limits).
+
+\paragraph{Data generation.} Vehicle arrivals, departures, and energy demands are generated using a Gaussian Mixture Model (GMM) trained on real ACN-Data from the Caltech site~\citep{lee2021acndata}. The Marginal Operating Emission Rate (MOER), representing the carbon intensity of marginal electricity generation, is obtained from WattTime and included as a 36-step forecast in the observations.
+
+\subsubsection{Observation Space}
+
+The observation space is a dictionary with the following components:
+\begin{equation}
+    \calO_{\text{EV}} = \left\{
+    \begin{array}{rl}
+    \texttt{timestep} & \in [0,1]^1 \quad \text{(fraction of day)} \\
+    \texttt{est\_departures} & \in [-288, 288]^n \quad \text{(periods until departure)} \\
+    \texttt{demands} & \in [0, \bar{E}]^n \quad \text{(remaining energy demand, kWh)} \\
+    \texttt{prev\_moer} & \in [0,1]^1 \quad \text{(current carbon intensity)} \\
+    \texttt{forecasted\_moer} & \in [0,1]^{k} \quad \text{(MOER forecast, } k = 36\text{)}
+    \end{array}\right.
+    \label{eq:ev_obs}
+\end{equation}
+with total dimension $|\calO| = 1 + n + n + 1 + k = 2n + k + 2 = 146$ (for $n=54, k=36$).
+
+The \texttt{est\_departures} component encodes estimated time until departure: positive values indicate the vehicle is still present, negative values indicate the vehicle has not yet arrived, and zero indicates no vehicle is connected. The \texttt{demands} component represents the remaining energy demand in kWh for each connected vehicle, decreasing as charging progresses.
+
+For safe RL compatibility with OmniSafe, the dictionary observation is flattened into a single Box: $\tilde{o} = \text{concat}(\texttt{timestep}, \texttt{est\_departures}, \texttt{demands}, \texttt{prev\_moer}, \texttt{forecasted\_moer}) \in \R^{2n+k+2}$.
+
+\subsubsection{Action Space and Network Constraint Projection}
+
+The action space is a continuous Box:
+\begin{equation}
+    \calA = [0, 1]^n,
+\end{equation}
+where $a_i \in [0, 1]$ is the normalized pilot signal for station $i$. The actual pilot signal in Amperes is $I_i^{\text{pilot}} = a_i \cdot \bar{I} = 32 a_i$.
+
+\paragraph{Action projection.} When \texttt{project\_action\_in\_env=True}, the environment projects the agent's action onto the feasible set defined by network constraints and demand limits. The projection is formulated as a convex optimization problem:
+\begin{equation}
+    \begin{aligned}
+    \mathbf{a}^{\text{proj}} = \argmin_{\mathbf{x}} \quad & \|\mathbf{x} - \mathbf{a}\|_2^2 \\
+    \text{s.t.} \quad & 0 \leq x_i \leq \min\!\left(1, \, \tfrac{d_i}{\bar{I} \cdot \kappa_E}\right), \; \forall i \in [n] \\
+    & \left|\tilde{A} \cdot (\bar{I} \cdot \mathbf{x})\right| \leq \mathbf{m}
+    \end{aligned}
+    \label{eq:ev_projection}
+\end{equation}
+where $d_i$ is the remaining demand for station $i$ and $\kappa_E = \bar{I} \cdot V \cdot \Delta t / (60 \cdot 1000) = 0.01733$ kWh is the energy per Ampere per period. This quadratic program is solved using CVXPY with the MOSEK solver at each timestep.
+
+\subsubsection{Reward Formulation}
+
+The per-timestep reward consists of three components:
+\begin{equation}
+    r_t = r_t^{\text{profit}} - r_t^{\text{carbon}} - r_t^{\text{violation}},
+    \label{eq:ev_reward}
+\end{equation}
+where:
+
+\paragraph{Profit component:}
+\begin{equation}
+    r_t^{\text{profit}} = \kappa_{\text{profit}} \cdot \sum_{i=1}^{n} I_i^{\text{actual}}(t),
+\end{equation}
+with $\kappa_{\text{profit}} = \kappa_E \cdot p_{\text{margin}} = 0.01733 \times 0.03 = 5.2 \times 10^{-4}$~\$/A/period, where $p_{\text{margin}} = p_{\text{revenue}} \cdot m_{\text{operating}} = 0.15 \times 0.20 = 0.03$~\$/kWh is the marginal profit.
+
+\paragraph{Carbon cost component:}
+\begin{equation}
+    r_t^{\text{carbon}} = \kappa_{\text{carbon}} \cdot \sum_{i=1}^{n} I_i^{\text{actual}}(t) \cdot \tilde{m}_t,
+\end{equation}
+with $\kappa_{\text{carbon}} = \kappa_E \cdot p_{\text{CO}_2} = 0.01733 \times (30.85/1000) = 5.345 \times 10^{-4}$ (in scaled units), where $p_{\text{CO}_2} = 30.85$~\$/metric ton CO$_2$, and $\tilde{m}_t$ is the (potentially noisy) MOER value at timestep $t$.
+
+\paragraph{Violation penalty:}
+\begin{equation}
+    r_t^{\text{violation}} = \kappa_{\text{viol}} \cdot \sum_{j=1}^{p} \max\!\left(0, \, \left|[\tilde{A} \cdot (\bar{I} \cdot \mathbf{a})]_j\right| - m_j\right),
+\end{equation}
+with $\kappa_{\text{viol}} = \kappa_E \cdot p_{\text{viol}} = 0.01733 \times 0.001 = 1.733 \times 10^{-5}$~\$/A/period.
+
+The episode return is $R = \sum_{t=0}^{287} r_t$, representing the net profit over a 24-hour period.
+
+% ------------------------------------------------------------
+\subsection{Building HVAC Environment}
+\label{sec:building_env}
+
+The building environment simulates HVAC control in a multi-zone commercial building based on the ASHRAE 90.1-2019 OfficeSmall prototype with a Hot\_Dry weather profile (Tucson, AZ).
+
+\subsubsection{RC Thermal Model}
+
+The building thermal dynamics are modeled using a resistance-capacitance (RC) network, which is a lumped-parameter approximation of the heat transfer equations. The continuous-time dynamics are:
+\begin{equation}
+    C \, \dot{T}(t) = A_c \, T(t) + B_c \, u(t) + D_c \, w(t),
+    \label{eq:building_continuous}
+\end{equation}
+where $T(t) \in \R^n$ is the vector of zone temperatures, $u(t) \in \R^n$ is the HVAC control input vector, $w(t)$ is the disturbance vector (outdoor temperature, ground temperature, solar irradiance, occupancy heat), $C \in \R^{n \times n}$ is the thermal capacitance matrix, $A_c \in \R^{n \times n}$ is the thermal conductance matrix, $B_c$ maps control inputs to temperature changes, and $D_c$ maps disturbances to temperature changes.
+
+\paragraph{Discretization.} The continuous-time system is discretized using the Zero-Order Hold (ZOH) method with time step $\Delta t = 300$ seconds (5 minutes):
+\begin{equation}
+    T[k+1] = A_d \, T[k] + B_{D,d} \, Y[k],
+    \label{eq:building_dynamics}
+\end{equation}
+where:
+\begin{equation}
+    A_d = \exp(A \cdot \Delta t), \quad B_{D,d} = A^{-1}(A_d - I)[D \,|\, B],
+    \label{eq:building_discretization}
+\end{equation}
+$A = C^{-1} A_c$ is the system matrix, and $Y[k]$ is the augmented input vector:
+\begin{equation}
+    Y[k] = [Q_{\text{occ}}(k), \, T_{\text{ground}}(k), \, T_{\text{outdoor}}(k), \, u_1(k), \ldots, u_n(k), \, G_{\text{solar}}(k)]^\top.
+    \label{eq:building_input}
+\end{equation}
+
+\paragraph{Occupancy sensible heat.} The internal heat gain from occupants is modeled using an 8-coefficient polynomial derived from the EnergyPlus Engineering Reference (v23.1, p.1299):
+\begin{equation}
+    Q_{\text{occ}}(T, M) = c_0 + c_1 M + c_2 M^2 - c_3 T M + c_4 T M^2 - c_5 T^2 + c_6 T^2 M - c_7 T^2 M^2,
+    \label{eq:occupancy}
+\end{equation}
+where $T$ is the average zone temperature (\degree C), $M$ is the metabolic rate, and the coefficients are:
+\begin{equation}
+    \mathbf{c} = [6.462, \, 0.947, \, 2.557{\times}10^{-5}, \, 0.063, \, 5.892{\times}10^{-5}, \, 0.199, \, 9.400{\times}10^{-4}, \, 1.495{\times}10^{-6}].
+\end{equation}
+This nonlinear function captures the fact that occupant heat output depends on both the ambient temperature and the activity level.
+
+\textbf{[Figure~4.2: RC thermal network diagram showing zones, thermal resistances, capacitances, HVAC inputs, and external disturbances.]}
+
+\subsubsection{Observation Space}
+
+The observation space is a flat continuous Box:
+\begin{equation}
+    \calO_{\text{Bldg}} = \R^{n+4},
+\end{equation}
+with components:
+\begin{equation}
+    o = [T_1, \ldots, T_n, \, T_{\text{outdoor}}, \, T_{\text{ground}}, \, G_{\text{solar}}, \, Q_{\text{occ}}],
+    \label{eq:building_obs}
+\end{equation}
+where $T_i \in [T_{\min}, T_{\max}]$ are zone temperatures (\degree C), $T_{\text{outdoor}}$ is the outdoor air temperature, $T_{\text{ground}}$ is the ground temperature, $G_{\text{solar}} \in [0, 1000]$ is the global horizontal irradiance (W/m$^2$), and $Q_{\text{occ}} \in [0, 1000]$ is the occupancy power (W).
+
+\subsubsection{Action Space}
+
+The action space is continuous:
+\begin{equation}
+    \calA = \prod_{i=1}^{n} [-\text{ac}_i, \, \text{ac}_i],
+\end{equation}
+where $\text{ac}_i \in \{0,1\}$ is the air conditioning availability map for zone $i$. Zones without AC ($\text{ac}_i = 0$) have fixed zero action. For zones with AC ($\text{ac}_i = 1$), $a_i \in [-1, 1]$ where:
+\begin{itemize}
+    \item $a_i = -1$: maximum cooling,
+    \item $a_i = 0$: no HVAC activity,
+    \item $a_i = +1$: maximum heating.
+\end{itemize}
+The actual HVAC power for zone $i$ is $P_i = a_i \cdot P_{\max,i}$, where $P_{\max,i}$ is the maximum HVAC capacity for zone $i$.
+
+\subsubsection{Reward Formulation}
+
+The reward function encodes the tradeoff between energy consumption and thermal comfort:
+\begin{equation}
+    r = -\left(q_{\text{rate}} \cdot \frac{\|\mathbf{a}\|_p}{M_{\text{ac}}^{1/p}} + e_{\text{rate}} \cdot \frac{\|\mathbf{e}_{\text{pen}}\|_p}{M_{\text{ac}}^{1/p}}\right),
+    \label{eq:building_reward}
+\end{equation}
+where:
+\begin{itemize}
+    \item $q_{\text{rate}} = (1 - \beta) \cdot 24$ is the energy penalty weight,
+    \item $e_{\text{rate}} = \beta$ is the comfort penalty weight,
+    \item $\beta \in [0, 1]$ is the comfort-energy tradeoff parameter (default $\beta = 0.5$),
+    \item $p$ is the norm order (default $p = 2$),
+    \item $M_{\text{ac}} = \sum_{i=1}^{n} \text{ac}_i$ is the number of AC-enabled zones,
+    \item $\mathbf{e}_{\text{pen}}$ is the vector of penalized temperature errors.
+\end{itemize}
+
+The penalized temperature error for zone $i$ is:
+\begin{equation}
+    e_{\text{pen},i} = \begin{cases}
+    \max(|T_i - T_i^*| - \delta, \, 0) \cdot \text{ac}_i & \text{if } \delta > 0 \text{ (deadband)} \\
+    |T_i - T_i^*| \cdot \text{ac}_i & \text{otherwise}
+    \end{cases}
+    \label{eq:temp_error}
+\end{equation}
+where $T_i^*$ is the temperature setpoint for zone $i$ and $\delta$ is the deadband width (\degree C).
+
+\paragraph{Reward normalization.} With \texttt{normalize\_reward=True}, the reward is normalized to $[-1, 0]$:
+\begin{equation}
+    r_{\text{norm}} = \clip\!\left(\frac{r}{q_{\text{rate}} \cdot 1.0 + e_{\text{rate}} \cdot 2.0}, \, -1, \, 0\right),
+    \label{eq:building_reward_norm}
+\end{equation}
+where the denominator represents the worst-case scenario (maximum action magnitude of 1.0 and maximum temperature error of 2.0\degree C).
+
+% ------------------------------------------------------------
+\subsection{Cogeneration Plant Environment}
+\label{sec:cogen_env}
+
+The cogeneration environment simulates a combined heat and power (CHP) facility with three gas turbines, three heat recovery steam generators, a steam turbine, a condenser, and a cooling tower system.
+
+\subsubsection{ONNX Surrogate Model}
+
+The plant dynamics are captured by an ONNX (Open Neural Network Exchange) surrogate model trained on operational data. Given control inputs $\mathbf{u}(t)$ and ambient conditions $\mathbf{w}(t)$, the model predicts plant outputs:
+\begin{equation}
+    \mathbf{y}(t) = f_{\text{ONNX}}(\mathbf{u}(t), \mathbf{w}(t)),
+    \label{eq:cogen_onnx}
+\end{equation}
+where $\mathbf{y}(t)$ includes power generation (MW), steam production (klb/hr), fuel consumption (MMBtu/hr), and various plant state variables.
+
+\begin{remark}
+The ONNX model is loaded lazily during \texttt{reset()} rather than \texttt{\_\_init\_\_()} because ONNX runtime sessions cannot be serialized (pickled) across Ray worker processes. This design decision is critical for multi-agent training with Ray RLlib.
+\end{remark}
+
+\subsubsection{Observation Space}
+
+The raw observation is a dictionary with forecast information:
+\begin{equation}
+    \calO_{\text{Cogen}} = \left\{
+    \begin{array}{rl}
+    \texttt{Time} & \in \R^{h+1} \\
+    \texttt{TAMB} & \in \R^{h+1} \quad \text{(ambient temperature, \degree F)} \\
+    \texttt{PAMB} & \in \R^{h+1} \quad \text{(ambient pressure, psia)} \\
+    \texttt{RHAMB} & \in \R^{h+1} \quad \text{(relative humidity)} \\
+    \texttt{Target\_Power} & \in \R^{h+1} \quad \text{(MW demand)} \\
+    \texttt{Target\_Steam} & \in \R^{h+1} \quad \text{(klb/hr steam demand)} \\
+    \texttt{Energy\_Price} & \in \R^{h+1} \quad \text{(\$/MWh)} \\
+    \texttt{Gas\_Price} & \in \R^{h+1} \quad \text{(\$/MMBtu)} \\
+    \texttt{Prev\_Action}^* & \in \R^{15} \quad \text{(previous control settings)}
+    \end{array}\right.
+    \label{eq:cogen_obs}
+\end{equation}
+where $h = 12$ is the default forecast horizon. The MyCogenEnv wrapper flattens the \texttt{Prev\_Action} dictionary into top-level keys (e.g., \texttt{GT1\_PWR}, \texttt{GT2\_PWR}, etc.), resulting in a flat dictionary with $8 \times (h+1) + 15 = 119$ total observation dimensions.
+
+For safe RL, the entire dictionary is further flattened into a single Box: $\tilde{o} \in \R^{119}$.
+
+\subsubsection{Action Space}
+
+The original CogenEnv uses a heterogeneous dictionary action space with 15 keys:
+
+\begin{table}[htbp]
+\centering
+\caption{Cogeneration action space components.}
+\label{tab:cogen_actions}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Key} & \textbf{Type} & \textbf{Range} & \textbf{Description} \\
+\midrule
+GT$k$\_PWR ($k\!=\!1,2,3$) & Box(1) & Continuous & Gas turbine $k$ power setpoint \\
+GT$k$\_PAC\_FFU ($k\!=\!1,2,3$) & Box(1) & Continuous & Inlet air cooling fuel valve \\
+GT$k$\_EVC\_FFU ($k\!=\!1,2,3$) & Box(1) & Continuous & Evaporative cooler fuel valve \\
+HR$k$\_HPIP\_M ($k\!=\!1,2,3$) & Box(1) & Continuous & HP/IP steam extraction valve \\
+ST\_PWR & Box(1) & Continuous & Steam turbine power setpoint \\
+IPPROC\_M & Box(1) & Continuous & IP process steam extraction \\
+CT\_NrBays & Discrete(12, start=1) & $\{1, \ldots, 12\}$ & Cooling tower active bays \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The MyCogenEnv wrapper flattens this into a single continuous Box: $\calA = \R^{15}$. For discrete actions, the continuous value is decoded via rounding and clipping:
+\begin{equation}
+    a_{\text{discrete}} = \clip\!\left(\rint(a_{\text{continuous}}), \, s, \, s{+}n{-}1\right),
+    \label{eq:discrete_decode}
+\end{equation}
+where $s$ is the start value and $n$ is the number of discrete choices.
+
+\begin{remark}[Discrete Action Decoding]
+Using \texttt{round()} (i.e., $\rint$) instead of \texttt{int()} (truncation) is critical to avoid systematic bias. For example, for Discrete(2) with values $\{0, 1\}$: $\texttt{int}(0.92) = 0$ (incorrect) vs.\ $\rint(0.92) = 1$ (correct). Truncation introduces a systematic downward bias that significantly degrades cogeneration performance.
+\end{remark}
+
+\subsubsection{Reward Formulation}
+
+The raw CogenEnv reward consists of four penalty components:
+\begin{equation}
+    r_{\text{raw}} = -\left(C_{\text{fuel}}(\mathbf{u}, \mathbf{w}) + C_{\text{ramp}}(\mathbf{u}, \mathbf{u}_{-1}) + C_{\text{nondeliv}}(\mathbf{y}, \mathbf{d}) + C_{\text{cv}}(\mathbf{y})\right),
+    \label{eq:cogen_reward_raw}
+\end{equation}
+where:
+\begin{itemize}
+    \item $C_{\text{fuel}}$ is the total fuel cost for all turbines,
+    \item $C_{\text{ramp}}$ penalizes rapid changes in control settings between consecutive timesteps,
+    \item $C_{\text{nondeliv}}$ penalizes shortfalls in meeting power and steam demand targets, and
+    \item $C_{\text{cv}}$ penalizes violations of dynamic operational constraints (e.g., temperature limits, pressure limits).
+\end{itemize}
+
+The raw reward is on the order of $10^7$ due to the physical units. The MyCogenEnv wrapper scales the reward for training stability:
+\begin{equation}
+    r = \frac{r_{\text{raw}}}{R_{\text{scale}}}, \quad R_{\text{scale}} = 10^7.
+    \label{eq:cogen_reward}
+\end{equation}
+This scaling brings the reward to the approximate range $[-5, 0]$, which is compatible with standard RL algorithm hyperparameters.
+
+% ============================================================
+\section{Noise Injection Framework}
+\label{sec:noise_framework}
+
+A central contribution of SustainRL-Bench is the systematic noise injection framework that enables controlled evaluation of RL algorithm robustness. This section describes the noise injection mechanisms for each environment across three independent channels.
+
+% ------------------------------------------------------------
+\subsection{Observation Noise}
+\label{sec:obs_noise}
+
+Observation noise simulates sensor degradation, measurement uncertainty, and communication errors. The noise is injected after the environment computes the true state and before the agent receives the observation.
+
+\paragraph{EV Charging observation noise.} Different observation components have distinct noise characteristics, reflecting the physical nature of each measurement:
+\begin{align}
+    \tilde{o}_{\text{moer}} &= \clip(o_{\text{moer}} + \epsilon_1, 0, 1), & \epsilon_1 &\sim \mathcal{N}(0, \sigma_{\text{obs}}^2), \label{eq:ev_obs_moer} \\
+    \tilde{o}_{\text{dep},i} &= \clip(o_{\text{dep},i} + \epsilon_2, -288, 288), & \epsilon_2 &\sim \mathcal{N}(0, (50\sigma_{\text{obs}})^2), \label{eq:ev_obs_dep} \\
+    \tilde{o}_{\text{dem},i} &= o_{\text{dem},i} \cdot \clip(1 + \epsilon_3, 0.5, 1.5), & \epsilon_3 &\sim \mathcal{N}(0, \sigma_{\text{obs}}^2), \label{eq:ev_obs_dem} \\
+    \tilde{o}_{\text{fmoer}} &= \clip(o_{\text{fmoer}} + \epsilon_4, 0, 1), & \epsilon_4 &\sim \mathcal{N}(0, \sigma_{\text{obs}}^2). \label{eq:ev_obs_fmoer}
+\end{align}
+
+The departure time noise has a scaling factor of 50 relative to the base noise level, reflecting the higher uncertainty in predicting when vehicles will depart. Energy demand noise is multiplicative and clipped to $[0.5, 1.5]$ of the true value to prevent negative or excessively large demands.
+
+\begin{remark}[Implementation Detail]
+Deep copies of the observation arrays are created before noise injection to avoid mutating the environment's internal state, which would corrupt future computations.
+\end{remark}
+
+\paragraph{Building observation noise.} The building environment uses proportional Gaussian noise:
+\begin{equation}
+    \tilde{o} = \clip\!\left(o + \epsilon, o_{\min}, o_{\max}\right), \quad \epsilon \sim \mathcal{N}(0, \sigma_{\text{obs}}^2 |o|^2),
+    \label{eq:bldg_obs_noise}
+\end{equation}
+where the noise standard deviation scales with the absolute value of each observation component. This proportional model is physically appropriate because sensor accuracy is typically specified as a percentage of reading.
+
+\paragraph{Cogeneration observation noise.} The cogeneration environment uses a more detailed noise model with component-specific noise ratios:
+\begin{align}
+    \tilde{o}_{\text{amb},0} &= o_{\text{amb},0} + \mathcal{N}(0, (0.02\sigma_{\text{obs}} |o_{\text{amb},0}|)^2), \label{eq:cogen_obs_amb0} \\
+    \tilde{o}_{\text{amb},i} &= o_{\text{amb},i} + \mathcal{N}(0, (0.05\sigma_{\text{obs}} (1{+}0.2(i{-}1)) |o_{\text{amb},i}|)^2), \; i \geq 1, \label{eq:cogen_obs_ambi} \\
+    \tilde{o}_{\text{target}} &= o_{\text{target}} + \mathcal{N}(0, (0.01\sigma_{\text{obs}} |o_{\text{target}}|)^2), \label{eq:cogen_obs_target} \\
+    \tilde{o}_{\text{price}} &= o_{\text{price}} + \mathcal{N}(0, (0.03\sigma_{\text{obs}} |o_{\text{price}}|)^2). \label{eq:cogen_obs_price}
+\end{align}
+
+The noise ratios (0.02, 0.05, 0.01, 0.03) reflect the relative accuracy of different sensor types: ambient sensors are moderately noisy, forecasts become noisier with horizon (the factor $1 + 0.2(i-1)$ increases noise linearly with forecast step), demand targets are relatively precise, and market prices have moderate uncertainty.
+
+% ------------------------------------------------------------
+\subsection{Action Noise}
+\label{sec:act_noise}
+
+Action noise simulates actuator imprecision and control signal corruption. The noise is injected after the agent outputs an action and before the environment processes it.
+
+\paragraph{EV Charging action noise.} Additive Gaussian noise:
+\begin{equation}
+    \tilde{a}_i(t) = \clip\!\left(a_i(t) + \epsilon_i, \, 0, \, 1\right), \quad \epsilon_i \sim \mathcal{N}(0, \sigma_{\text{act}}^2).
+    \label{eq:ev_act_noise}
+\end{equation}
+
+\paragraph{Building action noise.} Multiplicative Gaussian noise (proportional to action magnitude):
+\begin{equation}
+    \tilde{a}_i(t) = \clip\!\left(a_i(t) + a_i(t) \cdot \epsilon_i, \, -1, \, 1\right), \quad \epsilon_i \sim \mathcal{N}(0, \sigma_{\text{act}}^2).
+    \label{eq:bldg_act_noise}
+\end{equation}
+
+\paragraph{Cogeneration action noise.} Mixed continuous-discrete noise model:
+
+For continuous sub-actions:
+\begin{equation}
+    \tilde{a}_j(t) = \clip\!\left(a_j(t) + a_j(t) \cdot \epsilon_j, \, a_j^{\min}, \, a_j^{\max}\right), \quad \epsilon_j \sim \mathcal{N}(0, \sigma_{\text{act}}^2).
+    \label{eq:cogen_act_cont}
+\end{equation}
+
+For discrete sub-actions (Bernoulli flip):
+\begin{equation}
+    \tilde{a}_j(t) = \begin{cases}
+    1 - a_j(t) & \text{w.p.\ } \sigma_{\text{act}}, \quad \text{if } a_j \in \{0, 1\} \\
+    \clip(a_j(t) + U(\{-1, +1\}), \, s, \, s{+}n{-}1) & \text{w.p.\ } \sigma_{\text{act}}, \quad \text{if } |A_j| > 2 \\
+    a_j(t) & \text{otherwise}
+    \end{cases}
+    \label{eq:cogen_act_disc}
+\end{equation}
+This mixed model reflects the different physical characteristics of continuous valve positions versus discrete operating mode selections.
+
+% ------------------------------------------------------------
+\subsection{Environment Noise}
+\label{sec:env_noise}
+
+Environment noise simulates stochastic perturbations in the physical dynamics that are not directly observable to the agent.
+
+\paragraph{EV Charging environment noise.} The MOER value used in the carbon cost component of the reward is perturbed:
+\begin{equation}
+    \tilde{m}_t = \clip\!\left(m_t + \epsilon, \, 0, \, 1\right), \quad \epsilon \sim \mathcal{N}(0, \sigma_{\text{env}}^2).
+    \label{eq:ev_env_noise}
+\end{equation}
+This models uncertainty in the carbon intensity of marginal electricity generation.
+
+\paragraph{Building environment noise.} Weather parameters fed to the RC thermal model are perturbed:
+\begin{align}
+    \tilde{T}_{\text{out}} &= T_{\text{out}} + \mathcal{N}(0, (1.0 \cdot \sigma_{\text{env}})^2), \label{eq:bldg_env_tout} \\
+    \tilde{T}_{\text{ground}} &= T_{\text{ground}} + \mathcal{N}(0, (0.5 \cdot \sigma_{\text{env}})^2), \label{eq:bldg_env_tgnd} \\
+    \tilde{G}_{\text{solar}} &= \max(0, \, G_{\text{solar}} + \mathcal{N}(0, (50 \cdot \sigma_{\text{env}})^2)). \label{eq:bldg_env_solar}
+\end{align}
+The scaling factors (1.0, 0.5, 50.0) reflect the different physical scales and variabilities of each parameter. Ground temperature is more stable than outdoor temperature, while solar irradiance has the largest absolute variability.
+
+\paragraph{Cogeneration environment noise.} Ambient conditions fed to the ONNX surrogate model are perturbed:
+\begin{align}
+    \tilde{T}_{\text{amb}} &= T_{\text{amb}} + \mathcal{N}(0, (2.0 \cdot \sigma_{\text{env}})^2), \label{eq:cogen_env_tamb} \\
+    \tilde{P}_{\text{amb}} &= P_{\text{amb}} + \mathcal{N}(0, (0.1 \cdot \sigma_{\text{env}})^2), \label{eq:cogen_env_pamb} \\
+    \tilde{H}_{\text{amb}} &= \clip\!\left(H_{\text{amb}} + \mathcal{N}(0, (0.05 \cdot \sigma_{\text{env}})^2), 0, 1\right). \label{eq:cogen_env_hamb}
+\end{align}
+The scaling factors (2.0, 0.1, 0.05) reflect that ambient temperature has the largest variability, ambient pressure is relatively stable, and relative humidity is bounded to $[0, 1]$. These perturbations propagate through the ONNX model, affecting both plant outputs and the reward computation.
+
+% ------------------------------------------------------------
+\subsection{Noise Level Scales}
+\label{sec:noise_levels}
+
+\Cref{tab:noise_levels} summarizes the noise levels tested in each environment across all three channels.
+
+\begin{table}[htbp]
+\centering
+\caption{Noise levels tested for each environment and channel.}
+\label{tab:noise_levels}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Environment} & \textbf{Channel} & \textbf{Parameter} & \textbf{Levels Tested} \\
+\midrule
+EV Charging & Observation & $\sigma_{\text{obs}}$ & 0, 0.01, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.60 \\
+EV Charging & Action & $\sigma_{\text{act}}$ & 0, 0.01, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.60 \\
+EV Charging & Environment & $\sigma_{\text{env}}$ & 0, 0.01, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.60 \\
+\midrule
+Building & Observation & $\sigma_{\text{obs}}$ & 0, 0.01, 0.03, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40 \\
+Building & Action & $\sigma_{\text{act}}$ & 0, 0.01, 0.03, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40 \\
+Building & Environment & $\sigma_{\text{env}}$ & 0, 0.01, 0.03, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40 \\
+\midrule
+Cogeneration & Observation & $\sigma_{\text{obs}}$ & 0, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0 \\
+Cogeneration & Environment & $\sigma_{\text{env}}$ & 0, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The noise scales differ across environments because each environment has different physical units and sensitivities. The cogeneration environment uses larger noise values because the MyCogenEnv wrapper applies internal scaling factors (0.02, 0.05, etc.) that attenuate the base noise level.
+
+% ============================================================
+\section{Safe RL Formulation}
+\label{sec:safe_rl}
+
+% ------------------------------------------------------------
+\subsection{CMDP Wrapping}
+\label{sec:cmdp_wrapping}
+
+Each environment is wrapped as a Constrained MDP by defining an environment-specific cost function $c(s, a) \geq 0$ and a constraint budget $d$. The wrapping follows the OmniSafe framework~\citep{ji2023omnisafe}, which requires environments to return a 6-tuple $(o, r, c, \text{terminated}, \text{truncated}, \text{info})$ at each step.
+
+% ------------------------------------------------------------
+\subsection{Cost Signal Design}
+\label{sec:cost_signals}
+
+A critical design principle for CMDP cost signals is \emph{orthogonality}: the cost function should measure a quantity that the unconstrained reward does not directly optimize, creating a genuine tradeoff between reward maximization and constraint satisfaction. When the cost signal overlaps with the reward (e.g., penalizing the same quantity), the Lagrangian constraint becomes redundant and cost limits fail to differentiate agent behavior. We apply this principle to design environment-specific cost functions below.
+
+\paragraph{EV Charging cost signal.} The cost captures network capacity constraint violations:
+\begin{equation}
+    c_{\text{EV}}(s, a) = \alpha_{\text{EV}} \cdot \Delta r_t^{\text{excess}},
+    \label{eq:ev_cost}
+\end{equation}
+where $\Delta r_t^{\text{excess}}$ is the per-step increment in cumulative excess charge (network constraint violations) from the reward breakdown, and $\alpha_{\text{EV}} = 100$ is the cost scaling factor. This cost is orthogonal to the primary reward components (profit and carbon cost), creating a tradeoff between maximizing charging revenue and respecting network capacity limits.
+
+\paragraph{Building cost signal.} The cost captures thermal comfort deviations:
+\begin{equation}
+    c_{\text{Bldg}}(s, a) = \alpha_{\text{Bldg}} \cdot \frac{1}{|\mathcal{Z}_{\text{AC}}|} \sum_{i \in \mathcal{Z}_{\text{AC}}} |T_i - T_i^*|,
+    \label{eq:bldg_cost}
+\end{equation}
+where $\mathcal{Z}_{\text{AC}}$ is the set of AC-enabled zones, $T_i$ is the current zone temperature, $T_i^*$ is the target temperature, and $\alpha_{\text{Bldg}} = 0.1$. This design creates an orthogonal tradeoff: the reward's energy term ($q_{\text{rate}} \cdot \|a\|_p$) incentivizes reducing HVAC power, while the CMDP cost penalizes the resulting thermal discomfort. Tight cost limits force the agent to maintain comfort at the expense of higher energy use; loose limits allow aggressive energy savings with degraded comfort.
+
+\emph{Design rationale.} An earlier formulation used energy consumption ($c_{\text{power}}$) as the cost signal, but this overlapped with the reward's action magnitude penalty---both measured the same quantity. As a result, the Lagrangian constraint was redundant: all cost limits produced nearly identical behavior because the unconstrained agent already minimized energy through the reward. Switching to temperature error resolved this by introducing a genuine reward-cost tension.
+
+\paragraph{Cogeneration cost signal.} The cost captures turbine ramping stress:
+\begin{equation}
+    c_{\text{Cogen}}(s, a) = \alpha_{\text{Cogen}} \cdot \sum_{g \in \{GT1, GT2, GT3, ST\}} \rho \cdot |P_g^t - P_g^{t-1}|,
+    \label{eq:cogen_cost}
+\end{equation}
+where $\rho = 2$ is the ramp penalty coefficient, $P_g^t$ is the power output of generator $g$ at timestep $t$, and $\alpha_{\text{Cogen}} = 0.005$. This cost measures equipment wear from rapid power output changes, which is orthogonal to the reward: the reward is dominated by fuel costs and supply delivery, while the small $\rho = 2$ ramp penalty in the reward is negligible compared to fuel costs ($\sim\!10^3$) and non-delivery penalties ($\sim\!10^3$). The CMDP constraint forces smooth turbine operation that the unconstrained agent would otherwise ignore.
+
+\emph{Design rationale.} An earlier formulation used dynamic constraint violations ($\sum_v \text{cv}_v$) plus non-delivery cost as the cost signal. However, these penalties are already dominant components of the reward ($\kappa_{\text{cv}} = 1000$, $\kappa_{\text{imbal}} = 1000$), making the cost signal highly correlated with the reward. The unconstrained agent already minimizes these violations, so the CMDP constraint added no additional information.
+
+\Cref{tab:cost_signals} summarizes the final cost signal definitions for each environment.
+
+\begin{table}[htbp]
+\centering
+\caption{Cost signal definitions for each environment. Each cost is designed to be orthogonal to the primary reward objective, creating a genuine tradeoff under CMDP optimization.}
+\label{tab:cost_signals}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Environment} & \textbf{Cost Signal} & \textbf{Scale ($\alpha$)} & \textbf{Physical Meaning} \\
+\midrule
+EV Charging & $\alpha \cdot \Delta r_t^{\text{excess}}$ & 100 & Network capacity violation \\
+Building & $\alpha \cdot \overline{|T - T^*|}$ & 0.1 & Thermal comfort deviation \\
+Cogeneration & $\alpha \cdot \sum_g \rho |P_g^t - P_g^{t-1}|$ & 0.005 & Turbine ramping stress \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ------------------------------------------------------------
+\subsection{OmniSafe Integration}
+\label{sec:omnisafe_integration}
+
+The OmniSafe framework provides a standardized interface for CMDP environments. Each environment is wrapped in a class that extends the OmniSafe CMDP base class:
+
+\begin{algorithm}[htbp]
+\caption{OmniSafe CMDP Environment Wrapper}
+\label{alg:omnisafe_wrapper}
+\begin{algorithmic}[1]
+\Require Underlying SustainGym environment, noise parameters, cost function
+\Statex \textbf{class} SustainGymCMDP extends CMDP:
+\Statex
+\Function{Init}{env\_id, noise, noise\_action, noise\_env}
+    \State Initialize underlying SustainGym environment
+    \State Flatten observation space if needed (\texttt{safe\_rl=True})
+    \State Configure noise injection parameters
+\EndFunction
+\Statex
+\Function{Step}{action}
+    \State $o, r, \text{term}, \text{trunc}, \text{info} \gets \text{env.step}(\text{action})$
+    \State $c \gets \text{compute\_cost}(\text{info})$ \Comment{Environment-specific cost}
+    \State \Return $o, r, c, \text{term}, \text{trunc}, \text{info}$
+\EndFunction
+\Statex
+\Function{Reset}{}
+    \State $o, \text{info} \gets \text{env.reset}()$
+    \State \Return $o, \text{info}$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\Cref{tab:omnisafe_config} summarizes the key OmniSafe configuration parameters for each environment.
+
+\begin{table}[htbp]
+\centering
+\caption{OmniSafe CMDP configuration.}
+\label{tab:omnisafe_config}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Parameter} & \textbf{EV Charging} & \textbf{Building} & \textbf{Cogeneration} \\
+\midrule
+\texttt{steps\_per\_epoch} & 2000 & 2000 & 2000 \\
+\texttt{cost\_limits} ($d$) & \{1, 5, 25, 1000\} & \{1, 5, 25, 1000\} & \{10, 25, 50, 200\} \\
+\texttt{total\_steps} & 6,000,000 & 6,000,000 & 6,000,000 \\
+Hidden sizes & default & $[128, 128, 128]$ & $[128, 128, 128]$ \\
+Activation & default & ReLU & ReLU \\
+Batch size (on-policy) & default & 1024 & 1024 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The \texttt{steps\_per\_epoch} is set to 2000 for all environments, yielding 3000 epochs of training. Each environment is evaluated across four cost limits spanning from tight (strong constraint enforcement) to loose (nearly unconstrained). The Cogeneration cost limits are calibrated to the ramp cost scale (initial episode cost $\sim$240), while EV Charging and Building use the same limit set.
+
+\paragraph{Algorithm selection.} We evaluate four on-policy CMDP algorithms: PPO-Lagrangian (PPOLag), Constrained Policy Optimization (CPO), On-policy CRPO (OnCRPO), and First-Order Constrained Optimization in Policy Space (FOCOPS). We initially included SACLag~\citep{ha2021learning} as the sole off-policy CMDP baseline. However, SACLag consistently failed to satisfy cost constraints across all three environments---episode costs remained 5--10$\times$ above the limit regardless of cost limit setting. We attribute this to the fundamental incompatibility between the replay buffer data distribution and Lagrange multiplier updates: the multiplier adapts based on stale cost estimates from the buffer, preventing effective constraint enforcement even with increased update intervals (\texttt{update\_cycle}$=$100). This negative finding highlights that on-policy methods are necessary for reliable CMDP constraint satisfaction in these environments, consistent with theoretical concerns about off-policy Lagrangian methods~\citep{ray2019benchmarking}.
+
+% ============================================================
+\section{Multi-Agent RL Formulation}
+\label{sec:marl_formulation}
+
+% ------------------------------------------------------------
+\subsection{Agent Decomposition}
+\label{sec:agent_decomposition}
+
+Each environment is decomposed into a cooperative multi-agent system using physically motivated agent boundaries.
+
+\paragraph{EV Charging decomposition.} Each charging station is an independent agent:
+\begin{equation}
+    \text{Agents} = \{i \mid i \in \text{station\_ids}\}, \quad N = 54.
+\end{equation}
+All agents share the same global observation (no information asymmetry) and have identical action spaces: $\calA_i = [0, 1]^1$.
+
+\paragraph{Building decomposition.} Each AC-enabled thermal zone is an agent:
+\begin{equation}
+    \text{Agents} = \{i \mid \text{ac}_i = 1\}, \quad N = |\{i : \text{ac}_i = 1\}|.
+\end{equation}
+All agents share the full global observation $o \in \R^{n+4}$ and have identical action spaces: $\calA_i = [-1, 1]^1$.
+
+\paragraph{Cogeneration decomposition.} The plant is decomposed into four agents, one per major component:
+
+\begin{table}[htbp]
+\centering
+\caption{Cogeneration multi-agent decomposition.}
+\label{tab:cogen_marl_agents}
+\begin{tabular}{@{}lllc@{}}
+\toprule
+\textbf{Agent} & \textbf{Components} & \textbf{Action Keys} & \textbf{Dim} \\
+\midrule
+GT1 & Gas Turbine 1 + Heat Recovery 1 & GT1\_PWR, GT1\_PAC\_FFU, GT1\_EVC\_FFU, HR1\_HPIP\_M & 4 \\
+GT2 & Gas Turbine 2 + Heat Recovery 2 & GT2\_PWR, GT2\_PAC\_FFU, GT2\_EVC\_FFU, HR2\_HPIP\_M & 4 \\
+GT3 & Gas Turbine 3 + Heat Recovery 3 & GT3\_PWR, GT3\_PAC\_FFU, GT3\_EVC\_FFU, HR3\_HPIP\_M & 4 \\
+ST & Steam Turbine + Condenser + Cooling & ST\_PWR, IPPROC\_M, CT\_NrBays & 3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\Cref{tab:agent_decomposition} provides a summary of the agent decomposition across environments.
+
+\begin{table}[htbp]
+\centering
+\caption{Agent decomposition summary for each environment.}
+\label{tab:agent_decomposition}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Environment} & \textbf{Agent Granularity} & \textbf{$N$} & \textbf{Per-Agent Action} \\
+\midrule
+EV Charging & Per charging station & 54 & $[0,1]^1$ \\
+Building & Per AC-enabled zone & $|\{i: \text{ac}_i=1\}|$ & $[-1,1]^1$ \\
+Cogeneration & Per turbine/component & 4 (GT1, GT2, GT3, ST) & 3--4 continuous \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ------------------------------------------------------------
+\subsection{Observation and Action Space Design}
+\label{sec:marl_obs_act}
+
+\paragraph{Shared observations.} In all three multi-agent environments, agents receive the same global observation. This design choice reflects the assumption that centralized monitoring systems provide all agents with the same information. Formally, for all agents $i$:
+\begin{equation}
+    o_i(t) = \text{flatten}(\calO(t)),
+\end{equation}
+where $\calO(t)$ is the global observation at timestep $t$. In the EV charging environment, an optional time-delay mechanism allows each agent to see its own current local information while receiving other agents' information with a configurable delay of $\Delta$ periods.
+
+\paragraph{Per-agent actions.} Each agent controls only its assigned sub-actions. The joint action is assembled by concatenating per-agent actions:
+\begin{equation}
+    \mathbf{a} = (a_1, a_2, \ldots, a_N), \quad a_i \in \calA_i.
+\end{equation}
+
+For the cogeneration environment, discrete sub-actions (CT\_NrBays) are encoded as continuous values in the per-agent action space: Discrete(2) maps to $[0, 1]$ and Discrete(12, start=1) maps to $[1, 12]$. This continuous encoding enables compatibility with off-policy algorithms such as SAC, which require continuous action spaces.
+
+% ------------------------------------------------------------
+\subsection{Reward Structure}
+\label{sec:marl_reward}
+
+\paragraph{EV Charging and Building.} Shared reward equally divided among agents:
+\begin{equation}
+    r_i(t) = \frac{r_{\text{global}}(t)}{N}, \quad \forall i \in [N].
+    \label{eq:marl_shared_reward}
+\end{equation}
+This equal division encourages cooperation by ensuring that each agent benefits equally from global performance improvements.
+
+\paragraph{Cogeneration.} Per-agent cost decomposition based on individual component contributions:
+\begin{equation}
+    r_i(t) = -\left(C_{\text{fuel},i} + C_{\text{ramp},i} + C_{\text{cv},i} + \frac{C_{\text{nondeliv}}}{N}\right),
+    \label{eq:cogen_marl_reward}
+\end{equation}
+where $C_{\text{fuel},i}$, $C_{\text{ramp},i}$, and $C_{\text{cv},i}$ are the fuel cost, ramp cost, and constraint violation cost attributed to agent $i$'s components, and the non-delivery cost (demand imbalance) is split equally among all $N = 4$ agents since it arises from the collective plant output.
+
+% ------------------------------------------------------------
+\subsection{Ray RLlib Configuration}
+\label{sec:rllib_config}
+
+Multi-agent training is conducted using Ray RLlib. \Cref{tab:marl_config} summarizes the configuration for each environment.
+
+\begin{table}[htbp]
+\centering
+\caption{MARL training configuration.}
+\label{tab:marl_config}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Parameter} & \textbf{EV Charging} & \textbf{Building} & \textbf{Cogeneration} \\
+\midrule
+Algorithm & APPO & SAC & PPO \\
+\texttt{train\_batch\_size} & 2880 & 4000 & 4000 \\
+\texttt{rollout\_fragment\_length} & 288 & --- & --- \\
+\texttt{sgd\_minibatch\_size} & --- & --- & 128 \\
+\texttt{num\_sgd\_iter} & --- & --- & 30 \\
+\texttt{n\_step} & --- & 288 & --- \\
+\texttt{num\_workers} & 10 & 4 & 4 \\
+Learning rate & $3{\times}10^{-4}$ & $3{\times}10^{-4}$ & $3{\times}10^{-4}$ \\
+Training iterations & 32,000 & 32,000 & 100 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All environments use the PettingZoo \texttt{ParallelEnv} interface, where all agents act simultaneously at each timestep. Parameter sharing is employed within each environment (all agents of the same type share network weights), reducing the number of learnable parameters and improving sample efficiency.
+
+% ============================================================
+\section{Experimental Design}
+\label{sec:experimental_design}
+
+% ------------------------------------------------------------
+\subsection{Training Configuration}
+\label{sec:training_config}
+
+\Cref{tab:training_config} summarizes the single-agent training configurations for each environment.
+
+\begin{table}[htbp]
+\centering
+\caption{Standard RL training configuration (SB3).}
+\label{tab:training_config}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Parameter} & \textbf{Cogen} & \textbf{EVCharging} & \textbf{Building} \\
+\midrule
+Total timesteps & 3,000,000 & 9,000,000 & 9,000,000 \\
+Eval frequency & 1,000,000 & 1,000,000 & 1,000,000 \\
+Checkpoint freq. & 2,500,000 & 2,500,000 & 2,500,000 \\
+Device & CPU & CPU & CPU \\
+Base seed & 42 & 42 & 42 \\
+Seeds per config & 5 & 5 & 5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Algorithm-specific hyperparameters.} \Cref{tab:ppo_hyper,tab:sac_hyper,tab:td3_hyper} detail the hyperparameters for each algorithm.
+
+\begin{table}[htbp]
+\centering
+\caption{PPO hyperparameters per environment.}
+\label{tab:ppo_hyper}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Parameter} & \textbf{Cogen} & \textbf{EVCharging} & \textbf{Building} \\
+\midrule
+Learning rate & $5{\times}10^{-5}$ & $5{\times}10^{-5}$ & $3{\times}10^{-5}$ \\
+$n_{\text{steps}}$ & 1024 & 2048 & 2048 \\
+Batch size & 256 & 256 & 128 \\
+$\gamma$ & 0.995 & 0.99 & 0.995 \\
+Entropy coefficient & 0.001 & 0.005 & 0.001 \\
+Clip range $\epsilon$ & 0.2 & 0.2 & 0.2 \\
+$n_{\text{epochs}}$ & 10 & 10 & 10 \\
+Network architecture & $[256, 256]$ & $[256, 256]$ & $[256, 256]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{SAC hyperparameters (shared across environments).}
+\label{tab:sac_hyper}
+\begin{tabular}{@{}lc@{}}
+\toprule
+\textbf{Parameter} & \textbf{Value} \\
+\midrule
+Learning rate & $3{\times}10^{-4}$ \\
+Replay buffer size & 1,000,000 \\
+Learning starts & 10,000 \\
+Batch size & 256 \\
+$\tau$ (soft update) & 0.005 \\
+$\gamma$ & 0.99 \\
+Entropy coefficient & auto \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{TD3 hyperparameters (shared across environments).}
+\label{tab:td3_hyper}
+\begin{tabular}{@{}lc@{}}
+\toprule
+\textbf{Parameter} & \textbf{Value} \\
+\midrule
+Learning rate & $3{\times}10^{-4}$ \\
+Replay buffer size & 1,000,000 \\
+Learning starts & 10,000 \\
+Batch size & 256 \\
+$\tau$ (soft update) & 0.005 \\
+$\gamma$ & 0.99 \\
+Policy delay & 2 \\
+Target policy noise & 0.2 \\
+Target noise clip & 0.5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ------------------------------------------------------------
+\subsection{Evaluation Metrics}
+\label{sec:eval_metrics}
+
+\begin{definition}[Primary Metrics]\label{def:primary_metrics}
+\hfill
+\begin{enumerate}
+    \item \textbf{Episode return}: $R = \sum_{t=0}^{T-1} r_t$ --- cumulative reward over one episode.
+    \item \textbf{Episode cost return}: $C = \sum_{t=0}^{T-1} c_t$ --- cumulative cost over one episode (for safe RL).
+    \item \textbf{Constraint satisfaction rate}: $\text{CSR} = \frac{1}{N_{\text{eval}}} \sum_{j=1}^{N_{\text{eval}}} \mathbbm{1}[C_j \leq d]$ --- fraction of evaluation episodes satisfying the constraint budget.
+\end{enumerate}
+\end{definition}
+
+\begin{definition}[Derived Metrics]\label{def:derived_metrics}
+\hfill
+\begin{enumerate}
+    \item \textbf{Normalized performance drop}: $\Delta_\sigma = (R_\sigma - R_0)/|R_0|$ --- relative performance change under noise level $\sigma$ compared to clean baseline $R_0$.
+    \item \textbf{Noise sensitivity coefficient}: $\kappa = -\partial \Delta_\sigma / \partial \sigma |_{\sigma=0}$ --- linearized sensitivity of performance to noise (higher $\kappa$ indicates more sensitive).
+    \item \textbf{Reward--cost Pareto metric}: For safe RL, we report both reward and cost, and evaluate whether the policy achieves reward close to the unconstrained optimum while satisfying the constraint budget $d$.
+\end{enumerate}
+\end{definition}
+
+% ------------------------------------------------------------
+\subsection{Statistical Methodology}
+\label{sec:stat_methods}
+
+Following~\citet{agarwal2021deep}, we employ the following statistical methodology to ensure reliable evaluation.
+
+\paragraph{Multiple seeds.} Each configuration is trained with 5 independent random seeds: $\{42, 43, 44, 45, 46\}$. This provides sufficient samples to estimate variability while remaining computationally feasible.
+
+\paragraph{Interquartile mean (IQM).} We report the IQM of episode returns across seeds:
+\begin{equation}
+    \text{IQM}(\{R_1, \ldots, R_K\}) = \frac{1}{\lfloor 0.75K \rfloor - \lceil 0.25K \rceil} \sum_{i=\lceil 0.25K \rceil}^{\lfloor 0.75K \rfloor} R_{(i)},
+    \label{eq:iqm}
+\end{equation}
+where $R_{(i)}$ is the $i$-th order statistic and $K$ is the total number of evaluation episodes across seeds. The IQM is more robust to outliers than the mean while being more sample-efficient than the median.
+
+\paragraph{Bootstrap confidence intervals.} 95\% confidence intervals are computed using the stratified bootstrap:
+
+\begin{algorithm}[htbp]
+\caption{Stratified Bootstrap Confidence Interval}
+\label{alg:bootstrap}
+\begin{algorithmic}[1]
+\Require Results $R = \{R_{s,e}\}$ for seeds $s \in [S]$, episodes $e \in [E]$; $B = 10{,}000$
+\For{$b = 1, \ldots, B$}
+    \For{each seed $s$}
+        \State Resample $E$ episodes with replacement: $R^*_{s,1}, \ldots, R^*_{s,E}$
+    \EndFor
+    \State Compute $\text{IQM}(R^*)$ across all resampled episodes
+\EndFor
+\State $\text{CI} \gets [\text{quantile}(\text{IQM}^*, \alpha/2), \text{quantile}(\text{IQM}^*, 1{-}\alpha/2)]$
+\end{algorithmic}
+\end{algorithm}
+
+The stratified bootstrap preserves the seed structure: for each bootstrap replicate, episodes are resampled within each seed (rather than across seeds), ensuring that inter-seed variability is properly captured.
+
+% ------------------------------------------------------------
+\subsection{Baseline Methods}
+\label{sec:baselines}
+
+We compare against several non-RL baselines provided by SustainGym and additional baselines implemented for this thesis.
+
+\paragraph{Non-RL baselines (from SustainGym):}
+\begin{enumerate}
+    \item \textbf{Random}: Actions sampled uniformly from the action space at each timestep. Applicable to all environments.
+    \item \textbf{Offline Optimal (EV Charging only)}: LP solution with perfect foresight of all arrivals, departures, and demands. Represents the theoretical upper bound.
+    \item \textbf{MPC-3 (EV Charging only)}: LP-based model predictive control with a 3-step lookahead window.
+    \item \textbf{Greedy (EV Charging only)}: Charge all connected vehicles at maximum rate without regard for carbon intensity or network constraints.
+\end{enumerate}
+
+\paragraph{Additional baselines:}
+\begin{enumerate}
+    \setcounter{enumi}{4}
+    \item \textbf{Do-Nothing}: Zero action at all timesteps ($a_t = \mathbf{0}, \forall t$). Applicable to all environments.
+    \item \textbf{Thermostat / Bang-Bang (Building only)}: Rule-based controller --- if $T_i > T_i^* + \delta$, set $a_i = -1$ (cool); if $T_i < T_i^* - \delta$, set $a_i = +1$ (heat); otherwise $a_i = 0$.
+    \item \textbf{Load-Following (Cogeneration only)}: Equal power distribution across gas turbines: $P_{\text{GT},k} = T_{\text{power}} / 3$, with fixed steam turbine and condenser settings.
+\end{enumerate}
+
+\Cref{tab:baselines} summarizes the baseline methods.
+
+\begin{table}[htbp]
+\centering
+\caption{Baseline methods.}
+\label{tab:baselines}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Baseline} & \textbf{Type} & \textbf{Applicable Environments} \\
+\midrule
+Random & Non-RL & All \\
+Do-Nothing & Non-RL & All \\
+Offline Optimal & Oracle & EV Charging \\
+MPC-3 & Optimization & EV Charging \\
+Greedy & Heuristic & EV Charging \\
+Thermostat (bang-bang) & Rule-based & Building \\
+Load-Following & Rule-based & Cogeneration \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ------------------------------------------------------------
+\subsection{VecNormalize and Observation Normalization}
+\label{sec:vecnormalize}
+
+For standard RL training with SB3, optional observation normalization via \texttt{VecNormalize} is applied:
+\begin{equation}
+    \hat{o}(t) = \clip\!\left(\frac{o(t) - \mu_{\text{run}}}{\sigma_{\text{run}} + \epsilon}, -C_{\text{obs}}, C_{\text{obs}}\right),
+    \label{eq:vecnormalize}
+\end{equation}
+where $\mu_{\text{run}}$ and $\sigma_{\text{run}}$ are running mean and standard deviation computed from training data, $\epsilon = 10^{-8}$ prevents division by zero, and $C_{\text{obs}} = 10$ is the clipping bound. A \texttt{SyncVecNormalizeCallback} synchronizes the running statistics from the training environment to the evaluation environment before each evaluation cycle, ensuring consistent normalization during testing.
+
+% ------------------------------------------------------------
+\subsection{Computational Infrastructure}
+\label{sec:compute}
+
+All experiments are conducted on the Virginia Tech Advanced Research Computing (ARC) HPC cluster using:
+\begin{itemize}
+    \item \textbf{GPU partitions:} NVIDIA A100 (80GB) on \texttt{a100\_normal\_q}, NVIDIA H200 on \texttt{h200\_normal\_q}.
+    \item \textbf{Conda environments:} \texttt{stdrl\_train} for EV Charging and Building, \texttt{stdrl\_train\_co} for Cogeneration (separate due to ONNX dependency conflicts).
+    \item \textbf{SLURM job management:} Automated job submission with configurable wall-time limits (1--5 days per job).
+\end{itemize}
+
+Training scripts support checkpointing and resumption for long-running jobs, and evaluation scripts load trained models for standardized testing across noise levels.
+
+\textbf{[Figure~4.3: Experimental workflow diagram showing the SLURM job submission pipeline, from hyperparameter configuration through training, evaluation, and statistical analysis.]}
+
+% ------------------------------------------------------------
+\subsection{Experiment Matrix}
+\label{sec:experiment_matrix}
+
+\Cref{tab:experiment_matrix} summarizes the complete experiment matrix.
+
+\begin{table}[htbp]
+\centering
+\caption{Complete experiment matrix.}
+\label{tab:experiment_matrix}
+\begin{tabular}{@{}llllll@{}}
+\toprule
+\textbf{Axis} & \textbf{Environment} & \textbf{Algorithms} & \textbf{Noise Levels} & \textbf{Seeds} & \textbf{Configs} \\
+\midrule
+Standard RL & EVCharging & PPO, SAC, TD3 & 10 obs & 5 & 150 \\
+Standard RL & Building & PPO, SAC, TD3 & 9 act & 5 & 135 \\
+Standard RL & Cogen & PPO, SAC, TD3 & 7 obs & 5 & 105 \\
+Safe RL & EVCharging & OnCRPO & 3 noise & 5 & 15 \\
+Safe RL & Building & OnCRPO & 3 noise & 5 & 15 \\
+Safe RL & Cogen & OnCRPO & 3 noise & 5 & 15 \\
+MARL & EVCharging & APPO & 1 & 3 & 3 \\
+MARL & Building & SAC & 1 & 3 & 3 \\
+MARL & Cogen & PPO & 1 & 3 & 3 \\
+\midrule
+\textbf{Total} & & & & & $\sim$\textbf{444} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Each configuration involves a full training run (3M--9M timesteps) followed by evaluation over 100 episodes, resulting in an estimated total of approximately 735 individual training runs across all experimental axes.

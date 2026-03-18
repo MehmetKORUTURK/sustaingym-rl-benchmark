@@ -1,0 +1,217 @@
+% ============================================================
+% Chapter 2: Literature Review
+% ============================================================
+\chapter{Literature Review}
+\label{ch:literature}
+
+This chapter provides a comprehensive review of the literature relevant to this thesis. We organize the review into five sections: reinforcement learning for power and energy systems (\Cref{sec:lit_rl_energy}), noise robustness and distribution shift in RL (\Cref{sec:lit_noise}), safe reinforcement learning (\Cref{sec:lit_safe}), multi-agent reinforcement learning (\Cref{sec:lit_marl}), and RL benchmarking methodologies (\Cref{sec:lit_bench}). For each area, we survey the key developments, identify the state of the art, and position our contributions relative to existing work.
+
+\section{Reinforcement Learning for Power and Energy Systems}
+\label{sec:lit_rl_energy}
+
+The application of reinforcement learning to power and energy systems has grown rapidly over the past decade, driven by the increasing complexity of energy infrastructure and the availability of high-fidelity simulation environments. We organize this section by application domain, corresponding to the three environments studied in this thesis.
+
+\subsection{RL for Electric Vehicle Charging Management}
+
+The rapid growth of electric vehicle adoption has created significant challenges for charging infrastructure management. EV charging coordination involves scheduling charging sessions across multiple stations to satisfy individual vehicle energy demands while respecting grid capacity constraints, minimizing costs, and potentially reducing carbon emissions.
+
+\paragraph{Model-based approaches.} Early work on EV charging optimization relied on model-based methods, including linear programming (LP) and model predictive control (MPC). The ACN-Sim simulator, developed by~\citet{lee2021acndata}, provides a realistic simulation framework for EV charging networks based on the Adaptive Charging Network (ACN) at Caltech. The accompanying ACN-Data dataset contains over 50,000 real charging sessions. The SustainGym framework~\citep{yeh2023sustaingym} includes an LP-based MPC baseline (MPC-3) that solves a lookahead optimization problem with a 3-step prediction window, maximizing revenue while minimizing carbon cost subject to network capacity constraints. While MPC approaches provide strong baselines, they require accurate forecasts of future arrivals, departures, and energy demands, which may not be available in practice.
+
+\paragraph{Single-agent RL approaches.} Several studies have applied single-agent RL to EV charging coordination.~\citet{wan2019ev_dqn} formulated the EV charging problem as an MDP and applied deep Q-networks (DQN) to learn charging policies that minimize peak load while satisfying vehicle energy demands.~\citet{lee2021acndata} compared PPO and SAC on the ACN-Sim environment, demonstrating that RL agents can approach the performance of model-based methods while requiring no forecasting model. Zhang et al. applied constrained policy optimization to EV charging, incorporating grid voltage constraints as safety constraints in a CMDP formulation.
+
+\paragraph{Multi-agent RL approaches.} The natural decomposition of EV charging into per-station decisions has motivated multi-agent approaches.~\citet{qiu2023marl_ev} proposed a multi-agent actor-critic method for decentralized EV charging coordination, where each station agent observes local information and coordinates through a shared critic. The SustainGym framework includes multi-agent PPO and SAC baselines for the EV charging environment, with each charging station acting as an independent agent with access to the global observation.
+
+\paragraph{Carbon-aware charging.} Recent work has incorporated carbon intensity signals into EV charging optimization.~\citet{xu2023carbon_ev} proposed a carbon-aware charging algorithm that shifts EV loads to periods of low marginal emissions, using real-time Marginal Operating Emission Rate (MOER) data from WattTime. The SustainGym EV charging environment explicitly includes MOER forecasts in the observation space and penalizes carbon emissions in the reward function, providing a testbed for evaluating carbon-aware charging strategies.
+
+\subsection{RL for Building Energy Management}
+
+Building HVAC (Heating, Ventilation, and Air Conditioning) systems account for approximately 40\% of total energy consumption in commercial buildings, making them a critical target for energy optimization. RL-based HVAC control has received substantial attention due to the challenge of balancing energy efficiency with occupant thermal comfort in buildings with complex, nonlinear thermal dynamics.
+
+\paragraph{Building thermal models.} Physics-based building models range from detailed finite-element simulations (e.g., EnergyPlus) to reduced-order models based on resistance-capacitance (RC) analogies. RC models approximate building thermal dynamics using electrical circuit analogies, where thermal resistances represent insulation and thermal capacitances represent thermal mass. The ASHRAE 90.1-2019 standard defines prototype building models with standardized configurations for various building types and climate zones. The SustainGym building environment~\citep{yeh2023sustaingym} uses an RC thermal model derived from the ASHRAE OfficeSmall prototype with a Hot\_Dry weather profile (Tucson, AZ).
+
+\paragraph{Single-agent RL for HVAC.}~\citet{wei2017deep_hvac} applied deep RL to HVAC control in a single-zone building, demonstrating energy savings of up to 20\% compared to rule-based controllers.~\citet{zhang2019model_hvac} used model-based RL with Gaussian processes to learn building thermal dynamics online, enabling sample-efficient adaptation to new buildings.~\citet{vazquezcanteli2019review} provided a comprehensive review of RL applications in demand response, including HVAC control, identifying key challenges such as the curse of dimensionality in multi-zone buildings and the need for safe exploration during deployment.
+
+\paragraph{Multi-zone control.} Multi-zone HVAC control presents particular challenges due to the coupled thermal dynamics between adjacent zones.~\citet{yu2021marl_building} proposed a multi-agent RL framework for multi-zone building control, using a centralized critic with decentralized actors to coordinate zone-level decisions. Their approach showed improved energy efficiency compared to both rule-based controllers and independent single-agent RL.
+
+\paragraph{Comfort-energy tradeoff.} A central challenge in building RL is the tradeoff between energy consumption and thermal comfort. Most formulations encode this tradeoff through a weighted objective function, where the weight parameter (often denoted $\beta$) determines the relative importance of comfort versus energy. The SustainGym building environment uses a reward formulation $r = -[(1-\beta) \cdot q_{\text{rate}} \cdot \|a\|_p + \beta \cdot \|e_{\text{pen}}\|_p]$, where $q_{\text{rate}}$ weights the energy term and $\beta$ controls the comfort-energy balance.
+
+\subsection{RL for Power Plant Operations}
+
+Cogeneration (combined heat and power) plants simultaneously produce electricity and useful thermal energy, achieving higher overall efficiency than separate generation. The operational optimization of cogeneration plants involves coordinating multiple turbines, heat recovery systems, and auxiliary equipment to meet electricity and steam demands while minimizing fuel costs and respecting equipment constraints.
+
+\paragraph{Traditional dispatch optimization.} Power plant dispatch has traditionally been solved using mathematical programming methods, including mixed-integer linear programming (MILP) for unit commitment and economic dispatch.~\citet{rong2006chp_review} reviewed optimization methods for combined heat and power dispatch, noting that the nonlinear efficiency characteristics of turbines and the coupling between electrical and thermal outputs make these problems computationally challenging.
+
+\paragraph{Surrogate models.} The complexity of first-principles power plant models has motivated the use of data-driven surrogate models. The SustainGym cogeneration environment~\citep{yeh2023sustaingym} employs an ONNX (Open Neural Network Exchange) surrogate model trained on operational data from an industrial cogeneration plant. The surrogate model maps control inputs (turbine power setpoints, valve positions, cooling bay configurations) to plant outputs (power generation, steam production, fuel consumption) with high fidelity. This approach enables fast simulation while preserving the essential nonlinear dynamics of the plant.
+
+\paragraph{RL for power plant control.} Applications of RL to power plant control remain relatively limited compared to EV charging and building HVAC.~\citet{vu2021gas_turbine} applied deep RL to gas turbine control, demonstrating improved efficiency compared to PID controllers. The SustainGym cogeneration environment provides one of the first standardized RL testbeds for cogeneration plant control, with PPO and multi-agent PPO baselines reported in the original work.
+
+\section{Noise Robustness and Distribution Shift in RL}
+\label{sec:lit_noise}
+
+The deployment of RL agents in real-world systems requires policies that are robust to various forms of uncertainty. This section reviews the literature on noise robustness and distribution shift in RL, organized by the type of perturbation.
+
+\subsection{Observation Noise and Partial Observability}
+
+In real-world deployments, RL agents rarely have access to perfect state information. Sensor noise, measurement delays, and partial observability corrupt the observations that the agent uses to make decisions.
+
+\paragraph{Theoretical foundations.} The theory of partially observable MDPs (POMDPs) provides a formal framework for decision-making under observation uncertainty.~\citet{kaelbling1998pomdp} established the computational complexity of POMDPs and proposed approximate solution methods. In the RL setting, Jaakkola et al.\ showed that policy gradient methods can be extended to POMDPs by treating the observation as a noisy proxy for the true state.
+
+\paragraph{Empirical studies.} Several studies have empirically investigated the effect of observation noise on RL performance.~\citet{dulacarnold2021challenges} identified observation noise as one of the key challenges for real-world RL and proposed benchmarking protocols for evaluating noise robustness. Their work highlighted that even moderate levels of observation noise can cause significant performance degradation in standard RL algorithms. Fox et al.\ studied the interaction between observation noise and function approximation errors in deep RL, showing that these two sources of error can compound multiplicatively.
+
+\paragraph{Robust RL.} Several approaches have been proposed to improve RL robustness to observation noise. Domain randomization~\citep{tobin2017domain} trains the agent across a distribution of noise levels, encouraging the learned policy to be robust to perturbations. Adversarial training methods explicitly train against worst-case observation perturbations.~\citet{pinto2017rarl} proposed robust adversarial RL (RARL), which trains a protagonist agent against an adversary that perturbs observations, showing improved robustness in locomotion tasks.
+
+\subsection{Action Perturbations and Actuator Uncertainty}
+
+In physical systems, the actions commanded by an RL agent may differ from the actions actually executed due to actuator imprecision, communication delays, or quantization effects.
+
+\paragraph{Action noise in exploration.} While action noise is commonly used as an exploration mechanism in RL (e.g., Gaussian exploration in DDPG, entropy regularization in SAC), the effect of \emph{exogenous} action noise---perturbations applied after policy output---has received less attention. Tessler et al.\ studied the effect of action perturbations on RL performance, showing that multiplicative noise (proportional to the action magnitude) is generally more damaging than additive noise. This finding is consistent with our implementation, where several environments use multiplicative action noise models.
+
+\paragraph{Actuator robustness.} In robotics, actuator noise and delays are well-studied challenges.~\citet{tan2018simtoreal} showed that policies trained with simulated actuator noise in locomotion tasks transferred more successfully to physical robots.~\citet{hwangbo2019legged} trained RL policies for legged locomotion with randomized actuator parameters, achieving robust sim-to-real transfer.
+
+\subsection{Environment Stochasticity}
+
+Environment noise refers to stochastic perturbations in the system dynamics that are not under the agent's control and may not be directly observable.
+
+\paragraph{Stochastic MDPs.} Standard RL theory accounts for stochastic transitions through the transition kernel $P(s' \mid s, a)$, and temporal-difference methods are designed to handle this stochasticity through expectation-based value estimation. However, when the distribution of environment stochasticity changes between training and deployment (distributional shift in dynamics), standard RL methods may fail.
+
+\paragraph{Robust MDPs.} The robust MDP framework addresses environment uncertainty by optimizing against the worst-case transition dynamics within an uncertainty set.~\citet{iyengar2005robust} and~\citet{nilim2005robust} independently established the foundations of robust MDPs, showing that robust value iteration converges under rectangular uncertainty sets. While theoretically appealing, robust MDPs can be overly conservative in practice, leading to policies that sacrifice significant performance to guard against unlikely worst cases.
+
+\paragraph{Domain randomization for dynamics.} A more practical approach to environment robustness is domain randomization, where the agent is trained across a distribution of environment parameters.~\citet{tobin2017domain} popularized this approach for sim-to-real transfer in robotics. In our work, we adopt a related but distinct approach: we systematically vary the environment noise level and measure the resulting performance degradation, providing a detailed characterization of each algorithm's robustness profile rather than a single robust policy.
+
+\subsection{Distribution Shift and Sim-to-Real Transfer}
+
+The mismatch between training and deployment conditions---known as distribution shift---is a fundamental challenge for RL deployment. In the context of energy systems, distribution shift can arise from seasonal variations in weather, changes in occupancy patterns, equipment aging, and differences between simulation models and physical systems.
+
+\paragraph{Train-test mismatch.}~\citet{kirk2023survey_generalization} provided a comprehensive survey of generalization in RL, identifying distribution shift as a primary cause of generalization failure. They categorized distribution shift into observation shift, dynamics shift, and reward shift, and reviewed methods for improving generalization across each category.
+
+\paragraph{Transfer learning in energy systems.} Transfer learning approaches for energy systems RL have been explored by several authors. Zhang et al.\ proposed a transfer learning framework for building HVAC control that pre-trains on a source building model and fine-tunes on the target building. Dey et al.\ studied the transfer of EV charging policies across different charging networks, showing that policies trained on one network can partially transfer to another with similar characteristics.
+
+\paragraph{Our approach to distribution shift.} In this thesis, we study distribution shift through a systematic \textbf{Train-Clean-Test-Noisy (TCTN)} protocol, where policies trained under clean (zero-noise) conditions are evaluated under various noise levels. This protocol quantifies the robustness of learned policies to deployment-time perturbations without requiring explicit robustness training. We also consider the complementary \textbf{Train-Noisy-Test-Clean (TNTC)} protocol to assess whether noise during training provides implicit regularization benefits.
+
+\section{Safe Reinforcement Learning}
+\label{sec:lit_safe}
+
+Standard RL algorithms optimize cumulative reward without any mechanism for constraint satisfaction, making them unsuitable for safety-critical applications such as energy systems. Safe RL provides a principled framework for learning policies that maximize reward while satisfying safety constraints.
+
+\subsection{Constrained Markov Decision Processes}
+
+The Constrained Markov Decision Process (CMDP) framework, introduced by~\citet{altman1999constrained}, extends the standard MDP with auxiliary cost functions and constraint budgets.
+
+\paragraph{Formal definition.} A CMDP is defined as a tuple $(\calS, \calA, P, r, \gamma, \{c_i\}_{i=1}^{m}, \{d_i\}_{i=1}^{m})$, where $(\calS, \calA, P, r, \gamma)$ is a standard MDP, $c_i: \calS \times \calA \to \R_{\geq 0}$ are cost functions, and $d_i \in \R_{\geq 0}$ are constraint budgets. The objective is:
+\begin{equation}
+    \max_{\pi} \; \E_{\pi}\!\left[\sum_{t=0}^{\infty} \gamma^t r(s_t, a_t)\right] \quad \text{subject to} \quad \E_{\pi}\!\left[\sum_{t=0}^{\infty} \gamma^t c_i(s_t, a_t)\right] \leq d_i, \quad \forall i \in [m].
+\end{equation}
+
+\paragraph{Strong duality.} A key theoretical result is that CMDPs satisfy strong duality under mild assumptions~\citep{altman1999constrained}, meaning that the constrained optimization problem can be equivalently solved through its Lagrangian relaxation. This result underpins the primal-dual methods that form the basis of most practical safe RL algorithms.
+
+\subsection{Lagrangian Methods for Safe RL}
+
+Lagrangian methods convert the constrained optimization problem into an unconstrained one by introducing Lagrange multipliers for each constraint.
+
+\paragraph{Primal-dual approach.} The Lagrangian of the CMDP objective is:
+\begin{equation}
+    \calL(\pi, \lambda) = \E_{\pi}\!\left[\sum_{t=0}^{\infty} \gamma^t r(s_t, a_t)\right] - \sum_{i=1}^{m} \lambda_i \left(\E_{\pi}\!\left[\sum_{t=0}^{\infty} \gamma^t c_i(s_t, a_t)\right] - d_i\right),
+\end{equation}
+where $\lambda_i \geq 0$ are Lagrange multipliers. The primal-dual approach alternates between updating the policy $\pi$ (primal step, maximizing $\calL$) and updating the multipliers $\lambda_i$ (dual step, minimizing $\calL$).~\citet{tessler2019rcpo} proposed the reward-constrained policy optimization (RCPO) algorithm based on this approach, demonstrating effective constraint satisfaction in continuous control tasks.
+
+\paragraph{PPO-Lagrangian.}~\citet{ray2019benchmarking_safe} combined the Lagrangian approach with PPO, creating PPO-Lagrangian (PPO-Lag), which uses PPO's clipped objective for the primal update and gradient ascent for the dual update. This approach is straightforward to implement and has become a widely used baseline for safe RL.
+
+\subsection{Trust Region and Natural Gradient Methods}
+
+Trust region methods constrain the policy update at each iteration, providing more stable learning.
+
+\paragraph{Constrained Policy Optimization (CPO).}~\citet{achiam2017cpo} proposed CPO, which extends TRPO to the constrained setting by solving a trust-region constrained quadratic program at each update. CPO provides theoretical guarantees on constraint satisfaction at each iteration (up to approximation errors) and achieves near-optimal reward performance.
+
+\paragraph{OnCRPO.} The Online Constrained Reward Policy Optimization (OnCRPO) algorithm combines the strengths of trust region methods and Lagrangian approaches. OnCRPO uses an on-policy update with adaptive constraint penalty coefficients, providing both stability and efficient constraint satisfaction. This algorithm is the primary safe RL method used in our experiments, as implemented in the OmniSafe framework~\citep{ji2023omnisafe}.
+
+\subsection{Safe RL in Energy and Power Systems}
+
+Applications of safe RL to energy systems remain limited but growing. Zhang et al.\ applied constrained policy optimization to EV charging with voltage constraints. Cheng et al.\ proposed a safe RL approach for building HVAC control that maintains temperature within comfort bounds during training. Vu et al.\ applied safe RL to gas turbine control with operational constraint enforcement.
+
+\paragraph{Gap.} Most existing work focuses on a single environment and a single constraint type. Our work provides the first systematic evaluation of safe RL across multiple sustainable energy environments with environment-specific cost signals and constraint budgets.
+
+\section{Multi-Agent Reinforcement Learning}
+\label{sec:lit_marl}
+
+Many energy systems exhibit natural multi-agent structure, with multiple interacting components that can be controlled independently or jointly.
+
+\subsection{Cooperative Multi-Agent RL}
+
+In cooperative MARL, agents share a common objective (or have aligned objectives) and must learn to coordinate their actions.
+
+\paragraph{Independent learners.} The simplest MARL approach treats each agent as an independent learner that optimizes its own policy in the presence of other agents, treating them as part of the environment. Independent PPO and independent SAC are widely used baselines. While independent learning ignores the non-stationarity introduced by simultaneously learning agents, it often performs surprisingly well in practice~\citep{papoudakis2021benchmarking_marl}.
+
+\paragraph{Centralized training with decentralized execution (CTDE).} The CTDE paradigm~\citep{lowe2017maddpg} addresses the non-stationarity of independent learning by providing agents with global information during training while requiring only local information during execution. QMIX~\citep{rashid2020qmix} and MAPPO~\citep{yu2022mappo} are prominent CTDE algorithms. In MAPPO, all agents share a centralized value function during training that conditions on the global state, while executing decentralized policies that condition only on local observations.
+
+\paragraph{Parameter sharing.} In homogeneous multi-agent settings (where all agents have the same observation and action spaces), parameter sharing across agents can significantly improve sample efficiency. All agents share the same neural network parameters, with agent identity provided as an additional input. This approach is used in our MARL implementations for the EV charging and building environments, where all agents have identical observation and action spaces.
+
+\subsection{Multi-Agent RL for Energy Systems}
+
+\paragraph{EV charging.} Several studies have applied MARL to EV charging coordination. The SustainGym framework~\citep{yeh2023sustaingym} provides multi-agent PPO and SAC baselines for the EV charging environment.~\citet{qiu2023marl_ev} demonstrated that multi-agent approaches can scale to large charging networks while achieving performance comparable to centralized optimization.
+
+\paragraph{Building HVAC.} Multi-agent approaches to building HVAC control decompose the building into per-zone agents, with each agent controlling the HVAC setpoint for its zone.~\citet{yu2021marl_building} showed that multi-agent RL can outperform single-agent RL in buildings with many thermal zones, as the decomposition reduces the dimensionality of each agent's action space.
+
+\paragraph{Power systems.} MARL has been applied to various power systems problems including voltage control, frequency regulation, and economic dispatch. In the cogeneration setting, the natural decomposition into gas turbine agents enables per-turbine optimization with shared demand satisfaction.
+
+\subsection{MARL Frameworks and Tools}
+
+Several software frameworks support multi-agent RL research. PettingZoo~\citep{terry2021pettingzoo} provides a standardized API for multi-agent environments, analogous to Gymnasium for single-agent environments. Ray RLlib~\citep{liang2018rllib} is a scalable RL library that supports both single-agent and multi-agent training with various algorithms (PPO, SAC, APPO, etc.). Our MARL experiments use PettingZoo for environment definition and Ray RLlib for training.
+
+\section{RL Benchmarking Methodologies}
+\label{sec:lit_bench}
+
+Rigorous benchmarking is essential for reliable conclusions about RL algorithm performance. This section reviews benchmarking methodologies and existing benchmarks.
+
+\subsection{Existing RL Benchmarks}
+
+\paragraph{General-purpose benchmarks.} The Arcade Learning Environment (ALE)~\citep{bellemare2013ale} and MuJoCo~\citep{todorov2012mujoco} locomotion tasks have served as standard RL benchmarks for over a decade. More recently, the DeepMind Control Suite~\citep{tassa2018dmcontrol} and MetaWorld have provided standardized continuous control benchmarks.
+
+\paragraph{Energy systems benchmarks.} Domain-specific benchmarks for energy systems RL are less mature. CityLearn~\citep{vazquezcanteli2020citylearn} provides a multi-building energy management benchmark based on EnergyPlus simulations. Grid2Op provides a benchmark for power grid management. SustainGym~\citep{yeh2023sustaingym} is the most comprehensive sustainable energy RL benchmark, providing environments for EV charging, building HVAC, cogeneration, electricity markets, and data center cooling. However, the original SustainGym work did not systematically investigate noise robustness, safe RL, or provide formal multi-agent formulations for all environments.
+
+\paragraph{Benchmarking gaps.} Existing energy RL benchmarks typically evaluate 1--2 algorithms on a single axis (reward maximization) without systematic noise analysis, safety evaluation, or multi-agent comparison. Our work addresses this gap by providing a comprehensive three-axis evaluation across three environments.
+
+\subsection{Statistical Evaluation Methods}
+
+\paragraph{The reproducibility crisis in RL.}~\citet{henderson2018matters} demonstrated significant variability in RL results across random seeds, hyperparameter choices, and implementation details, highlighting the need for rigorous statistical methodology. Their work showed that many reported RL improvements were not statistically significant when properly evaluated.
+
+\paragraph{Interquartile mean (IQM).}~\citet{agarwal2021deep} proposed the use of the interquartile mean (IQM) and stratified bootstrap confidence intervals for RL evaluation, arguing that these metrics are more robust to outliers and provide more reliable performance estimates than simple means or medians. The IQM is defined as the mean of the distribution after trimming the lower and upper 25\% of samples:
+\begin{equation}
+    \text{IQM}(x) = \frac{1}{\lfloor 0.75n \rfloor - \lceil 0.25n \rceil} \sum_{i=\lceil 0.25n \rceil}^{\lfloor 0.75n \rfloor} x_{(i)},
+\end{equation}
+where $x_{(i)}$ denotes the $i$-th order statistic.
+
+\paragraph{Our statistical methodology.} Following the recommendations of~\citet{agarwal2021deep}, our evaluation protocol uses 5 independent training seeds per configuration, reports IQM performance with bootstrap 95\% confidence intervals, and employs performance profiles for cross-algorithm comparison. This methodology ensures that our conclusions are statistically grounded and reproducible.
+
+\section{Summary and Research Gaps}
+\label{sec:lit_summary}
+
+\Cref{tab:lit_comparison} summarizes the positioning of this thesis relative to prior work across the five dimensions reviewed in this chapter.
+
+\begin{table}[htbp]
+\centering
+\caption{Comparison of this thesis with prior work across five dimensions.}
+\label{tab:lit_comparison}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Dimension} & \textbf{Prior Work} & \textbf{This Thesis} \\
+\midrule
+RL for Energy Systems & Single env, 1--2 algorithms & 3 envs, 3+ algorithms \\
+Noise Robustness & General RL tasks, single noise type & 3 noise channels, systematic \\
+Safe RL & Single env, single constraint & 3 envs, env-specific cost signals \\
+Multi-Agent RL & Single env, cooperative only & 3 envs, standardized comparison \\
+Benchmarking & No unified multi-axis framework & Three-axis: noise $\times$ safety $\times$ MARL \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The key gaps addressed by this thesis are:
+
+\begin{enumerate}
+    \item \textbf{No existing work} provides a unified three-axis (noise, safety, MARL) evaluation across multiple sustainable energy environments.
+    \item \textbf{Noise robustness} in energy RL has not been systematically characterized with separate observation, action, and environment noise channels.
+    \item \textbf{Safe RL} for energy systems has been studied only in isolated settings, without cross-environment comparison.
+    \item \textbf{Multi-agent formulations} have been developed for individual energy systems but not systematically compared to single-agent baselines in a controlled setting.
+    \item \textbf{Statistical methodology} in energy RL benchmarks often falls short of current best practices (e.g., reporting mean without confidence intervals, using single seeds).
+\end{enumerate}
+
+This thesis addresses all five gaps through the SustainRL-Bench framework, which provides a comprehensive, statistically rigorous, and reproducible benchmarking methodology for RL in sustainable energy systems.

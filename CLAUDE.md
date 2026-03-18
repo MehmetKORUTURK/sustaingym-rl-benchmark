@@ -34,7 +34,7 @@ This is a **Master's thesis research project** by Mehmet Koruturk (Virginia Tech
 - **Reward**: `-(q_rate * ||action||_p + error_rate * ||temp_error||_p)` normalized to [-1, 0]
 - **Policy type**: `MlpPolicy` (flat Box obs space)
 - **Noise implementation**: obs noise = proportional Gaussian (`noise * |state|`), action noise = proportional Gaussian (`noise_action * |action|`), env noise = dict with `out_temp`, `ground_temp`, `ghi` std (applied to external conditions before RC dynamics)
-- **Safe RL cost**: mean HVAC ramping (action change rate) across AC-enabled zones, computed as `mean(|action - prev_action| * ac_map)`, scaled by `cost_scale` (default 1.0). Fully orthogonal: reward measures energy + comfort but NOT action smoothness; CMDP cost penalizes rapid HVAC switching (equipment wear). Initial episode cost ~210-240, min achievable TBD.
+- **Safe RL cost**: deadband temperature violation across AC-enabled zones, computed as `mean(max(0, |temp_error| - 1.0) * ac_map)`, scaled by `cost_scale` (default 1.0). Deadband=1°C: temp errors within ±1°C are "free", only violations beyond 1°C count. Orthogonal to reward: reward penalizes ALL temp error + energy smoothly, CMDP enforces a hard comfort boundary.
 - **MARL agents**: Each AC-enabled zone is an agent, PettingZoo ParallelEnv, shared reward / num_agents
 
 ### 3. Cogen (`envs/cogen/`)
@@ -269,7 +269,7 @@ Scalar `noise_env` converted to dict in `scripts/train/stdrl_training.py`:
 | Total steps | 6,000,000 | 6,000,000 | 6,000,000 |
 | Steps per epoch | 2000 | 2000 | 2000 |
 | Cost scale | 100.0 | 1.0 | 0.005 |
-| Cost limits tested | 1, 5, 25, 1000 | 25, 50, 100, 200 | 10, 25, 50, 200 |
+| Cost limits tested | 1, 5, 25, 1000 | 50, 100, 200, 500 | 10, 25, 50, 200 |
 | Algorithms | PPOLag, CPO, OnCRPO, FOCOPS | same | same |
 | Network (Building/Cogen) | default | [128,128,128] ReLU | [128,128,128] ReLU |
 | Batch size (on-policy, Building/Cogen) | default | 1024 | 1024 |
@@ -279,7 +279,7 @@ Scalar `noise_env` converted to dict in `scripts/train/stdrl_training.py`:
 - **Non-Lagrangian algos** (CPO, OnCRPO): cost_limit via `algo_cfgs`
 - **SACLag REMOVED**: Off-policy Lagrangian fails consistently across all 3 environments — replay buffer staleness prevents lambda from correctly tracking policy cost. Tested with update_cycle=1 and 100, neither worked. This is a known limitation of off-policy CMDP methods and should be reported as a negative finding in the thesis: "Off-policy Lagrangian methods (SACLag) fail to satisfy cost constraints due to fundamental incompatibility between replay buffer data distribution and Lagrange multiplier updates."
 - **Building/Cogen**: No `reward_normalize` or `cost_normalize` (BuildingEnv already normalizes reward to [-1,0], Cogen reward already scaled by 1e7)
-- **Building Safe RL**: Uses `reward_beta=0.5` (matching stdrl), CMDP cost = mean HVAC ramping `mean(|action - prev_action| * ac_map)` (fully orthogonal: reward measures energy + comfort but NOT action smoothness, CMDP penalizes rapid HVAC switching / equipment wear). Initial episode cost ~210-240, limits calibrated to 25/50/100/200.
+- **Building Safe RL**: Uses `reward_beta=0.5` (matching stdrl), CMDP cost = deadband temperature violation `mean(max(0, |temp_error| - 1.0) * ac_map)` with 1°C deadband. Orthogonal to reward: reward penalizes ALL temp error + energy smoothly, CMDP enforces hard comfort boundary (no zone >1°C from target). Limits TBD after calibration (placeholder: 50/100/200/500).
 - **Cogen Safe RL**: CMDP cost = `sum(ramp_costs)` (turbine ramping stress/equipment wear, orthogonal: reward dominated by fuel+delivery, ramp_penalty=2 too small for agent to care, CMDP enforces smooth operation)
 
 ---
@@ -307,7 +307,7 @@ logs_marl_train/{env}_{algo}/{timestamp}_NOISE_0_ACT_0_ENV_0/
   ├── metrics.csv         # Per-iteration metrics (iteration, mean_reward, mean_length, loss, elapsed_seconds)
   └── checkpoints/        # Periodic RLlib checkpoints
 
-runs/omnisafe_{env}/{algo}_CL_{climit}_{noise}_{timestamp}/
+logs_saferl_train/omnisafe_{env}/{timestamp}_{algo}_CL_{climit}/
   └── ...                      # OmniSafe logger output (Safe RL)
 ```
 
@@ -383,4 +383,4 @@ runs/omnisafe_{env}/{algo}_CL_{climit}_{noise}_{timestamp}/
 10. **OmniSafe steps_per_epoch**: Must be large enough to collect meaningful gradient estimates. `steps_per_epoch=288` (1 episode) causes extreme variance; use 2000+ for all envs
 11. **OmniSafe loose constraint divergence**: Trust-region CMDP algorithms (CPO, OnCRPO) can diverge with very loose cost limits (e.g., climit=1000). When constraint is nearly inactive, trust-region update becomes unstable. PPOLag handles this gracefully (lambda→0 = unconstrained PPO). Avoid cost limits >4x initial episode cost for trust-region methods.
 12. **scripts/plot/omni_plot.py filenames**: PNG filenames include unique algo names extracted from experiment labels (e.g., `PPOLag_CPO` not `PPOLag_1_PPOLag_5`)
-13. **Building HVAC ramping cost**: Building Safe RL uses `_prev_action` tracking initialized to zeros in `reset()`. Cost = `mean(|action - prev_action| * ac_map) * cost_scale`. Previous cost (temp_error) had partial overlap with reward's comfort term, causing PPOLag to show no limit differentiation.
+13. **Building deadband temp cost**: Building Safe RL uses deadband=1°C: `cost = mean(max(0, |temp_error| - 1.0) * ac_map) * cost_scale`. Previous attempts: (1) raw temp_error had partial overlap with reward's comfort term → no PPOLag limit differentiation; (2) HVAC ramping was too weak a signal (cost collapsed to ~7 regardless of limit). Deadband approach creates genuine orthogonality: reward penalizes all deviation smoothly, cost enforces hard boundary.

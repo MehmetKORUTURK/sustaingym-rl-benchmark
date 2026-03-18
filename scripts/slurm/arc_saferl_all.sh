@@ -30,32 +30,32 @@ python scripts/train/saferl_training.py --env evcharging --algo FOCOPS --climit 
 python scripts/train/saferl_training.py --env evcharging --algo FOCOPS --climit 1000 --seed 42
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Building (cost_scale=1.0, cost=hvac_ramping)
-# Initial episode cost ~210-240, min achievable TBD
+# Building (cost_scale=1.0, cost=deadband_temp_violation, deadband=1°C)
+# Limits TBD after calibration — placeholder based on estimated initial cost ~600-1000
 # ══════════════════════════════════════════════════════════════════════════════
 
 # PPOLag
-python scripts/train/saferl_training.py --env building --algo PPOLag --climit 25 --seed 42
 python scripts/train/saferl_training.py --env building --algo PPOLag --climit 50 --seed 42
 python scripts/train/saferl_training.py --env building --algo PPOLag --climit 100 --seed 42
 python scripts/train/saferl_training.py --env building --algo PPOLag --climit 200 --seed 42
+python scripts/train/saferl_training.py --env building --algo PPOLag --climit 500 --seed 42
 
 # CPO
-python scripts/train/saferl_training.py --env building --algo CPO --climit 25 --seed 42
 python scripts/train/saferl_training.py --env building --algo CPO --climit 50 --seed 42
 python scripts/train/saferl_training.py --env building --algo CPO --climit 100 --seed 42
 python scripts/train/saferl_training.py --env building --algo CPO --climit 200 --seed 42
+python scripts/train/saferl_training.py --env building --algo CPO --climit 500 --seed 42
 
 # OnCRPO
-python scripts/train/saferl_training.py --env building --algo OnCRPO --climit 25 --seed 42
 python scripts/train/saferl_training.py --env building --algo OnCRPO --climit 50 --seed 42
 python scripts/train/saferl_training.py --env building --algo OnCRPO --climit 100 --seed 42
 python scripts/train/saferl_training.py --env building --algo OnCRPO --climit 200 --seed 42
+python scripts/train/saferl_training.py --env building --algo OnCRPO --climit 500 --seed 42
 
 # FOCOPS
-python scripts/train/saferl_training.py --env building --algo FOCOPS --climit 25 --seed 42
 python scripts/train/saferl_training.py --env building --algo FOCOPS --climit 50 --seed 42
 python scripts/train/saferl_training.py --env building --algo FOCOPS --climit 100 --seed 42
+python scripts/train/saferl_training.py --env building --algo FOCOPS --climit 200 --seed 42
 python scripts/train/saferl_training.py --env building --algo FOCOPS --climit 200 --seed 42
 
 # ══════════════════════════════════════════════════════════════════════════════

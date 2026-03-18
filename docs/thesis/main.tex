@@ -1,0 +1,189 @@
+% ============================================================
+% Master's Thesis - Mehmet Koruturk
+% Virginia Polytechnic Institute and State University
+% ============================================================
+\documentclass[12pt, letterpaper]{report}
+
+% ---- Packages ----
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{amsmath, amssymb, amsthm, bbm}
+\usepackage{mathtools}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{multirow}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{natbib}
+\usepackage{tcolorbox}
+\usepackage{listings}
+
+% ---- Theorem environments ----
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}{Remark}[chapter]
+\newtheorem{assumption}{Assumption}[chapter]
+\newtheorem{finding}{Finding}[chapter]
+
+% ---- Custom commands ----
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\calS}{\mathcal{S}}
+\newcommand{\calA}{\mathcal{A}}
+\newcommand{\calO}{\mathcal{O}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calH}{\mathcal{H}}
+\newcommand{\calV}{\mathcal{V}}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\clip}{clip}
+\DeclareMathOperator{\rint}{round}
+
+% ---- Listings style for pseudocode ----
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  captionpos=b
+}
+
+% ---- Double spacing ----
+\doublespacing
+
+% ============================================================
+\begin{document}
+
+% ---- Title Page ----
+\begin{titlepage}
+\centering
+\vspace*{1in}
+{\Large\bfseries Reinforcement Learning Benchmarking for Sustainable Energy Systems:\\ Noise Robustness, Safety Constraints, and Multi-Agent Coordination}\\[2cm]
+{\large Mehmet Koruturk}\\[1cm]
+Thesis submitted to the Faculty of the\\
+Virginia Polytechnic Institute and State University\\
+in partial fulfillment of the requirements for the degree of\\[0.5cm]
+{\large Master of Science}\\
+in\\
+{\large Computer Engineering}\\[1.5cm]
+Ming Jin, Chair\\
+Committee Member 2\\
+Committee Member 3\\[1.5cm]
+\today\\
+Blacksburg, Virginia\\[0.5cm]
+Keywords: Reinforcement Learning, Sustainable Energy, Safe RL, Multi-Agent RL, Benchmarking\\[0.3cm]
+Copyright \the\year, Mehmet Koruturk
+\end{titlepage}
+
+% ---- Abstract ----
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+Reinforcement learning (RL) has emerged as a promising approach for sequential decision-making in sustainable energy systems, yet the lack of systematic benchmarks hinders principled algorithm comparison and deployment. This thesis presents SustainRL-Bench, a comprehensive benchmarking framework that evaluates RL algorithms across three sustainable energy environments---electric vehicle charging coordination, building HVAC control, and cogeneration plant dispatch---along three experimental axes: noise robustness, safety constraints, and multi-agent coordination.
+
+For noise robustness, we develop a three-channel noise injection framework that independently perturbs observations, actions, and environment dynamics at varying intensities, characterizing policy degradation curves for PPO, SAC, and TD3 across ten or more noise levels per environment. For safety, we formulate each environment as a Constrained Markov Decision Process (CMDP) with physically meaningful cost signals and evaluate safe RL algorithms from the OmniSafe framework. For multi-agent coordination, we decompose each environment into cooperative agents using the PettingZoo interface and compare centralized single-agent versus decentralized multi-agent performance using Ray RLlib.
+
+Our evaluation employs rigorous statistical methodology following current best practices: five independent seeds per configuration, interquartile mean (IQM) reporting, and bootstrap 95\% confidence intervals. The resulting benchmark comprises over 700 training runs across three environments, three algorithms, and multiple noise levels, providing actionable insights for practitioners deploying RL controllers in real-world energy systems.
+
+% ---- General Audience Abstract ----
+\chapter*{General Audience Abstract}
+\addcontentsline{toc}{chapter}{General Audience Abstract}
+
+Managing energy systems efficiently is critical for reducing carbon emissions and operating costs. This includes scheduling when to charge electric vehicles, controlling heating and cooling in buildings, and coordinating power plants that produce both electricity and steam. These are complex optimization problems where traditional methods struggle to scale.
+
+Reinforcement learning (RL) is an artificial intelligence technique where a computer agent learns to make good decisions through trial and error. While RL has shown promise for energy system control, there is a lack of systematic studies comparing different RL algorithms under realistic conditions. Real-world deployments face noisy sensors, safety constraints, and the need to coordinate multiple subsystems---challenges that are often ignored in idealized simulations.
+
+This thesis addresses these gaps by creating a comprehensive testing framework for RL algorithms across three energy environments. We systematically evaluate how well these algorithms handle sensor noise, respect safety limits, and scale to multi-agent settings. Our results provide practical guidance for engineers and researchers seeking to deploy RL-based controllers in sustainable energy systems.
+
+% ---- Dedication ----
+\chapter*{Dedication}
+\addcontentsline{toc}{chapter}{Dedication}
+\vspace*{2in}
+\begin{center}
+\textit{To my family.}
+\end{center}
+
+% ---- Acknowledgments ----
+\chapter*{Acknowledgments}
+\addcontentsline{toc}{chapter}{Acknowledgments}
+
+[To be written.]
+
+% ---- Table of Contents ----
+\tableofcontents
+\listoffigures
+\listoftables
+
+% ---- List of Abbreviations ----
+\chapter*{List of Abbreviations}
+\addcontentsline{toc}{chapter}{List of Abbreviations}
+
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Abbreviation} & \textbf{Full Form} \\
+\midrule
+ACN & Adaptive Charging Network \\
+APPO & Asynchronous Proximal Policy Optimization \\
+ASHRAE & American Society of Heating, Refrigerating and Air-Conditioning Engineers \\
+BMS & Battery Management System \\
+CHP & Combined Heat and Power \\
+CI & Confidence Interval \\
+CMDP & Constrained Markov Decision Process \\
+CPO & Constrained Policy Optimization \\
+CTDE & Centralized Training with Decentralized Execution \\
+Dec-POMDP & Decentralized Partially Observable MDP \\
+DFO & Derivative-Free Optimization \\
+EVSE & Electric Vehicle Supply Equipment \\
+FOCOPS & First-Order Constrained Optimization in Policy Space \\
+GAE & Generalized Advantage Estimation \\
+GMM & Gaussian Mixture Model \\
+HPC & High-Performance Computing \\
+HVAC & Heating, Ventilation, and Air Conditioning \\
+IQM & Interquartile Mean \\
+LP & Linear Programming \\
+MARL & Multi-Agent Reinforcement Learning \\
+MDP & Markov Decision Process \\
+MILP & Mixed-Integer Linear Programming \\
+MOER & Marginal Operating Emission Rate \\
+MPC & Model Predictive Control \\
+ONNX & Open Neural Network Exchange \\
+OnCRPO & Online Constrained Reward Policy Optimization \\
+POMDP & Partially Observable MDP \\
+PPO & Proximal Policy Optimization \\
+PPOLag & PPO-Lagrangian (PPO with Lagrangian relaxation for CMDPs) \\
+RC & Resistance-Capacitance \\
+RL & Reinforcement Learning \\
+SAC & Soft Actor-Critic \\
+SB3 & Stable-Baselines3 \\
+SLURM & Simple Linux Utility for Resource Management \\
+TCTN & Train-Clean-Test-Noisy \\
+TD3 & Twin Delayed Deep Deterministic Policy Gradient \\
+TNTC & Train-Noisy-Test-Clean \\
+ZOH & Zero-Order Hold \\
+\bottomrule
+\end{tabular}
+
+% ---- Chapters ----
+\input{chapter1}
+\input{chapter2}
+\input{chapter3}
+\input{chapter4}
+\input{chapter5}
+
+% ---- Bibliography ----
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

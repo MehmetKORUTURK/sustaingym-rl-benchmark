@@ -1,0 +1,621 @@
+% ============================================================
+% Chapter 3: Preliminaries and Background
+% ============================================================
+\chapter{Preliminaries and Background}
+\label{ch:preliminaries}
+
+This chapter establishes the mathematical foundations required for the subsequent technical chapters. We begin with the Markov Decision Process framework (\Cref{sec:mdp}), present the deep RL algorithms used in this work (\Cref{sec:algorithms}), extend the framework to constrained MDPs for safe RL (\Cref{sec:cmdp_prelim}) and multi-agent settings (\Cref{sec:marl_prelim}), formalize the noise models (\Cref{sec:noise_models}), and provide an overview of the SustainGym environment suite (\Cref{sec:sustaingym}).
+
+\section{Markov Decision Processes}
+\label{sec:mdp}
+
+\subsection{Formal Definition}
+
+A Markov Decision Process (MDP) provides the standard mathematical framework for sequential decision-making under uncertainty.
+
+\begin{definition}[Markov Decision Process]
+\label{def:mdp}
+An MDP is a tuple $\calM = (\calS, \calA, P, r, \gamma, \rho_0)$, where:
+\begin{itemize}
+    \item $\calS$ is the state space (possibly continuous),
+    \item $\calA$ is the action space (possibly continuous),
+    \item $P: \calS \times \calA \times \calS \to [0, 1]$ is the transition kernel, where $P(s' \mid s, a)$ denotes the probability of transitioning to state $s'$ when taking action $a$ in state $s$,
+    \item $r: \calS \times \calA \to \R$ is the reward function,
+    \item $\gamma \in [0, 1)$ is the discount factor, and
+    \item $\rho_0$ is the initial state distribution.
+\end{itemize}
+\end{definition}
+
+A policy $\pi: \calS \to \Delta(\calA)$ maps states to probability distributions over actions. For a stochastic policy, $\pi(a \mid s)$ denotes the probability of selecting action $a$ in state $s$. A deterministic policy is a special case where $\pi(s) = a$ for a single action $a$.
+
+The interaction between an agent and the MDP generates a trajectory $\tau = (s_0, a_0, r_0, s_1, a_1, r_1, \ldots)$, where $s_0 \sim \rho_0$, $a_t \sim \pi(\cdot \mid s_t)$, $r_t = r(s_t, a_t)$, and $s_{t+1} \sim P(\cdot \mid s_t, a_t)$.
+
+\begin{definition}[Markov Property]
+The defining characteristic of an MDP is the Markov property: the transition probability and reward depend only on the current state and action, not on the history of past states and actions:
+\begin{equation}
+    P(s_{t+1} \mid s_0, a_0, \ldots, s_t, a_t) = P(s_{t+1} \mid s_t, a_t).
+\end{equation}
+\end{definition}
+
+\subsection{Value Functions and Bellman Equations}
+
+The objective in an MDP is to find a policy $\pi^*$ that maximizes the expected discounted cumulative reward, also known as the return:
+\begin{equation}
+    J(\pi) = \E_{\tau \sim \pi}\!\left[\sum_{t=0}^{\infty} \gamma^t r(s_t, a_t)\right] = \E_{s_0 \sim \rho_0}\!\left[V^{\pi}(s_0)\right].
+    \label{eq:objective}
+\end{equation}
+
+\begin{definition}[Value Functions]
+The state-value function $V^{\pi}(s)$ and the action-value function $Q^{\pi}(s, a)$ are defined as:
+\begin{align}
+    V^{\pi}(s) &= \E_{\pi}\!\left[\sum_{t=0}^{\infty} \gamma^t r(s_t, a_t) \;\middle|\; s_0 = s\right], \label{eq:vfunc} \\
+    Q^{\pi}(s, a) &= \E_{\pi}\!\left[\sum_{t=0}^{\infty} \gamma^t r(s_t, a_t) \;\middle|\; s_0 = s, a_0 = a\right]. \label{eq:qfunc}
+\end{align}
+The advantage function $A^{\pi}(s, a) = Q^{\pi}(s, a) - V^{\pi}(s)$ measures the relative value of taking action $a$ in state $s$ compared to the average action under $\pi$.
+\end{definition}
+
+These functions satisfy the Bellman equations:
+\begin{align}
+    V^{\pi}(s) &= \E_{a \sim \pi(\cdot|s)}\!\left[r(s, a) + \gamma \E_{s' \sim P(\cdot|s,a)}[V^{\pi}(s')]\right], \label{eq:bellman_v} \\
+    Q^{\pi}(s, a) &= r(s, a) + \gamma \E_{s' \sim P(\cdot|s,a)}\!\left[\E_{a' \sim \pi(\cdot|s')}[Q^{\pi}(s', a')]\right]. \label{eq:bellman_q}
+\end{align}
+
+The optimal value functions satisfy the Bellman optimality equations:
+\begin{align}
+    V^{*}(s) &= \max_{a \in \calA} \left[r(s, a) + \gamma \E_{s' \sim P(\cdot|s,a)}[V^{*}(s')]\right], \label{eq:bellman_opt_v} \\
+    Q^{*}(s, a) &= r(s, a) + \gamma \E_{s' \sim P(\cdot|s,a)}\!\left[\max_{a'} Q^{*}(s', a')\right]. \label{eq:bellman_opt_q}
+\end{align}
+
+\subsection{Policy Gradient Methods}
+
+For continuous state and action spaces, exact solution methods (e.g., value iteration, policy iteration) are intractable. Policy gradient methods parameterize the policy $\pi_\theta$ with parameters $\theta$ and optimize $J(\pi_\theta)$ via gradient ascent.
+
+\begin{theorem}[Policy Gradient Theorem~\citep{sutton1999policy}]
+\label{thm:pg}
+The gradient of the objective is:
+\begin{equation}
+    \nabla_\theta J(\pi_\theta) = \E_{\tau \sim \pi_\theta}\!\left[\sum_{t=0}^{\infty} \gamma^t \nabla_\theta \log \pi_\theta(a_t \mid s_t) \, A^{\pi_\theta}(s_t, a_t)\right].
+    \label{eq:pg}
+\end{equation}
+\end{theorem}
+
+In practice, the advantage function is estimated using various methods, including:
+
+\begin{itemize}
+    \item \textbf{Monte Carlo returns:} $\hat{A}_t = \sum_{k=0}^{T-t} \gamma^k r_{t+k} - V_\phi(s_t)$,
+    \item \textbf{Generalized Advantage Estimation (GAE):} as defined below.
+\end{itemize}
+
+\begin{definition}[Generalized Advantage Estimation (GAE)~\citep{schulman2016gae}]
+The GAE estimator is:
+\begin{equation}
+    \hat{A}_t^{\text{GAE}(\gamma, \lambda)} = \sum_{k=0}^{T-t} (\gamma \lambda)^k \delta_{t+k}, \quad \text{where} \quad \delta_t = r_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t)
+    \label{eq:gae}
+\end{equation}
+is the temporal difference error and $\lambda \in [0, 1]$ controls the bias-variance tradeoff.
+\end{definition}
+
+The GAE estimator, introduced by \citet{schulman2016gae}, provides a flexible interpolation between high-bias, low-variance (TD, $\lambda = 0$) and low-bias, high-variance (MC, $\lambda = 1$) advantage estimates, and is used by all on-policy algorithms in this thesis.
+
+\subsection{Actor-Critic Architecture}
+
+Actor-critic methods maintain two function approximators:
+
+\begin{itemize}
+    \item \textbf{Actor} $\pi_\theta(a \mid s)$: parameterized policy that selects actions.
+    \item \textbf{Critic} $V_\phi(s)$ or $Q_\phi(s, a)$: parameterized value function that evaluates states or state-action pairs.
+\end{itemize}
+
+The actor is updated using the policy gradient with the critic's estimate as a baseline, while the critic is updated via temporal difference learning:
+\begin{equation}
+    \phi \leftarrow \phi - \alpha_c \nabla_\phi \frac{1}{N} \sum_{i=1}^{N} \left(V_\phi(s_i) - \hat{R}_i\right)^2,
+    \label{eq:critic_update}
+\end{equation}
+where $\hat{R}_i$ is the target return (bootstrapped or Monte Carlo). This separation enables variance reduction in the policy gradient while maintaining low bias through the learned value function.
+
+\section{Deep Reinforcement Learning Algorithms}
+\label{sec:algorithms}
+
+This section presents the three deep RL algorithms used as the primary baselines in this thesis: Proximal Policy Optimization (PPO), Soft Actor-Critic (SAC), and Twin Delayed Deep Deterministic Policy Gradient (TD3).
+
+\subsection{Proximal Policy Optimization (PPO)}
+\label{sec:ppo}
+
+PPO, introduced by~\citet{schulman2017ppo}, is an on-policy actor-critic algorithm that addresses the instability of vanilla policy gradient methods by constraining the magnitude of policy updates.
+
+\paragraph{Clipped surrogate objective.} PPO maximizes the following objective:
+\begin{equation}
+    L^{\text{CLIP}}(\theta) = \hat{\E}_t\!\left[\min\!\left(\rho_t(\theta) \hat{A}_t, \; \clip(\rho_t(\theta), 1 - \epsilon, 1 + \epsilon) \hat{A}_t\right)\right],
+    \label{eq:ppo_clip}
+\end{equation}
+where $\rho_t(\theta) = \pi_\theta(a_t \mid s_t) / \pi_{\theta_{\text{old}}}(a_t \mid s_t)$ is the importance sampling ratio, $\hat{A}_t$ is the GAE advantage estimate, and $\epsilon$ (typically 0.2) is the clipping parameter. The $\min$ operation ensures that the objective is a lower bound on the unclipped objective, preventing excessively large policy updates that could destabilize training.
+
+\paragraph{Value function loss.} The value function is trained to minimize the mean squared error between predicted values and empirical returns:
+\begin{equation}
+    L^{V}(\phi) = \hat{\E}_t\!\left[\left(V_\phi(s_t) - \hat{R}_t\right)^2\right],
+\end{equation}
+where $\hat{R}_t$ is the discounted return target computed from the rollout data.
+
+\paragraph{Entropy bonus.} To encourage exploration, PPO adds an entropy bonus to the objective:
+\begin{equation}
+    L(\theta) = L^{\text{CLIP}}(\theta) + c_1 \, \hat{\E}_t\!\left[\calH[\pi_\theta(\cdot \mid s_t)]\right] - c_2 \, L^{V}(\phi),
+    \label{eq:ppo_full}
+\end{equation}
+where $\calH[\pi_\theta(\cdot \mid s_t)] = -\sum_a \pi_\theta(a \mid s_t) \log \pi_\theta(a \mid s_t)$ is the entropy of the policy, $c_1$ is the entropy coefficient (encouraging exploration), and $c_2$ is the value function coefficient.
+
+\begin{algorithm}[htbp]
+\caption{Proximal Policy Optimization (PPO)}
+\label{alg:ppo}
+\begin{algorithmic}[1]
+\Require Initial parameters $\theta_0, \phi_0$; clipping $\epsilon$; horizon $T$; $K$ epochs
+\For{iteration $= 1, 2, \ldots$}
+    \State Collect $T$ timesteps of data under $\pi_\theta$
+    \State Compute advantages $\hat{A}_t$ using GAE$(\gamma, \lambda)$
+    \State Compute returns $\hat{R}_t = \hat{A}_t + V_\phi(s_t)$
+    \For{epoch $= 1, \ldots, K$}
+        \For{each minibatch $B \subset \{1, \ldots, T\}$}
+            \State Compute ratio $\rho_t \gets \pi_\theta(a_t|s_t) / \pi_{\theta_{\text{old}}}(a_t|s_t)$
+            \State $L_{\text{clip}} \gets \frac{1}{|B|} \sum_{t \in B} \min\!\bigl(\rho_t \hat{A}_t, \clip(\rho_t, 1{-}\epsilon, 1{+}\epsilon) \hat{A}_t\bigr)$
+            \State $L_{\text{vf}} \gets \frac{1}{|B|} \sum_{t \in B} (V_\phi(s_t) - \hat{R}_t)^2$
+            \State $L \gets L_{\text{clip}} + c_1 \calH[\pi_\theta] - c_2 L_{\text{vf}}$
+            \State $\theta \gets \theta + \alpha_a \nabla_\theta L$
+            \State $\phi \gets \phi - \alpha_c \nabla_\phi L_{\text{vf}}$
+        \EndFor
+    \EndFor
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Properties.} PPO is on-policy, meaning it uses data collected under the current policy and discards it after each update. This makes PPO less sample-efficient than off-policy methods but generally more stable. PPO naturally handles continuous action spaces through Gaussian policies with learnable mean and standard deviation. In our experiments, PPO is used with environment-specific hyperparameters (learning rate, batch size, entropy coefficient) as detailed in \Cref{ch:methodology}.
+
+\subsection{Soft Actor-Critic (SAC)}
+\label{sec:sac}
+
+SAC, introduced by~\citet{haarnoja2018sac}, is an off-policy actor-critic algorithm based on the maximum entropy RL framework. SAC augments the standard RL objective with an entropy regularization term that encourages exploration and robustness.
+
+\paragraph{Maximum entropy objective.} SAC maximizes:
+\begin{equation}
+    J_{\text{SAC}}(\pi) = \sum_{t=0}^{T} \E_{(s_t, a_t) \sim \rho_\pi}\!\left[r(s_t, a_t) + \alpha \calH[\pi(\cdot \mid s_t)]\right],
+    \label{eq:sac_obj}
+\end{equation}
+where $\alpha > 0$ is the temperature parameter that controls the relative importance of entropy versus reward. The optimal policy under this objective is:
+\begin{equation}
+    \pi^{*}(a \mid s) = \frac{\exp\!\left(\frac{1}{\alpha} Q^{*}(s, a)\right)}{Z(s)},
+\end{equation}
+where $Z(s)$ is a normalizing partition function.
+
+\paragraph{Dual Q-networks.} SAC maintains two Q-function networks $Q_{\phi_1}$ and $Q_{\phi_2}$ to mitigate overestimation bias (following the double Q-learning technique). The minimum of the two Q-values is used for both policy improvement and Q-function targets:
+\begin{equation}
+    y_t = r_t + \gamma \left(\min_{j=1,2} Q_{\bar{\phi}_j}(s_{t+1}, a_{t+1}) - \alpha \log \pi_\theta(a_{t+1} \mid s_{t+1})\right), \quad a_{t+1} \sim \pi_\theta(\cdot \mid s_{t+1}).
+    \label{eq:sac_target}
+\end{equation}
+
+\paragraph{Q-function update.} Each Q-function is trained to minimize the soft Bellman residual:
+\begin{equation}
+    L(\phi_j) = \hat{\E}\!\left[\left(Q_{\phi_j}(s_t, a_t) - y_t\right)^2\right], \quad j \in \{1, 2\}.
+\end{equation}
+
+\paragraph{Policy update.} The policy is updated to minimize the expected KL-divergence from the exponential Q-function:
+\begin{equation}
+    L(\theta) = \hat{\E}_{s_t}\!\left[\hat{\E}_{a_t \sim \pi_\theta}\!\left[\alpha \log \pi_\theta(a_t \mid s_t) - \min_{j=1,2} Q_{\phi_j}(s_t, a_t)\right]\right].
+    \label{eq:sac_policy}
+\end{equation}
+
+In practice, the policy outputs the mean and log-standard deviation of a squashed Gaussian distribution: $a = \tanh(\mu_\theta(s) + \sigma_\theta(s) \odot \epsilon)$, $\epsilon \sim \mathcal{N}(0, I)$. The reparameterization trick enables gradient computation through the sampling process.
+
+\begin{remark}[Automatic Entropy Tuning]
+SAC can automatically adjust the temperature parameter $\alpha$ by solving:
+\begin{equation}
+    \min_\alpha \hat{\E}_{a_t \sim \pi_\theta}\!\left[-\alpha \log \pi_\theta(a_t \mid s_t) - \alpha \bar{\calH}\right],
+\end{equation}
+where $\bar{\calH} = -\dim(\calA)$ is the target entropy. This mechanism is denoted \texttt{ent\_coef="auto"} in the Stable-Baselines3 implementation.
+\end{remark}
+
+\begin{algorithm}[htbp]
+\caption{Soft Actor-Critic (SAC)}
+\label{alg:sac}
+\begin{algorithmic}[1]
+\Require Initial parameters $\theta, \phi_1, \phi_2, \alpha$; replay buffer $\mathcal{D}$; target params $\bar{\phi}_1, \bar{\phi}_2$
+\For{each environment step}
+    \State Sample action $a_t \sim \pi_\theta(\cdot \mid s_t)$; observe $s_{t+1}, r_t$
+    \State Store transition: $\mathcal{D} \gets \mathcal{D} \cup \{(s_t, a_t, r_t, s_{t+1})\}$
+\EndFor
+\For{each gradient step}
+    \State Sample minibatch $B \sim \mathcal{D}$
+    \State Sample $\tilde{a}' \sim \pi_\theta(\cdot \mid s')$
+    \State Compute target: $y \gets r + \gamma\bigl(\min_j Q_{\bar{\phi}_j}(s', \tilde{a}') - \alpha \log \pi_\theta(\tilde{a}' \mid s')\bigr)$
+    \State Update critics: $\phi_j \gets \phi_j - \alpha_Q \nabla_{\phi_j} \frac{1}{|B|} \sum (Q_{\phi_j}(s,a) - y)^2$, \; $j = 1, 2$
+    \State Sample $\tilde{a} \sim \pi_\theta(\cdot \mid s)$ (reparameterized)
+    \State Update actor: $\theta \gets \theta - \alpha_\pi \nabla_\theta \frac{1}{|B|} \sum \bigl(\alpha \log \pi_\theta(\tilde{a} \mid s) - \min_j Q_{\phi_j}(s, \tilde{a})\bigr)$
+    \State Update temperature: $\alpha \gets \alpha - \alpha_\alpha \nabla_\alpha \bigl(-\alpha(\log \pi_\theta(\tilde{a} \mid s) + \bar{\calH})\bigr)$
+    \State Soft update targets: $\bar{\phi}_j \gets \tau \phi_j + (1{-}\tau) \bar{\phi}_j$, \; $j = 1, 2$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Properties.} SAC is off-policy and sample-efficient, storing all transitions in a replay buffer of size $10^6$ for reuse. The entropy regularization provides implicit exploration and has been shown to improve robustness to hyperparameter choices and environment perturbations. In our experiments, SAC uses a learning start of $10^4$ steps and automatic entropy tuning.
+
+\subsection{Twin Delayed Deep Deterministic Policy Gradient (TD3)}
+\label{sec:td3}
+
+TD3, introduced by~\citet{fujimoto2018td3}, is an off-policy actor-critic algorithm that improves upon DDPG by addressing overestimation bias and training instability through three key modifications.
+
+\paragraph{Deterministic policy.} Unlike SAC, TD3 uses a deterministic policy $\mu_\theta: \calS \to \calA$ and adds Gaussian exploration noise during data collection:
+\begin{equation}
+    a_t = \mu_\theta(s_t) + \epsilon, \quad \epsilon \sim \mathcal{N}(0, \sigma^2 I).
+    \label{eq:td3_explore}
+\end{equation}
+
+\paragraph{Twin Q-networks.} TD3 maintains two Q-function networks and uses the minimum for the target computation:
+\begin{equation}
+    y_t = r_t + \gamma \min_{j=1,2} Q_{\bar{\phi}_j}(s_{t+1}, \tilde{a}_{t+1}),
+    \label{eq:td3_target}
+\end{equation}
+where $\tilde{a}_{t+1} = \mu_{\bar{\theta}}(s_{t+1}) + \epsilon'$ with $\epsilon' \sim \clip(\mathcal{N}(0, \tilde{\sigma}^2 I), -c, c)$ is the target action with smoothed noise ($\tilde{\sigma}$ is the target policy noise and $c$ is the noise clip parameter).
+
+\paragraph{Delayed policy updates.} TD3 updates the policy (and target networks) less frequently than the Q-functions---typically every $d$ gradient steps (default $d = 2$). This ensures that the Q-function estimates have stabilized before being used for policy improvement.
+
+\begin{algorithm}[htbp]
+\caption{Twin Delayed DDPG (TD3)}
+\label{alg:td3}
+\begin{algorithmic}[1]
+\Require Initial parameters $\theta, \phi_1, \phi_2$; replay buffer $\mathcal{D}$; policy delay $d$
+\For{each environment step}
+    \State $a_t = \mu_\theta(s_t) + \epsilon$, \; $\epsilon \sim \mathcal{N}(0, \sigma^2 I)$; observe $s_{t+1}, r_t$
+    \State $\mathcal{D} \gets \mathcal{D} \cup \{(s_t, a_t, r_t, s_{t+1})\}$
+\EndFor
+\For{each gradient step $t = 1, 2, \ldots$}
+    \State Sample minibatch $B \sim \mathcal{D}$
+    \State Compute smoothed target action: $\tilde{a} \gets \mu_{\bar{\theta}}(s') + \clip(\mathcal{N}(0, \tilde{\sigma}^2 I), -c, c)$
+    \State Compute target: $y \gets r + \gamma \min_j Q_{\bar{\phi}_j}(s', \tilde{a})$
+    \State Update critics: $\phi_j \gets \phi_j - \alpha_Q \nabla_{\phi_j} \frac{1}{|B|} \sum (Q_{\phi_j}(s,a) - y)^2$
+    \If{$t \bmod d = 0$}
+        \State Update actor: $\theta \gets \theta + \alpha_\mu \nabla_\theta \frac{1}{|B|} \sum Q_{\phi_1}(s, \mu_\theta(s))$
+        \State Soft update: $\bar{\theta} \gets \tau\theta + (1{-}\tau)\bar{\theta}$; \; $\bar{\phi}_j \gets \tau\phi_j + (1{-}\tau)\bar{\phi}_j$
+    \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Properties.} TD3 is off-policy and deterministic, making it particularly effective for continuous control tasks with relatively low-dimensional action spaces. The target policy smoothing acts as a regularizer, preventing the policy from exploiting narrow peaks in the Q-function. In our experiments, TD3 uses a policy delay of 2, target policy noise of 0.2, and noise clip of 0.5.
+
+\subsection{Comparison of Algorithms}
+
+\Cref{tab:algo_comparison} summarizes the key differences among the three algorithms used in this thesis.
+
+\begin{table}[htbp]
+\centering
+\caption{Comparison of PPO, SAC, and TD3.}
+\label{tab:algo_comparison}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Property} & \textbf{PPO} & \textbf{SAC} & \textbf{TD3} \\
+\midrule
+Policy type & Stochastic (Gaussian) & Stochastic (squashed Gaussian) & Deterministic \\
+On/Off-policy & On-policy & Off-policy & Off-policy \\
+Exploration & Entropy bonus & Maximum entropy & Gaussian noise \\
+Q-networks & None (uses $V$) & Twin $Q$ & Twin $Q$ \\
+Replay buffer & No & Yes ($10^6$) & Yes ($10^6$) \\
+Sample efficiency & Low & High & High \\
+Stability & High & Medium & Medium \\
+Hyperparameter sensitivity & Medium & Low (auto $\alpha$) & Medium \\
+Action space support & Continuous, Discrete & Continuous only & Continuous only \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Constrained Markov Decision Processes}
+\label{sec:cmdp_prelim}
+
+\subsection{CMDP Formulation}
+
+\begin{definition}[Constrained MDP]
+\label{def:cmdp}
+A CMDP is a tuple $\calM_C = (\calS, \calA, P, r, \gamma, \{c_k\}_{k=1}^{K}, \{d_k\}_{k=1}^{K})$, where $(\calS, \calA, P, r, \gamma)$ is a standard MDP, $c_k: \calS \times \calA \to \R_{\geq 0}$ are cost functions, and $d_k \in \R_{\geq 0}$ are constraint budgets. The objective is:
+\begin{equation}
+    \max_{\pi \in \Pi} \; J_r(\pi) = \E_\pi\!\left[\sum_{t=0}^{T} \gamma^t r(s_t, a_t)\right] \quad \text{subject to} \quad J_{c_k}(\pi) = \E_\pi\!\left[\sum_{t=0}^{T} \gamma^t c_k(s_t, a_t)\right] \leq d_k, \; \forall k \in [K].
+    \label{eq:cmdp_def}
+\end{equation}
+\end{definition}
+
+In this thesis, we consider a single constraint ($K = 1$) for each environment, with the cost function $c$ capturing environment-specific safety violations.
+
+\subsection{Lagrangian Relaxation and Strong Duality}
+
+By introducing a Lagrange multiplier $\lambda \geq 0$, the constrained problem can be relaxed to an unconstrained one:
+\begin{equation}
+    \calL(\pi, \lambda) = J_r(\pi) - \lambda \left(J_c(\pi) - d\right).
+\end{equation}
+
+\begin{proposition}[Strong Duality for CMDPs~\citep{altman1999constrained}]
+Under Slater's condition, the CMDP satisfies strong duality:
+\begin{equation}
+    \max_{\pi} \min_{\lambda \geq 0} \calL(\pi, \lambda) = \min_{\lambda \geq 0} \max_{\pi} \calL(\pi, \lambda).
+\end{equation}
+This implies that the constrained optimum can be found by solving the saddle-point problem through alternating optimization of the policy (primal) and the multiplier (dual).
+\end{proposition}
+
+\subsection{Primal-Dual Methods}
+
+The primal-dual approach alternates between:
+
+\begin{enumerate}
+    \item \textbf{Primal update (policy improvement):} For fixed $\lambda$, update the policy to maximize the Lagrangian:
+    \begin{equation}
+        \theta_{k+1} = \argmax_\theta \calL(\pi_\theta, \lambda_k) = \argmax_\theta \left[J_r(\pi_\theta) - \lambda_k J_c(\pi_\theta)\right].
+        \label{eq:primal}
+    \end{equation}
+    This is equivalent to maximizing a modified reward $\tilde{r}(s, a) = r(s, a) - \lambda c(s, a)$.
+
+    \item \textbf{Dual update (multiplier adjustment):} Update the Lagrange multiplier based on constraint violation:
+    \begin{equation}
+        \lambda_{k+1} = \max\!\left(0, \, \lambda_k + \eta \left(J_c(\pi_{\theta_{k+1}}) - d\right)\right),
+        \label{eq:dual}
+    \end{equation}
+    where $\eta > 0$ is the dual learning rate.
+\end{enumerate}
+
+When the constraint is violated ($J_c > d$), the multiplier increases, placing more weight on cost reduction. When the constraint is satisfied with margin ($J_c < d$), the multiplier decreases, allowing more focus on reward maximization.
+
+\subsection{OnCRPO Algorithm}
+
+The Online Constrained Reward Policy Optimization (OnCRPO) algorithm is the primary safe RL method used in our experiments. OnCRPO belongs to the family of first-order constrained policy optimization methods and is implemented in the OmniSafe framework~\citep{ji2023omnisafe}.
+
+OnCRPO operates by maintaining an adaptive penalty coefficient that adjusts the reward-cost tradeoff based on the current constraint satisfaction level. The OnCRPO update proceeds as follows:
+
+\begin{enumerate}
+    \item \textbf{Collect rollouts} under the current policy $\pi_\theta$.
+    \item \textbf{Estimate reward and cost advantages} $\hat{A}_t^r$ and $\hat{A}_t^c$ using GAE.
+    \item \textbf{Compute the surrogate objective:}
+    \begin{equation}
+        L(\theta) = \hat{\E}_t\!\left[\min\!\left(\rho_t \hat{A}_t^r, \clip(\rho_t, 1{-}\epsilon, 1{+}\epsilon) \hat{A}_t^r\right) - \lambda \cdot \rho_t \hat{A}_t^c\right].
+    \end{equation}
+    \item \textbf{Update the penalty coefficient} $\lambda$ based on the empirical cost return:
+    \begin{equation}
+        \lambda \leftarrow \max\!\left(0, \lambda + \eta \left(\hat{J}_c - d\right)\right).
+    \end{equation}
+\end{enumerate}
+
+\begin{algorithm}[htbp]
+\caption{OnCRPO (Online Constrained Reward Policy Optimization)}
+\label{alg:oncrpo}
+\begin{algorithmic}[1]
+\Require Initial $\theta, \phi_r, \phi_c, \lambda = 0$; cost limit $d$; dual learning rate $\eta$
+\For{iteration $= 1, 2, \ldots$}
+    \State Collect $T$ timesteps under $\pi_\theta$
+    \State Compute reward advantages $\hat{A}^r_t$ using GAE with $V_{\phi_r}$
+    \State Compute cost advantages $\hat{A}^c_t$ using GAE with $V_{\phi_c}$
+    \For{epoch $= 1, \ldots, K$}
+        \State $L \gets \hat{\E}_t[\min(\rho_t \hat{A}^r_t, \clip(\rho_t, 1{-}\epsilon, 1{+}\epsilon) \hat{A}^r_t)] - \lambda \cdot \hat{\E}_t[\rho_t \hat{A}^c_t]$
+        \State $\theta \gets \theta + \alpha \nabla_\theta L$
+    \EndFor
+    \State Update reward critic: $\phi_r \gets \argmin_{\phi} \text{MSE}(V_{\phi_r}(s), \hat{R}^r)$
+    \State Update cost critic: $\phi_c \gets \argmin_{\phi} \text{MSE}(V_{\phi_c}(s), \hat{R}^c)$
+    \State Estimate $\hat{J}_c$ from collected trajectories
+    \State $\lambda \gets \max(0, \lambda + \eta(\hat{J}_c - d))$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\section{Multi-Agent Reinforcement Learning}
+\label{sec:marl_prelim}
+
+\subsection{Stochastic Games and Decentralized POMDPs}
+
+Multi-agent reinforcement learning extends the single-agent MDP to settings with multiple interacting agents. The general framework is the stochastic game (also called Markov game).
+
+\begin{definition}[Stochastic Game]
+A stochastic game for $N$ agents is defined as:
+\begin{equation}
+    \mathcal{G} = (N, \calS, \{\calA_i\}_{i=1}^{N}, P, \{r_i\}_{i=1}^{N}, \gamma),
+\end{equation}
+where $N$ is the number of agents, $\calS$ is the shared state space, $\calA_i$ is the action space of agent $i$, $P(s' \mid s, a_1, \ldots, a_N)$ is the joint transition function, $r_i(s, a_1, \ldots, a_N)$ is the reward function for agent $i$, and $\gamma$ is the discount factor.
+\end{definition}
+
+\paragraph{Cooperative setting.} In cooperative MARL, all agents share a common reward function or have aligned objectives: $r_1 = r_2 = \cdots = r_N = r$. The goal is to find joint policies $(\pi_1, \ldots, \pi_N)$ that maximize the common return. In our MARL experiments, all environments use a cooperative formulation where the single-agent reward is divided equally among agents:
+\begin{equation}
+    r_i(s, \mathbf{a}) = \frac{r(s, \mathbf{a})}{N}, \quad \forall i \in [N].
+    \label{eq:shared_reward}
+\end{equation}
+The exception is the cogeneration environment, where per-agent rewards reflect individual component costs.
+
+\begin{definition}[Dec-POMDP]
+A Decentralized Partially Observable MDP (Dec-POMDP) is a cooperative stochastic game where each agent has a private observation $o_i$ of the shared state $s$:
+\begin{equation}
+    o_i = O_i(s), \quad i \in [N],
+\end{equation}
+where $O_i: \calS \to \calO_i$ is agent $i$'s observation function.
+\end{definition}
+
+In our MARL implementations, all agents observe the full global state (i.e., $O_i$ is the identity function), which simplifies the problem while still preserving the multi-agent action decomposition.
+
+\subsection{Independent Learning}
+
+Independent learning treats each agent as an independent RL learner that optimizes its own policy, treating the other agents as part of the (non-stationary) environment.
+
+\paragraph{Independent PPO.} Each agent $i$ maintains its own PPO policy $\pi_{\theta_i}$ and value function $V_{\phi_i}$, collecting experience and updating independently. The non-stationarity arising from simultaneously learning agents is ignored.
+
+\paragraph{Independent SAC.} Similarly, each agent maintains its own SAC networks (actor, two critics). The replay buffer for each agent stores transitions $(o_i, a_i, r_i, o_i')$.
+
+\paragraph{Parameter sharing.} When agents are homogeneous (identical observation and action spaces), a single set of network parameters can be shared across all agents, with agent identity provided as an additional input feature. This significantly improves sample efficiency for large agent populations and is used in our EV charging (54 agents) and building HVAC MARL implementations.
+
+\subsection{Centralized Training with Decentralized Execution (CTDE)}
+
+The CTDE paradigm provides global information to agents during training while requiring only local information during execution.
+
+\paragraph{Centralized critic.} A common CTDE approach uses a centralized value function $V(s)$ or $Q(s, a_1, \ldots, a_N)$ that conditions on the global state and all agents' actions during training, while each agent's policy $\pi_i(a_i \mid o_i)$ conditions only on local observations:
+\begin{align}
+    \text{Training:} \quad & V_\phi(s) = \E\!\left[\sum_t \gamma^t r(s_t, \mathbf{a}_t) \;\middle|\; s_0 = s\right] \\
+    \text{Execution:} \quad & a_i \sim \pi_{\theta_i}(\cdot \mid o_i), \quad \forall i \in [N]
+\end{align}
+
+In our Ray RLlib implementations, independent learning with shared observations is used for EV charging and building environments, while the cogeneration environment uses per-agent policies with shared global observations.
+
+\subsection{PettingZoo Parallel Environment Interface}
+
+PettingZoo~\citep{terry2021pettingzoo} provides a standardized interface for multi-agent environments. The parallel API, used in our implementations, allows all agents to act simultaneously:
+
+\begin{algorithm}[htbp]
+\caption{PettingZoo Parallel Environment Step}
+\label{alg:pettingzoo}
+\begin{algorithmic}[1]
+\Require Joint action dictionary $\{$agent\_id$: a_i\}$
+\State observations, rewards, terminations, truncations, infos $\gets$ \texttt{env.step}(actions)
+\Ensure
+\State \quad observations: $\{$agent\_id$: o_i\}$ \Comment{per-agent observations}
+\State \quad rewards: $\{$agent\_id$: r_i\}$ \Comment{per-agent rewards}
+\State \quad terminations: $\{$agent\_id$:$ bool$\}$ \Comment{per-agent done flags}
+\State \quad truncations: $\{$agent\_id$:$ bool$\}$ \Comment{per-agent truncation flags}
+\State \quad infos: $\{$agent\_id$:$ info$_i\}$ \Comment{per-agent info dicts}
+\end{algorithmic}
+\end{algorithm}
+
+This interface is compatible with Ray RLlib's multi-agent training infrastructure, enabling seamless integration of our PettingZoo environments with standard MARL algorithms.
+
+\section{Noise Models and Robustness Theory}
+\label{sec:noise_models}
+
+A central contribution of this thesis is the systematic characterization of RL algorithm robustness to noise. This section formalizes the three noise channels used in our framework.
+
+\subsection{Observation Noise Model}
+
+Observation noise models sensor uncertainty and measurement errors. Given the true state $s_t$, the agent observes a noisy version $\tilde{s}_t$:
+\begin{equation}
+    \tilde{s}_t = h_{\text{obs}}(s_t, \xi_t^{\text{obs}}),
+    \label{eq:obs_noise}
+\end{equation}
+where $\xi_t^{\text{obs}}$ is the noise random variable and $h_{\text{obs}}$ is the noise injection function. We consider two common models:
+
+\begin{definition}[Additive Gaussian Noise]
+\begin{equation}
+    \tilde{s}_t = s_t + \epsilon_t, \quad \epsilon_t \sim \mathcal{N}(0, \sigma_{\text{obs}}^2 I),
+\end{equation}
+where $\sigma_{\text{obs}}$ is the observation noise standard deviation. This model is used for MOER values and departure estimates in the EV charging environment.
+\end{definition}
+
+\begin{definition}[Proportional (Multiplicative) Gaussian Noise]
+\begin{equation}
+    \tilde{s}_t = s_t \odot (1 + \epsilon_t), \quad \epsilon_t \sim \mathcal{N}(0, \sigma_{\text{obs}}^2 I),
+\end{equation}
+where $\odot$ denotes element-wise multiplication. This model scales the noise magnitude with the signal magnitude, which is physically appropriate for percentage-based sensor errors. This model is used for the building environment observations and cogeneration environment sensor readings.
+\end{definition}
+
+\paragraph{Mixed noise.} In the EV charging environment, different observation components use different noise models:
+\begin{align}
+    \tilde{o}_{\text{moer}} &= \clip(o_{\text{moer}} + \epsilon, 0, 1), & \epsilon &\sim \mathcal{N}(0, \sigma^2), \\
+    \tilde{o}_{\text{dep}} &= \clip(o_{\text{dep}} + \epsilon, -288, 288), & \epsilon &\sim \mathcal{N}(0, (50\sigma)^2), \\
+    \tilde{o}_{\text{dem}} &= o_{\text{dem}} \odot \clip(1 + \epsilon, 0.5, 1.5), & \epsilon &\sim \mathcal{N}(0, \sigma^2).
+\end{align}
+Note the factor of 50 applied to departure time noise, reflecting the larger scale and higher uncertainty of departure estimates compared to MOER values.
+
+\subsection{Action Noise Model}
+
+Action noise models actuator imprecision and command execution errors. Given the policy output $a_t = \pi(s_t)$, the executed action is:
+\begin{equation}
+    \tilde{a}_t = h_{\text{act}}(a_t, \xi_t^{\text{act}}).
+    \label{eq:act_noise}
+\end{equation}
+
+\paragraph{Additive Gaussian noise (continuous actions):}
+\begin{equation}
+    \tilde{a}_t = \clip(a_t + \epsilon_t, a_{\min}, a_{\max}), \quad \epsilon_t \sim \mathcal{N}(0, \sigma_{\text{act}}^2 I).
+\end{equation}
+
+\paragraph{Multiplicative Gaussian noise (continuous actions):}
+\begin{equation}
+    \tilde{a}_t = \clip(a_t + a_t \odot \epsilon_t, a_{\min}, a_{\max}), \quad \epsilon_t \sim \mathcal{N}(0, \sigma_{\text{act}}^2 I).
+\end{equation}
+
+\paragraph{Bernoulli flip noise (discrete actions):} For discrete actions (e.g., cooling bay count in cogeneration), with probability $p_{\text{act}}$, the action is perturbed:
+\begin{equation}
+    \tilde{a}_t = \begin{cases}
+    1 - a_t & \text{w.p.\ } p_{\text{act}}, \quad \text{if } a_t \in \{0, 1\}, \\
+    a_t + \text{Uniform}(\{-1, +1\}) & \text{w.p.\ } p_{\text{act}}, \quad \text{if } |\calA| > 2.
+    \end{cases}
+\end{equation}
+
+\subsection{Environment Noise Model}
+
+Environment noise models stochastic perturbations in the system dynamics that are not directly observable to the agent. Given the true environment parameters $\theta_{\text{env}}$, the perturbed parameters are:
+\begin{equation}
+    \tilde{\theta}_{\text{env}} = \theta_{\text{env}} + \epsilon_{\text{env}}, \quad \epsilon_{\text{env}} \sim \mathcal{N}(0, \Sigma_{\text{env}}).
+    \label{eq:env_noise}
+\end{equation}
+
+Environment noise affects the dynamics and/or reward computation but is not reflected in the agent's observations. Specific implementations:
+\begin{itemize}
+    \item \textbf{EV Charging:} MOER value used in reward computation is perturbed: $\tilde{m}_t = \clip(m_t + \epsilon, 0, 1)$.
+    \item \textbf{Building:} Outdoor temperature, ground temperature, and solar irradiance are perturbed before the RC thermal model step.
+    \item \textbf{Cogeneration:} Ambient temperature, pressure, and humidity fed to the ONNX surrogate model are perturbed.
+\end{itemize}
+
+\subsection{Noise Channel Independence}
+
+A key design principle of our noise framework is \textbf{channel independence}: observation noise, action noise, and environment noise are sampled independently at each timestep.
+
+\begin{assumption}[Noise Channel Independence]
+\label{ass:independence}
+\begin{equation}
+    \xi_t^{\text{obs}} \perp \xi_t^{\text{act}} \perp \xi_t^{\text{env}}, \quad \forall t.
+\end{equation}
+\end{assumption}
+
+This independence enables controlled experiments where the contribution of each noise channel can be isolated through ablation studies.
+
+\subsection{Distribution Shift Protocols}
+
+We formalize two distribution shift protocols:
+
+\begin{definition}[TCTN Protocol]
+\textbf{Train-Clean-Test-Noisy:} Train the policy $\pi^*$ under clean conditions ($\sigma = 0$) and evaluate under noise level $\sigma > 0$:
+\begin{equation}
+    \text{TCTN}(\sigma) = J_\sigma(\pi^*_0), \quad \pi^*_0 = \argmax_\pi J_0(\pi).
+\end{equation}
+\end{definition}
+
+\begin{definition}[TNTC Protocol]
+\textbf{Train-Noisy-Test-Clean:} Train the policy $\pi^*_\sigma$ under noise level $\sigma$ and evaluate under clean conditions:
+\begin{equation}
+    \text{TNTC}(\sigma) = J_0(\pi^*_\sigma), \quad \pi^*_\sigma = \argmax_\pi J_\sigma(\pi).
+\end{equation}
+\end{definition}
+
+The benefit of noise-aware training is measured by the \emph{distribution shift gap}:
+\begin{equation}
+    \Delta_{\text{shift}}(\sigma) = J_\sigma(\pi^*_\sigma) - \text{TCTN}(\sigma).
+\end{equation}
+
+\section{SustainGym: Sustainable Energy RL Environments}
+\label{sec:sustaingym}
+
+\subsection{Design Philosophy}
+
+SustainGym~\citep{yeh2023sustaingym} is a suite of RL environments designed for sustainable energy systems research. The environments share several design principles:
+
+\begin{enumerate}
+    \item \textbf{Physics-based models:} Each environment is grounded in realistic physical models (ACN-Sim for EV charging, RC thermal models for buildings, ONNX surrogate models for cogeneration).
+    \item \textbf{Real-world data:} Environments use real-world data where available (ACN-Data charging sessions, TMY weather data, historical energy prices).
+    \item \textbf{Gymnasium compatibility:} All environments implement the Gymnasium API, enabling seamless integration with standard RL libraries.
+    \item \textbf{Multi-objective rewards:} Rewards balance multiple competing objectives (profit vs.\ carbon cost, comfort vs.\ energy, fuel cost vs.\ demand satisfaction).
+\end{enumerate}
+
+\subsection{Environment Suite Overview}
+
+SustainGym includes five environments, of which three are used in this thesis. \Cref{tab:sustaingym_overview} provides an overview.
+
+\begin{table}[htbp]
+\centering
+\caption{Overview of SustainGym environments used in this thesis.}
+\label{tab:sustaingym_overview}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+\textbf{Environment} & \textbf{Episode Length} & \textbf{Obs Dim} & \textbf{Act Dim} & \textbf{Reward Range} \\
+\midrule
+EVChargingEnv & 288 steps (24h) & Dict ($\sim$146) & 54 (cont.) & $[\sim{-}0.01, 0.03]$ \\
+BuildingEnv & 288 steps (24h) & $n+4$ (flat) & $n$ (cont.) & $[-1, 0]$ \\
+CogenEnv & 96 steps (24h) & Dict ($\sim$119) & 15 (mixed) & $[\sim{-}5, 0]$ (scaled) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Each environment is described in full technical detail in \Cref{ch:methodology}, including the physical models, observation and action space definitions, reward formulations, and noise injection mechanisms.

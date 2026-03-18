@@ -7,6 +7,11 @@ Usage:
     python scripts/plot/stdrl_plot.py --env evcharging --algo PPO --dt DS
     python scripts/plot/stdrl_plot.py --env building --algo SAC --dt DA --auto_ylim
     python scripts/plot/stdrl_plot.py --env cogen --algo PPO --dt DE
+
+    # Baseline algorithm comparison (PPO vs SAC vs TD3, noise=0):
+    python scripts/plot/stdrl_plot.py --env evcharging --compare
+    python scripts/plot/stdrl_plot.py --env building --compare --auto_ylim
+    python scripts/plot/stdrl_plot.py --env cogen --compare
 """
 
 import os
@@ -21,7 +26,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from style import (COLORS_INDEXED, LINE_STYLES, MARKERS,
-                   MARK_EVERY_FRAC, FILL_ALPHA, ENV_SHORT, style_axis)
+                   MARK_EVERY_FRAC, FILL_ALPHA, ENV_SHORT, style_axis,
+                   ALGO_COLORS, ALGO_MARKERS, ALGO_LINESTYLES,
+                   get_color, get_marker, get_linestyle)
 # style.py auto-applies rcParams on import
 
 
@@ -322,6 +329,29 @@ ALL_CONFIGS = {
 
 
 # ============================================================================
+# BASELINE PATHS FOR ALGORITHM COMPARISON (noise=0.0 for each algo)
+# ============================================================================
+
+BASELINE_PATHS = {
+    "evcharging": {
+        "PPO": r"logs_std_train/evcharging_PPO/2026-02-05-20-06-35_DS_0.0_DA_0.0/monitor.csv",
+        "SAC": r"logs_std_train/evcharging_SAC/2026-02-09-12-45-20_DS_0.0_DA_0.0/monitor.csv",
+        "TD3": r"logs_std_train/evcharging_TD3/2026-02-07-17-45-25_DS_0.0_DA_0.0/monitor.csv",
+    },
+    "building": {
+        "PPO": r"logs_std_train/building_PPO/2026-02-09-11-18-57_DS_0.0_DA_0.0/monitor.csv",
+        "SAC": r"logs_std_train/building_SAC/2026-02-09-11-18-19_DS_0.0_DA_0.0/monitor.csv",
+        "TD3": r"logs_std_train/building_TD3/2026-02-11-08-02-31_DS_0.0_DA_0.0/monitor.csv",
+    },
+    "cogen": {
+        "PPO": r"logs_std_train/cogen_PPO/2026-02-09-18-02-55_DS_0.0_DA_0.0/monitor.csv",
+        "SAC": r"logs_std_train/cogen_SAC/2026-02-09-18-03-16_DS_0.0_DA_0.0/monitor.csv",
+        "TD3": r"logs_std_train/cogen_TD3/2026-02-09-18-03-50_DS_0.0_DA_0.0/monitor.csv",
+    },
+}
+
+
+# ============================================================================
 # FUNCTIONS
 # ============================================================================
 
@@ -448,6 +478,91 @@ def save_plot(env: str, algo: str, dt: str, output_dir: str, save_pdf: bool = Fa
         print(f"PDF saved: {pdf_path}")
 
 
+def plot_comparison(
+    env: str,
+    max_steps: int = 32000,
+    window: int = 6000,
+    skip_initial: int = 250,
+    auto_ylim: bool = False,
+    ylim: Optional[Tuple[float, float]] = None,
+    xlim: Optional[Tuple[float, float]] = None,
+    auto_xlim: bool = False,
+    std_band: float = 0.03,
+):
+    """Plot baseline (noise=0) learning curves for all algorithms on one chart."""
+    baselines = BASELINE_PATHS.get(env, {})
+    if not baselines:
+        print(f"No baseline paths for env: {env}")
+        return
+
+    env_def = ENV_DEFAULTS[env]
+    _, ax = plt.subplots(figsize=(10, 6))
+
+    for algo, csv_path in baselines.items():
+        print(f"Loading {algo} baseline ...")
+        rewards = load_rewards(csv_path, max_steps)
+        if rewards is None:
+            continue
+
+        mean, std = calculate_running_stats(rewards, window)
+
+        x_full = np.arange(len(mean))
+        step = max(1, len(x_full) // 1500)
+        x = x_full[::step]
+        mean_t = mean[::step]
+        std_t = std[::step]
+
+        color = get_color(algo)
+        ls = get_linestyle(algo)
+        marker = get_marker(algo)
+        me = max(1, int(len(x) * MARK_EVERY_FRAC))
+
+        ax.plot(x, mean_t, label=algo, linewidth=1.8, color=color,
+                linestyle=ls, marker=marker, markersize=5,
+                markevery=me, markeredgewidth=0.6,
+                markeredgecolor=color)
+        ax.fill_between(x, mean_t - std_band * std_t, mean_t + std_band * std_t,
+                        alpha=FILL_ALPHA, color=color, linewidth=0)
+
+    # X-axis limits
+    if auto_xlim:
+        pass
+    elif xlim:
+        ax.set_xlim(xlim)
+    else:
+        ax.set_xlim(skip_initial, max_steps)
+
+    # Y-axis limits
+    if auto_ylim:
+        pass
+    elif ylim:
+        ax.set_ylim(ylim)
+
+    ax.set_title(f"{env_def['title']} — Algorithm Comparison (Baseline)")
+    ax.set_xlabel("Training Episode")
+    ax.set_ylabel("Average Episode Reward")
+    ax.legend(loc='lower right', frameon=True)
+    style_axis(ax)
+    plt.tight_layout()
+
+
+def save_comparison_plot(env: str, output_dir: str, save_pdf: bool = False):
+    """Save comparison plot into graphs/C_STDRL/{env_short}/comparison/"""
+    subdir = os.path.join(output_dir, ENV_SHORT.get(env, env), "comparison")
+    os.makedirs(subdir, exist_ok=True)
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    base_filename = f"baseline_comparison_{timestamp}"
+
+    png_path = os.path.join(subdir, base_filename + ".png")
+    plt.savefig(png_path, dpi=300, bbox_inches='tight')
+    print(f"\nPNG saved: {png_path}")
+
+    if save_pdf:
+        pdf_path = os.path.join(subdir, base_filename + ".pdf")
+        plt.savefig(pdf_path, bbox_inches='tight')
+        print(f"PDF saved: {pdf_path}")
+
+
 # ============================================================================
 # MAIN
 # ============================================================================
@@ -455,8 +570,10 @@ def save_plot(env: str, algo: str, dt: str, output_dir: str, save_pdf: bool = Fa
 def main():
     parser = argparse.ArgumentParser(description='Unified Standard RL Training Curve Plotter')
     parser.add_argument('--env', type=str, required=True, choices=['evcharging', 'building', 'cogen'])
-    parser.add_argument('--algo', type=str, default='PPO', choices=['PPO', 'SAC', 'TD3'])
-    parser.add_argument('--dt', type=str, default='DS', choices=['DS', 'DA', 'DE'])
+    parser.add_argument('--algo', type=str, default='PPO', choices=['PPO', 'SAC', 'TD3'],
+                        help='Algorithm (ignored with --compare)')
+    parser.add_argument('--dt', type=str, default='DS', choices=['DS', 'DA', 'DE'],
+                        help='Noise type (ignored with --compare)')
     parser.add_argument('--t_steps', type=int, default=None, help='Training steps (default: env-specific)')
     parser.add_argument('--w_size', type=int, default=6000, help='Window size')
     parser.add_argument('--skip', type=int, default=250, help='Skip initial episodes')
@@ -467,6 +584,8 @@ def main():
                         help='X-axis limits (e.g., --xlim 250 32000)')
     parser.add_argument('--auto_ylim', action='store_true', help='Force auto y-axis limits')
     parser.add_argument('--auto_xlim', action='store_true', help='Force auto x-axis limits')
+    parser.add_argument('--compare', action='store_true',
+                        help='Compare all algorithms baseline (noise=0) for the given env')
 
     args = parser.parse_args()
 
@@ -474,11 +593,37 @@ def main():
     env_def = ENV_DEFAULTS[args.env]
     t_steps = args.t_steps if args.t_steps is not None else env_def["t_steps"]
 
+    # Determine ylim / xlim
+    ylim = tuple(args.ylim) if args.ylim else (None if args.auto_ylim else None)
+    xlim = tuple(args.xlim) if args.xlim else None
+    auto_xlim = args.auto_xlim and not args.xlim
+
+    # ── Comparison mode ──
+    if args.compare:
+        print(f"\n{'='*70}")
+        print(f"Baseline Algorithm Comparison: {args.env}")
+        print(f"{'='*70}\n")
+
+        plot_comparison(
+            env=args.env,
+            max_steps=t_steps,
+            window=args.w_size,
+            skip_initial=args.skip,
+            auto_ylim=args.auto_ylim,
+            ylim=ylim,
+            xlim=xlim,
+            auto_xlim=auto_xlim,
+            std_band=env_def["std_band"],
+        )
+        save_comparison_plot(args.env, OUTPUT_DIR, args.pdf)
+        plt.show()
+        return
+
+    # ── Standard single-algo noise plot ──
     print(f"\n{'='*70}")
     print(f"Plotting {args.env} / {args.algo} / {args.dt}")
     print(f"{'='*70}\n")
 
-    # Get config
     env_config = ALL_CONFIGS[args.env]
     if args.algo not in env_config or args.dt not in env_config[args.algo]:
         print(f"Config not found: {args.env} / {args.algo} / {args.dt}")
@@ -486,26 +631,10 @@ def main():
 
     paths, default_ylim = env_config[args.algo][args.dt]
 
-    # Determine ylim
-    if args.ylim:
-        ylim = tuple(args.ylim)
-    elif args.auto_ylim:
-        ylim = None
-    else:
+    # Override ylim with config default if no explicit flag
+    if not args.ylim and not args.auto_ylim:
         ylim = default_ylim
 
-    # Determine xlim
-    if args.xlim:
-        xlim = tuple(args.xlim)
-        auto_xlim = False
-    elif args.auto_xlim:
-        xlim = None
-        auto_xlim = True
-    else:
-        xlim = None
-        auto_xlim = False
-
-    # Plot
     plot_learning_curves(
         experiments=paths,
         ylim=ylim,
@@ -520,10 +649,7 @@ def main():
         dt=args.dt,
     )
 
-    # Save
     save_plot(args.env, args.algo, args.dt, OUTPUT_DIR, args.pdf)
-
-    # Show
     plt.show()
 
 
