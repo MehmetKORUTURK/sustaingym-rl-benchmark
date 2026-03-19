@@ -179,7 +179,7 @@ if args.algo == "APPO":
         .rollouts(num_rollout_workers=args.num_workers,
                   rollout_fragment_length=288, enable_connectors=True)
         .training(
-            train_batch_size=2880, num_sgd_iter=5, lr=5e-5,
+            train_batch_size=2880, num_sgd_iter=2, lr=5e-5,
             gamma=0.99, lambda_=0.95, clip_param=0.2,
             entropy_coeff=0.005, grad_clip=5.0,
             model={"fcnet_hiddens": [64, 64]},
