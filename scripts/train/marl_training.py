@@ -400,8 +400,16 @@ elif args.algo == "IMPALA":
     from ray.rllib.algorithms.impala import ImpalaConfig
 
     if args.env == "evcharging":
+        # Shared policy: use fewer workers (3) to reduce staleness,
+        # batch=864 (3*288) for divisibility. Independent: normal 10 workers.
+        if args.shared_policy:
+            ev_impala_batch = 864   # 3 workers * 288
+            ev_impala_workers = 3
+        else:
+            ev_impala_batch = 2880  # 10 workers * 288
+            ev_impala_workers = args.num_workers
         impala_params = dict(
-            train_batch_size=2880, lr=5e-5,
+            train_batch_size=ev_impala_batch, lr=5e-5,
             gamma=0.99, entropy_coeff=0.005,
             vtrace=True, vtrace_clip_rho_threshold=0.5,
             vtrace_clip_pg_rho_threshold=0.5,
@@ -431,6 +439,11 @@ elif args.algo == "IMPALA":
         )
         rollout_frag = 200
 
+    # EVCharging shared IMPALA uses fewer workers to reduce policy staleness
+    impala_workers = args.num_workers
+    if args.env == "evcharging" and args.shared_policy:
+        impala_workers = 3
+
     config = (
         ImpalaConfig()
         .environment(env="marl_env", env_config=env_config_dict,
@@ -438,7 +451,7 @@ elif args.algo == "IMPALA":
         .framework("torch")
         .resources(num_gpus=min(1, num_gpus), num_gpus_per_worker=0)
         .multi_agent(**common_multi_agent)
-        .rollouts(num_rollout_workers=args.num_workers,
+        .rollouts(num_rollout_workers=impala_workers,
                   rollout_fragment_length=rollout_frag,
                   observation_filter=obs_filter, enable_connectors=True)
         .training(**impala_params)
