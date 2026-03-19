@@ -71,13 +71,100 @@ We evaluate the noise robustness of three standard RL algorithms---PPO, SAC, and
 \label{fig:baseline_co}
 \end{figure}
 
+% --- Non-RL Baseline Comparison ---
+\subsubsection{Comparison with Non-RL Baselines}
+
+To contextualize the RL results, \Cref{tab:nonrl_baselines} compares the trained RL policies against non-RL baselines: Random (uniform action sampling), Do-Nothing (zero action), environment-specific heuristics (Greedy, MPC), and the Offline Optimal oracle (LP with perfect foresight, EV Charging only).
+
+\begin{table}[htbp]
+\centering
+\caption{Non-RL baseline comparison. Mean reward $\pm$ std over 1000 evaluation episodes. Best RL and best overall are highlighted.}
+\label{tab:nonrl_baselines}
+\begin{tabular}{@{}llcc@{}}
+\toprule
+\textbf{Environment} & \textbf{Method} & \textbf{Mean Reward} & \textbf{Std} \\
+\midrule
+\multirow{7}{*}{EV Charging}
+    & Offline Optimal (oracle) & $8.32$ & $4.57$ \\
+    & Greedy & $\mathbf{8.65}$ & $4.44$ \\
+    & MPC-3 & $8.51$ & $4.37$ \\
+    & Random & $4.62$ & $3.52$ \\
+    \cmidrule{2-4}
+    & PPO (best RL) & $6.01$ & $3.48$ \\
+    & SAC & $3.79$ & $3.29$ \\
+    & TD3 & $3.16$ & $3.11$ \\
+\midrule
+\multirow{6}{*}{Building}
+    & Do-Nothing & $-59.81$ & $16.79$ \\
+    & MPC & $-59.81$ & $16.79$ \\
+    & Random & $-219.27$ & $14.67$ \\
+    \cmidrule{2-4}
+    & PPO (best RL) & $\mathbf{-32.10}$ & $7.65$ \\
+    & TD3 & $-63.20$ & $26.85$ \\
+    & SAC & $-97.71$ & $9.50$ \\
+\midrule
+\multirow{5}{*}{Cogeneration}
+    & Do-Nothing & $-7.36$ & $1.06$ \\
+    & Random & $-1.84$ & $0.40$ \\
+    \cmidrule{2-4}
+    & SAC (best RL) & $\mathbf{-0.033}$ & $0.079$ \\
+    & TD3 & $-0.040$ & $0.073$ \\
+    & PPO & $-1.76$ & $0.91$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\Cref{fig:baseline_compare_ev,fig:baseline_compare_bu,fig:baseline_compare_co} visualize the comparison between non-RL baselines and RL algorithms, while \Cref{fig:baseline_violin} shows the reward distributions of the non-RL baselines.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{figures/C_BASEL/evcharging/compare.png}
+\caption{EV Charging: Non-RL baselines vs.\ RL algorithms. Greedy and MPC outperform all RL algorithms, indicating that the EV Charging reward structure favors simple heuristics. RL agents underperform the Offline Optimal oracle by $28$--$62\%$.}
+\label{fig:baseline_compare_ev}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{figures/C_BASEL/building/compare.png}
+\caption{Building: Non-RL baselines vs.\ RL algorithms. PPO substantially outperforms all baselines, demonstrating that RL learns meaningful HVAC control strategies. Do-Nothing and MPC achieve identical performance ($-59.8$), suggesting the MPC controller defaults to zero action.}
+\label{fig:baseline_compare_bu}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{figures/C_BASEL/cogen/compare.png}
+\caption{Cogeneration: Non-RL baselines vs.\ RL algorithms. SAC and TD3 achieve near-zero reward, vastly outperforming both Random ($-1.84$) and Do-Nothing ($-7.36$). PPO performs comparably to Random, reflecting its conservative strategy.}
+\label{fig:baseline_compare_co}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_BASEL/evcharging/violin.png}
+\caption{EV Charging}
+\label{fig:baseline_violin_ev}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_BASEL/building/violin.png}
+\caption{Building}
+\label{fig:baseline_violin_bu}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_BASEL/cogen/violin.png}
+\caption{Cogeneration}
+\label{fig:baseline_violin_co}
+\end{subfigure}
+\caption{Non-RL baseline reward distributions. (a) EV Charging: Greedy, MPC, and Offline Optimal show similar distributions with high variance from stochastic EV arrivals. (b) Building: Do-Nothing exhibits bimodal structure (high/low occupancy days); Random is concentrated around $-220$. (c) Cogeneration: Do-Nothing has wide spread ($-5$ to $-10.5$) indicating unstable plant operation; Random is tightly clustered around $-1.8$.}
+\label{fig:baseline_violin}
+\end{figure}
+
 Several environment-specific observations emerge from the baselines:
 
-\paragraph{EV Charging.} PPO significantly outperforms SAC and TD3 in absolute reward ($6.01$ vs.\ $3.79$ and $3.16$). The variance is substantial across all algorithms ($\text{std} \approx 3.1$--$3.5$), reflecting the stochastic nature of EV arrival/departure patterns.
+\paragraph{EV Charging.} A striking finding is that all RL algorithms underperform the simple Greedy heuristic ($8.65$) and MPC-3 controller ($8.51$). PPO achieves only $69\%$ of the Greedy baseline, while SAC and TD3 fall below the Random policy. This suggests that the EV Charging reward structure---which combines profit, carbon cost, and network violations---is difficult for general-purpose RL to optimize, and domain-specific heuristics capture the key operational patterns more effectively. The Offline Optimal oracle ($8.32$) is slightly below Greedy, likely because it optimizes a different LP objective than the RL reward.
 
-\paragraph{Building.} PPO achieves the best baseline reward ($-32.10$), substantially outperforming TD3 ($-63.20$) and SAC ($-97.71$). The large gap suggests that PPO's on-policy optimization is better suited to the Building environment's multi-zone thermal dynamics. TD3's high variance ($\text{std} = 26.85$) indicates inconsistent HVAC control across episodes.
+\paragraph{Building.} PPO ($-32.10$) is the clear winner, outperforming Do-Nothing ($-59.81$) by $46\%$ and Random ($-219.27$) by $85\%$. This demonstrates that RL learns genuinely useful HVAC control beyond trivial strategies. The Do-Nothing and MPC baselines achieve identical performance, suggesting that the rule-based MPC controller defaults to zero action in this configuration. TD3's high variance ($\text{std} = 26.85$) indicates inconsistent HVAC control across episodes.
 
-\paragraph{Cogeneration.} SAC and TD3 achieve near-zero reward ($\approx -0.03$ to $-0.04$), indicating successful plant operation. PPO's reward of $-1.76$ is significantly worse, reflecting PPO's known difficulty with high-dimensional continuous action spaces (15 actuators). However, PPO achieves the lowest fuel cost (\$11,001 vs.\ \$18,700 for SAC), suggesting it learns an overly conservative but fuel-efficient strategy.
+\paragraph{Cogeneration.} SAC and TD3 achieve near-zero reward ($\approx -0.03$ to $-0.04$), vastly outperforming Random ($-1.84$, $50\times$ worse) and Do-Nothing ($-7.36$, $200\times$ worse). PPO's conservative strategy ($-1.76$) is comparable to Random, confirming that PPO fails to learn effective plant dispatch despite achieving the lowest fuel cost (\$11,001 vs.\ \$18,700 for SAC).
 
 % ============================================================
 \subsection{EV Charging: Noise Robustness}

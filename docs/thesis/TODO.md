@@ -136,10 +136,11 @@ MARL deneyleri tamamlandığında eklenecek:
 - [x] main.tex nomenclature'da IQM kalıyor (tanım hala geçerli)
 - **Multi-seed IQM analizi**: SmartGridComm paper'a taşındı → `docs/SGC/TODO.md`
 
-### ~~9. Non-RL Baseline Karşılaştırması~~ ✅ TAMAMLANDI
-- [x] Chapter 4: Baseline Methods subsection kaldırıldı (tanımlar + tablo)
-- [x] Yorum olarak neden kaldırıldığı belirtildi (focus = RL algo comparison, not RL vs non-RL)
-- [x] Non-RL baselines SGC paper TODO'ya taşındı → `docs/SGC/TODO.md` #6b
+### ~~9. Non-RL Baseline Karşılaştırması~~ ✅ TAMAMLANDI (GERİ EKLENDİ)
+- [x] Chapter 4: Baseline tanımları kaldırıldı (methodology'de gereksizdi)
+- [x] Chapter 5: Non-RL baseline karşılaştırma section eklendi (tablo + 3 compare figür)
+- [x] Baselines: Random, DoNothing, Greedy, MPC, OfflineOptimal (env-specific)
+- [x] Key finding: EV'de RL heuristik'lerden kötü, Building'de PPO açık ara iyi, Cogen'de SAC/TD3 hakim
 
 ### ~~10. Abstract'teki "700 runs" vs Experiment Matrix "444 configs"~~ ✅ TAMAMLANDI (#6 ile birlikte)
 - [x] main.tex abstract: "over 700" → "over 200 unique configs / over 300 runs"
