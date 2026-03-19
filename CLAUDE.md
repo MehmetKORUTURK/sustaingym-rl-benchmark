@@ -58,6 +58,7 @@ This is a **Master's thesis research project** by Mehmet Koruturk (Virginia Tech
 |------|---------|-----------|------------|
 | `scripts/train/stdrl_training.py` | Standard single-agent training | Stable-Baselines3 | PPO, SAC, TD3 |
 | `scripts/test/stdrl_testing.py` | Model evaluation/testing | Stable-Baselines3 | PPO, SAC, TD3 |
+| `scripts/test/baseline_testing.py` | Non-RL baseline evaluation | — | Random, Greedy, MPC, OfflineOptimal, DoNothing |
 | `scripts/train/marl_training.py` | MARL training - unified | Ray RLlib | PPO, SAC, APPO, IMPALA |
 | `scripts/train/marl_tr_ev.py` | MARL training - EVCharging | Ray RLlib | PPO, SAC, APPO, IMPALA |
 | `scripts/train/marl_tr_bu.py` | MARL training - Building | Ray RLlib | PPO, SAC, APPO, IMPALA |
@@ -105,6 +106,7 @@ This is a **Master's thesis research project** by Mehmet Koruturk (Virginia Tech
 | `scripts/plot/stdrl_post_plot.py` | Post-training bar/line/heatmap charts | `./graphs/C_POST/` |
 | `scripts/plot/omni_plot.py` | OmniSafe Safe RL dual-panel (reward+cost) | `./graphs/C_SRL/{env}/` |
 | `scripts/plot/marl_plot.py` | MARL training curves | `./graphs/C_MARL/` |
+| `scripts/plot/baseline_plot.py` | Non-RL baseline comparison plots | `./graphs/C_BASEL/{env}/` |
 
 **Plot usage**:
 ```bash
@@ -112,6 +114,8 @@ python scripts/plot/stdrl_plot_bu.py --algo PPO --dt DE --auto_ylim
 python scripts/plot/stdrl_post_plot.py --env evcharging --algo SAC --noise-type obs --plot all
 python scripts/plot/omni_plot.py --env building --t_steps 20000 --w_size 500 --climit 5
 python scripts/plot/marl_plot.py --env evcharging --t_steps 32000 --w_size 500 --auto_ylim
+python scripts/plot/baseline_plot.py --env evcharging --plot all
+python scripts/plot/baseline_plot.py --env evcharging --plot compare --with-rl
 ```
 
 ---
@@ -137,6 +141,40 @@ python scripts/train/stdrl_training.py --env cogen --algo PPO --quick-test
 ```
 
 **Key args**: `--env {cogen,evcharging,building}`, `--algo {PPO,SAC,TD3}`, `--noise FLOAT`, `--noise-action FLOAT`, `--noise-env FLOAT`, `--use-vecnormalize`, `--norm-reward`, `--seed INT`, `--quick-test`, `--no-eval`, `--rm INT` (cogen), `--eval-freq INT`, `--n-eval-episodes INT`, `--checkpoint-freq INT`
+
+### Non-RL Baseline Testing
+
+```bash
+# EVCharging baselines
+python scripts/test/baseline_testing.py --env evcharging --algo Random --n-eval 100
+python scripts/test/baseline_testing.py --env evcharging --algo Greedy --n-eval 100
+python scripts/test/baseline_testing.py --env evcharging --algo MPC --n-eval 100
+python scripts/test/baseline_testing.py --env evcharging --algo OfflineOptimal --n-eval 50
+
+# Building baselines
+python scripts/test/baseline_testing.py --env building --algo Random --n-eval 100
+python scripts/test/baseline_testing.py --env building --algo MPC --n-eval 100
+python scripts/test/baseline_testing.py --env building --algo DoNothing --n-eval 100
+
+# Cogen baselines
+python scripts/test/baseline_testing.py --env cogen --algo Random --n-eval 100 --rm 300
+python scripts/test/baseline_testing.py --env cogen --algo DoNothing --n-eval 100 --rm 300
+
+# With noise (robustness testing)
+python scripts/test/baseline_testing.py --env evcharging --algo MPC --noise 0.1 --n-eval 100
+```
+
+**Key args**: `--env {cogen,evcharging,building}`, `--algo {Random,Greedy,MPC,OfflineOptimal,DoNothing}`, `--noise FLOAT`, `--noise-action FLOAT`, `--noise-env FLOAT`, `--n-eval INT`, `--rm INT` (cogen), `--reward-beta FLOAT` (building), `--seed INT`, `--collect-trajectories`
+
+**Available baselines per env**:
+
+- **EVCharging**: Random, Greedy, MPC (cvxpy lookahead), OfflineOptimal (oracle upper bound)
+- **Building**: Random, MPC (RC model-based), DoNothing (no HVAC)
+- **Cogen**: Random, DoNothing (min-power operation)
+
+**Output**: `logs_baseline_test/{env}_{algo}/{timestamp}_NOISE_{n}_ACT_{a}_ENV_{e}/` — same format as stdrl_testing.py (episode_results.csv, evaluation_summary.txt, test_config.json)
+
+**Plotting**: Use `scripts/plot/baseline_plot.py` (see Plot Scripts table). For baselines vs RL comparison: `--plot compare` or `--with-rl`.
 
 ### MARL Training (Ray RLlib)
 ```bash
