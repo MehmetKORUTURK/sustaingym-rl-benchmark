@@ -77,12 +77,12 @@ os.makedirs(log_dir, exist_ok=True)
 
 policy_mode = "shared" if args.shared_policy else "independent"
 
-# Compute actual lr (all Building algos use hardcoded lr for unnormalized reward)
-actual_lr = 3e-5 if args.algo == "PPO" else args.lr
+# Compute actual lr (APPO/IMPALA use hardcoded values, not args.lr)
+actual_lr = 1e-4 if args.algo == "PPO" else args.lr
 if args.algo == "APPO":
-    actual_lr = 1e-5
+    actual_lr = 5e-5
 elif args.algo == "IMPALA":
-    actual_lr = 1e-5
+    actual_lr = 5e-5
 
 print("\n" + "=" * 70)
 print("MARL TRAINING CONFIGURATION - Building")
@@ -109,7 +109,8 @@ def env_creator(env_config):
         building='OfficeSmall', weather='Hot_Dry', location='Tucson',
         reward_beta=0.5,
     )
-    params["normalize_reward"] = False  # raw reward for stronger gradient signal
+    # normalize_reward=True (default) — keeps reward in [-1, 0]
+    # MeanStdFilter on obs provides the gradient signal instead
     env = MultiAgentBuildingEnv(params)
     return ParallelPettingZooEnv(env)
 
@@ -194,7 +195,7 @@ elif args.algo == "PPO":
                   rollout_fragment_length=288, observation_filter="MeanStdFilter", enable_connectors=True)
         .training(
             train_batch_size=1152, sgd_minibatch_size=128,
-            num_sgd_iter=3, lr=3e-5,
+            num_sgd_iter=3, lr=1e-4,
             gamma=0.99, lambda_=0.95, clip_param=0.1,
             entropy_coeff=0.05, grad_clip=0.5,
             model={"fcnet_hiddens": [64, 64]},
@@ -212,7 +213,7 @@ elif args.algo == "APPO":
         .rollouts(num_rollout_workers=args.num_workers,
                   rollout_fragment_length=288, observation_filter="MeanStdFilter", enable_connectors=True)
         .training(
-            train_batch_size=1152, num_sgd_iter=3, lr=1e-5,
+            train_batch_size=1152, num_sgd_iter=3, lr=5e-5,
             gamma=0.99, lambda_=0.95, clip_param=0.2,
             entropy_coeff=0.05, grad_clip=5.0,
             model={"fcnet_hiddens": [64, 64]},
@@ -230,7 +231,7 @@ elif args.algo == "IMPALA":
         .rollouts(num_rollout_workers=args.num_workers,
                   rollout_fragment_length=288, observation_filter="MeanStdFilter", enable_connectors=True)
         .training(
-            train_batch_size=1152, lr=1e-5,
+            train_batch_size=1152, lr=5e-5,
             gamma=0.99, entropy_coeff=0.05,
             vtrace=True, vtrace_clip_rho_threshold=1.0,
             vtrace_clip_pg_rho_threshold=1.0,
