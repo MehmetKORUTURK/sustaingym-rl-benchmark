@@ -4,17 +4,19 @@
 
 % --- SustainGym & ACN ---
 @inproceedings{yeh2023sustaingym,
-  title={SustainGym: Reinforcement Learning Environments for Sustainable Energy Systems},
+  title={{SustainGym}: Reinforcement Learning Environments for Sustainable Energy Systems},
   author={Yeh, Christopher and Li, Victor and Datta, Rajeev and Arroyo, Julio and Zhang, Chi and others},
   booktitle={Advances in Neural Information Processing Systems (NeurIPS), Datasets and Benchmarks Track},
   year={2023}
 }
 
-@article{lee2021acndata,
+@inproceedings{lee2019acndata,
   title={{ACN-Data}: Analysis and Applications of an Open {EV} Charging Dataset},
   author={Lee, Zachary J and Li, Tongxin and Low, Steven H},
-  journal={Proceedings of the Tenth ACM International Conference on Future Energy Systems},
-  year={2019}
+  booktitle={Proceedings of the Tenth ACM International Conference on Future Energy Systems (e-Energy)},
+  pages={139--149},
+  year={2019},
+  organization={ACM}
 }
 
 % --- RL Algorithms ---
@@ -29,6 +31,7 @@
   title={Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor},
   author={Haarnoja, Tuomas and Zhou, Aurick and Abbeel, Pieter and Levine, Sergey},
   booktitle={International Conference on Machine Learning (ICML)},
+  pages={1861--1870},
   year={2018}
 }
 
@@ -36,13 +39,14 @@
   title={Addressing Function Approximation Error in Actor-Critic Methods},
   author={Fujimoto, Scott and van Hoof, Herke and Meger, David},
   booktitle={International Conference on Machine Learning (ICML)},
+  pages={1587--1596},
   year={2018}
 }
 
-@article{sutton1999policy,
+@inproceedings{sutton1999policy,
   title={Policy Gradient Methods for Reinforcement Learning with Function Approximation},
   author={Sutton, Richard S and McAllester, David and Singh, Satinder and Mansour, Yishay},
-  journal={Advances in Neural Information Processing Systems},
+  booktitle={Advances in Neural Information Processing Systems},
   volume={12},
   year={1999}
 }
@@ -66,6 +70,7 @@
   title={Constrained Policy Optimization},
   author={Achiam, Joshua and Held, David and Tamar, Aviv and Abbeel, Pieter},
   booktitle={International Conference on Machine Learning (ICML)},
+  pages={22--31},
   year={2017}
 }
 
@@ -90,6 +95,29 @@
   year={2023}
 }
 
+@inproceedings{ha2021learning,
+  title={Learning to be Safe: Deep {RL} with a Safety Critic},
+  author={Ha, Sehoon and Xu, Peng and Tan, Zhenyu and Levine, Sergey and Tan, Jie},
+  booktitle={International Conference on Robotics and Automation (ICRA)},
+  year={2021}
+}
+
+@inproceedings{zhang2020ev_cpo,
+  title={Constrained {EV} Charging Scheduling Based on Safe Deep Reinforcement Learning},
+  author={Zhang, Yifei and Shi, Yuanming and others},
+  booktitle={IEEE International Conference on Communications (ICC)},
+  year={2020}
+}
+
+@article{cheng2019safe_hvac,
+  title={End-to-End Safe Reinforcement Learning through Barrier Functions for Safety-Critical Continuous Control Tasks},
+  author={Cheng, Richard and Orosz, G{\'a}bor and Murray, Richard M and Burdick, Joel W},
+  journal={Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume={33},
+  pages={3387--3395},
+  year={2019}
+}
+
 % --- MARL ---
 @inproceedings{lowe2017maddpg,
   title={Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments},
@@ -109,6 +137,7 @@
   title={The Surprising Effectiveness of {PPO} in Cooperative Multi-Agent Games},
   author={Yu, Chao and Velu, Akash and Vinitsky, Eugene and Gao, Jiaxuan and Wang, Yu and Baez, Alexandre and others},
   journal={Advances in Neural Information Processing Systems},
+  volume={35},
   year={2022}
 }
 
@@ -116,6 +145,7 @@
   title={{PettingZoo}: Gym for Multi-Agent Reinforcement Learning},
   author={Terry, J K and Black, Benjamin and Grammel, Nathaniel and Jayakumar, Mario and Hari, Ananth and others},
   journal={Advances in Neural Information Processing Systems},
+  volume={34},
   year={2021}
 }
 
@@ -123,6 +153,7 @@
   title={{RLlib}: Abstractions for Distributed Reinforcement Learning},
   author={Liang, Eric and Liaw, Richard and Nishihara, Robert and Moritz, Philipp and Fox, Roy and others},
   booktitle={International Conference on Machine Learning (ICML)},
+  pages={3053--3062},
   year={2018}
 }
 
@@ -138,6 +169,9 @@
   title={Challenges of Real-World Reinforcement Learning: Definitions, Benchmarks and Analysis},
   author={Dulac-Arnold, Gabriel and Levine, Nir and Mankowitz, Daniel J and Paduraru, Cosmin and others},
   journal={Machine Learning},
+  volume={110},
+  number={9},
+  pages={2419--2468},
   year={2021}
 }
 
@@ -145,6 +179,7 @@
   title={Robust Adversarial Reinforcement Learning},
   author={Pinto, Lerrel and Davidson, James and Sukthankar, Rahul and Gupta, Abhinav},
   booktitle={International Conference on Machine Learning (ICML)},
+  pages={2817--2826},
   year={2017}
 }
 
@@ -152,13 +187,14 @@
   title={Domain Randomization for Transferring Deep Neural Networks from Simulation to the Real World},
   author={Tobin, Josh and Fong, Rachel and Ray, Alex and Schneider, Jonas and Zaremba, Wojciech and Abbeel, Pieter},
   booktitle={IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  pages={23--30},
   year={2017}
 }
 
-@article{tan2018simtoreal,
+@inproceedings{tan2018simtoreal,
   title={Sim-to-Real: Learning Agile Locomotion for Quadruped Robots},
   author={Tan, Jie and Zhang, Tingnan and Coumans, Erwin and Iscen, Atil and Bai, Yunfei and others},
-  journal={Robotics: Science and Systems},
+  booktitle={Robotics: Science and Systems (RSS)},
   year={2018}
 }
 
@@ -166,6 +202,9 @@
   title={Learning Agile and Dynamic Motor Skills for Legged Robots},
   author={Hwangbo, Jemin and Lee, Joonho and Dosovitskiy, Alexey and Bellicoso, Dario and others},
   journal={Science Robotics},
+  volume={4},
+  number={26},
+  pages={eaau5872},
   year={2019}
 }
 
@@ -173,7 +212,49 @@
   title={A Survey of Generalization in Deep Reinforcement Learning},
   author={Kirk, Robert and Zhang, Amy and Grefenstette, Edward and Rockt{\"a}schel, Tim},
   journal={Journal of Artificial Intelligence Research},
+  volume={76},
+  pages={1--59},
   year={2023}
+}
+
+@article{fox2018dithering,
+  title={Dithering and Biasing for Accelerating Neural Network Training},
+  author={Fox, Roy and Pakman, Ari and Tishby, Naftali},
+  journal={arXiv preprint arXiv:1803.01513},
+  year={2018}
+}
+
+@article{tessler2019action,
+  title={Action Robust Reinforcement Learning and Applications in Continuous Control},
+  author={Tessler, Chen and Efroni, Yonathan and Mannor, Shie},
+  journal={arXiv preprint arXiv:1901.09184},
+  year={2019}
+}
+
+@article{jaakkola1994reinforcement,
+  title={Reinforcement Learning Algorithm for Partially Observable {Markov} Decision Problems},
+  author={Jaakkola, Tommi and Singh, Satinder P and Jordan, Michael I},
+  journal={Advances in Neural Information Processing Systems},
+  volume={7},
+  year={1994}
+}
+
+@article{zhang2020transfer_hvac,
+  title={Transfer Learning for Building Energy Control Using Deep Reinforcement Learning},
+  author={Zhang, Zhiang and Chong, Adrian and Pan, Yuqi and Zhang, Chenlu and Lam, Khee Poh},
+  journal={Energy and AI},
+  volume={1},
+  pages={100004},
+  year={2020}
+}
+
+@inproceedings{dey2020transfer_ev,
+  title={Reinforcement Learning Building Control Approach Harnessing Domain Knowledge},
+  author={Dey, Sourav and others},
+  booktitle={Energy and Buildings},
+  volume={195},
+  pages={223--233},
+  year={2020}
 }
 
 % --- Robust MDPs ---
@@ -208,10 +289,11 @@
 }
 
 % --- RL for Energy Systems ---
-@article{wei2017deep_hvac,
+@inproceedings{wei2017deep_hvac,
   title={Deep Reinforcement Learning for Building {HVAC} Control},
   author={Wei, Tianshu and Wang, Yanzhi and Zhu, Qi},
-  journal={Proceedings of the 54th Annual Design Automation Conference},
+  booktitle={Proceedings of the 54th Annual Design Automation Conference (DAC)},
+  pages={1--6},
   year={2017}
 }
 
@@ -219,6 +301,8 @@
   title={Practical Implementation of Reinforcement Learning Based {HVAC} Control},
   author={Zhang, Zhiang and Lam, Khee Poh},
   journal={Energy and Buildings},
+  volume={158},
+  pages={1355--1366},
   year={2019}
 }
 
@@ -226,6 +310,8 @@
   title={Reinforcement Learning for Demand Response: A Review of Algorithms and Modeling Techniques},
   author={V{\'a}zquez-Canteli, Jos{\'e} R and Nagy, Zolt{\'a}n},
   journal={Applied Energy},
+  volume={235},
+  pages={1072--1089},
   year={2019}
 }
 
@@ -233,6 +319,9 @@
   title={Multi-Agent Deep Reinforcement Learning for {HVAC} Control in Commercial Buildings},
   author={Yu, Liang and Sun, Yi and Xu, Zhanbo and Shen, Chao and Yue, Dong and others},
   journal={IEEE Transactions on Smart Grid},
+  volume={12},
+  number={1},
+  pages={407--419},
   year={2021}
 }
 
@@ -240,6 +329,9 @@
   title={An Analytical Approach for Optimal Combined Heat and Power Generation},
   author={Rong, Aiying and Lahdelma, Risto},
   journal={IEEE Transactions on Power Systems},
+  volume={21},
+  number={4},
+  pages={1471--1481},
   year={2006}
 }
 
@@ -247,6 +339,8 @@
   title={Deep Reinforcement Learning for Gas Turbine Control},
   author={Vu, Thanh Long and others},
   journal={IEEE Access},
+  volume={9},
+  pages={151602--151615},
   year={2021}
 }
 
@@ -254,6 +348,9 @@
   title={Model-Free Real-Time {EV} Charging Scheduling Based on Deep Reinforcement Learning},
   author={Wan, Zhiqiang and Li, Hepeng and He, Haibo and Prokhorov, Danil},
   journal={IEEE Transactions on Smart Grid},
+  volume={10},
+  number={5},
+  pages={5246--5257},
   year={2019}
 }
 
@@ -276,6 +373,8 @@
   title={The Arcade Learning Environment: An Evaluation Platform for General Agents},
   author={Bellemare, Marc G and Naddaf, Yavar and Veness, Joel and Bowling, Michael},
   journal={Journal of Artificial Intelligence Research},
+  volume={47},
+  pages={253--279},
   year={2013}
 }
 
@@ -283,6 +382,7 @@
   title={{MuJoCo}: A Physics Engine for Model-Based Control},
   author={Todorov, Emanuel and Erez, Tom and Tassa, Yuval},
   booktitle={IEEE/RSJ International Conference on Intelligent Robots and Systems},
+  pages={5026--5033},
   year={2012}
 }
 
@@ -291,6 +391,21 @@
   author={Tassa, Yuval and Doron, Yotam and Muldal, Alistair and Erez, Tom and Li, Yazhe and others},
   journal={arXiv preprint arXiv:1801.00690},
   year={2018}
+}
+
+@inproceedings{yu2020metaworld,
+  title={{Meta-World}: A Benchmark and Evaluation for Multi-Task and Meta Reinforcement Learning},
+  author={Yu, Tianhe and Quillen, Deirdre and He, Zhanpeng and Julian, Ryan and Hausman, Karol and Finn, Chelsea and Levine, Sergey},
+  booktitle={Conference on Robot Learning (CoRL)},
+  pages={1094--1100},
+  year={2020}
+}
+
+@inproceedings{donnot2020grid2op,
+  title={{Grid2Op}: A Testbed for Power Grid Reinforcement Learning},
+  author={Donnot, Benjamin and Guyon, Isabelle and Schoenauer, Marc and Marot, Antoine and Panciatici, Patrick},
+  booktitle={NeurIPS 2020 Competition Track},
+  year={2020}
 }
 
 @article{vazquezcanteli2020citylearn,
@@ -312,5 +427,6 @@
   title={Deep Reinforcement Learning at the Edge of the Statistical Precipice},
   author={Agarwal, Rishabh and Schwarzer, Max and Castro, Pablo Samuel and Courville, Aaron and Bellemare, Marc},
   booktitle={Advances in Neural Information Processing Systems},
+  volume={34},
   year={2021}
 }

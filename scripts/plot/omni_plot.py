@@ -152,7 +152,7 @@ def plot_algo_dual_panel(
     Create a dual-panel (Reward + Cost) figure for a single algorithm,
     with each cost limit as a separate line.
     """
-    fig, (ax_r, ax_c) = plt.subplots(1, 2, figsize=(14, 5))
+    fig, (ax_r, ax_c) = plt.subplots(1, 2, figsize=(16, 5.5))
     env_title = ENV_TITLES.get(env, env)
     fig.suptitle(f"{env_title} — Safe RL Training", fontsize=15)
 
@@ -258,7 +258,7 @@ def plot_all_algos_single(
     """
     from style import get_color, get_marker, get_linestyle
 
-    fig, (ax_r, ax_c) = plt.subplots(1, 2, figsize=(14, 5))
+    fig, (ax_r, ax_c) = plt.subplots(1, 2, figsize=(16, 5.5))
     env_title = ENV_TITLES.get(env, env)
     fig.suptitle(f"{env_title} — Safe RL (Cost Limit = {int(cl_value)})", fontsize=15)
 

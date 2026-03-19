@@ -37,9 +37,9 @@ from style import (COLORS_INDEXED, LINE_STYLES, MARKERS,
 # ============================================================================
 
 ENV_DEFAULTS = {
-    "evcharging": {"title": "EVCharging-v0", "t_steps": 32000, "std_band": 0.03, "ylim": None},
-    "building":   {"title": "Building-v0",   "t_steps": 32000, "std_band": 0.03, "ylim": None},
-    "cogen":      {"title": "Cogen-v0",      "t_steps": 32000, "std_band": 0.03, "ylim": None},
+    "evcharging": {"title": "EV Charging", "t_steps": 32000, "std_band": 0.03, "ylim": None},
+    "building":   {"title": "Building",   "t_steps": 32000, "std_band": 0.03, "ylim": None},
+    "cogen":      {"title": "Cogeneration",      "t_steps": 32000, "std_band": 0.03, "ylim": None},
 }
 
 OUTPUT_DIR = "./graphs/C_STDRL/"

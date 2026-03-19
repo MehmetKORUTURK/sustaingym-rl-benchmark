@@ -27,10 +27,57 @@ The framework architecture consists of four layers:
 
     \item[Training Layer.] Integrates the three RL frameworks: SB3 for standard single-agent RL, OmniSafe for CMDP-based safe RL, and Ray RLlib for multi-agent RL with PettingZoo environments.
 
-    \item[Evaluation Layer.] Performs statistical analysis following~\citet{agarwal2021deep}, computing interquartile mean (IQM) with stratified bootstrap 95\% confidence intervals, normalized performance metrics, and cross-environment comparisons.
+    \item[Evaluation Layer.] Performs statistical analysis informed by~\citet{agarwal2021deep}, computing mean reward with bootstrap 95\% confidence intervals, distributional analysis via violin plots, and cross-environment comparisons.
 \end{description}
 
-\textbf{[Figure~4.1: SustainRL-Bench framework architecture diagram showing the four-layer design with data flow between layers.]}
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    layer/.style={draw, rounded corners, minimum width=14cm, minimum height=1.6cm, align=center, font=\small},
+    sublabel/.style={font=\scriptsize, text=gray!70!black},
+    arrow/.style={-{Stealth[length=3mm]}, thick, gray!60!black},
+    layerlabel/.style={font=\small\bfseries, anchor=east},
+]
+% Layer 1: Environment
+\node[layer, fill=blue!8] (env) at (0, 0) {
+    \textbf{EVChargingEnv} \quad\quad \textbf{BuildingEnv} \quad\quad \textbf{CogenEnv (MyCogenEnv)}\\[2pt]
+    {\scriptsize Gymnasium API \,$\cdot$\, configurable noise params \,$\cdot$\, MARL via PettingZoo}
+};
+\node[layerlabel] at (-7.5, 0) {Environment\\Layer};
+
+% Layer 2: Noise Injection
+\node[layer, fill=orange!10] (noise) at (0, 2.4) {
+    \textbf{Observation Noise} \quad\quad \textbf{Action Noise} \quad\quad \textbf{Environment Noise}\\[2pt]
+    {\scriptsize sensor uncertainty \hspace{1.5cm} actuator imprecision \hspace{1.2cm} stochastic dynamics}
+};
+\node[layerlabel] at (-7.5, 2.4) {Noise Injection\\Layer};
+
+% Layer 3: Training
+\node[layer, fill=green!8] (train) at (0, 4.8) {
+    \textbf{SB3} (PPO, SAC, TD3) \quad\quad \textbf{OmniSafe} (PPOLag, CPO, OnCRPO, FOCOPS) \quad\quad \textbf{Ray RLlib} (MAPPO, SAC, APPO, IMPALA)\\[2pt]
+    {\scriptsize Standard RL \hspace{2.8cm} Safe RL (CMDP) \hspace{3.5cm} Multi-Agent RL}
+};
+\node[layerlabel] at (-7.5, 4.8) {Training\\Layer};
+
+% Layer 4: Evaluation
+\node[layer, fill=purple!8] (eval) at (0, 7.2) {
+    \textbf{Mean $\pm$ Bootstrap CI} \quad\quad \textbf{Violin Plots} \quad\quad \textbf{Training Curves} \quad\quad \textbf{Cross-Env Comparison}\\[2pt]
+    {\scriptsize 1000 episodes \hspace{1.5cm} distributional analysis \hspace{1cm} convergence \hspace{1.5cm} noise sensitivity}
+};
+\node[layerlabel] at (-7.5, 7.2) {Evaluation\\Layer};
+
+% Arrows
+\draw[arrow] (env.north) -- (noise.south) node[midway, right, font=\scriptsize] {$o_t, r_t, d_t$};
+\draw[arrow] (noise.north) -- (train.south) node[midway, right, font=\scriptsize] {$\tilde{o}_t, \tilde{a}_t, \tilde{r}_t$};
+\draw[arrow] (train.north) -- (eval.south) node[midway, right, font=\scriptsize] {$\pi^*, \text{logs}$};
+
+% Feedback arrow
+\draw[arrow, dashed] (train.south west) -- +(-0.8,-1.2) -- +(-0.8,-2.4) -| (env.south west) node[midway, left, font=\scriptsize, xshift=-5pt] {$a_t$};
+
+\end{tikzpicture}
+\caption{SustainRL-Bench framework architecture. Four layers operate in sequence: environments provide Gymnasium-compatible interfaces; the noise injection layer independently perturbs observations, actions, and dynamics; the training layer supports three RL paradigms; the evaluation layer produces statistical summaries and distributional analyses.}
+\label{fig:framework}
+\end{figure}
 
 % ============================================================
 \section{Environment Descriptions and System Models}
@@ -64,7 +111,7 @@ where $I_i^{\text{BMS}}(t)$ is the maximum charging rate accepted by the vehicle
 \end{equation}
 where $\tilde{A} \in \mathbb{C}^{p \times n}$ is the constraint matrix encoding the network topology, with $\tilde{A}_{jk} = A_{jk} e^{j\phi_{jk}}$ incorporating complex phase angles for three-phase AC networks, $\mathbf{I}^{\text{pilot}}(t) \in \R^n$ is the vector of pilot signals (scaled to Amperes), and $\mathbf{m} \in \R^p$ is the vector of magnitude constraints (branch current limits).
 
-\paragraph{Data generation.} Vehicle arrivals, departures, and energy demands are generated using a Gaussian Mixture Model (GMM) trained on real ACN-Data from the Caltech site~\citep{lee2021acndata}. The Marginal Operating Emission Rate (MOER), representing the carbon intensity of marginal electricity generation, is obtained from WattTime and included as a 36-step forecast in the observations.
+\paragraph{Data generation.} Vehicle arrivals, departures, and energy demands are generated using a Gaussian Mixture Model (GMM) trained on real ACN-Data from the Caltech site~\citep{lee2019acndata}. The Marginal Operating Emission Rate (MOER), representing the carbon intensity of marginal electricity generation, is obtained from WattTime and included as a 36-step forecast in the observations.
 
 \subsubsection{Observation Space}
 
@@ -176,7 +223,7 @@ where $T$ is the average zone temperature (\degree C), $M$ is the metabolic rate
 \end{equation}
 This nonlinear function captures the fact that occupant heat output depends on both the ambient temperature and the activity level.
 
-\textbf{[Figure~4.2: RC thermal network diagram showing zones, thermal resistances, capacitances, HVAC inputs, and external disturbances.]}
+% RC thermal network diagram omitted; the RC model is fully specified by Equations above.
 
 \subsubsection{Observation Space}
 
@@ -576,7 +623,7 @@ The OmniSafe framework provides a standardized interface for CMDP environments. 
 \textbf{Parameter} & \textbf{EV Charging} & \textbf{Building} & \textbf{Cogeneration} \\
 \midrule
 \texttt{steps\_per\_epoch} & 2000 & 2000 & 2000 \\
-\texttt{cost\_limits} ($d$) & \{1, 5, 25, 1000\} & \{1, 5, 25, 1000\} & \{10, 25, 50, 200\} \\
+\texttt{cost\_limits} ($d$) & \{3, 5, 25, 1000, 10000\} & \{25, 50, 100, 200\} & \{10, 25, 50, 200\} \\
 \texttt{total\_steps} & 6,000,000 & 6,000,000 & 6,000,000 \\
 Hidden sizes & default & $[128, 128, 128]$ & $[128, 128, 128]$ \\
 Activation & default & ReLU & ReLU \\
@@ -585,9 +632,9 @@ Batch size (on-policy) & default & 1024 & 1024 \\
 \end{tabular}
 \end{table}
 
-The \texttt{steps\_per\_epoch} is set to 2000 for all environments, yielding 3000 epochs of training. Each environment is evaluated across four cost limits spanning from tight (strong constraint enforcement) to loose (nearly unconstrained). The Cogeneration cost limits are calibrated to the ramp cost scale (initial episode cost $\sim$240), while EV Charging and Building use the same limit set.
+The \texttt{steps\_per\_epoch} is set to 2000 for all environments, yielding 3000 epochs of training. Each environment is evaluated across multiple cost limits spanning from tight (strong constraint enforcement) to loose (nearly unconstrained). The EV Charging limits ($d \in \{3, 5, 25, 1000, 10{,}000\}$) span three orders of magnitude to probe both precise constraint tracking and near-unconstrained behavior. The Building limits ($d \in \{25, 50, 100, 200\}$) are calibrated to the deadband temperature violation scale. The Cogeneration limits ($d \in \{10, 25, 50, 200\}$) are calibrated to the ramp cost scale (initial episode cost $\sim$240).
 
-\paragraph{Algorithm selection.} We evaluate four on-policy CMDP algorithms: PPO-Lagrangian (PPOLag), Constrained Policy Optimization (CPO), On-policy CRPO (OnCRPO), and First-Order Constrained Optimization in Policy Space (FOCOPS). We initially included SACLag~\citep{ha2021learning} as the sole off-policy CMDP baseline. However, SACLag consistently failed to satisfy cost constraints across all three environments---episode costs remained 5--10$\times$ above the limit regardless of cost limit setting. We attribute this to the fundamental incompatibility between the replay buffer data distribution and Lagrange multiplier updates: the multiplier adapts based on stale cost estimates from the buffer, preventing effective constraint enforcement even with increased update intervals (\texttt{update\_cycle}$=$100). This negative finding highlights that on-policy methods are necessary for reliable CMDP constraint satisfaction in these environments, consistent with theoretical concerns about off-policy Lagrangian methods~\citep{ray2019benchmarking}.
+\paragraph{Algorithm selection.} We evaluate four on-policy CMDP algorithms: PPO-Lagrangian (PPOLag), Constrained Policy Optimization (CPO), On-policy CRPO (OnCRPO), and First-Order Constrained Optimization in Policy Space (FOCOPS). We initially included SACLag~\citep{ha2021learning} as the sole off-policy CMDP baseline. However, SACLag consistently failed to satisfy cost constraints across all three environments---episode costs remained 5--10$\times$ above the limit regardless of cost limit setting. We attribute this to the fundamental incompatibility between the replay buffer data distribution and Lagrange multiplier updates: the multiplier adapts based on stale cost estimates from the buffer, preventing effective constraint enforcement even with increased update intervals (\texttt{update\_cycle}$=$100). This negative finding highlights that on-policy methods are necessary for reliable CMDP constraint satisfaction in these environments, consistent with theoretical concerns about off-policy Lagrangian methods~\citep{ray2019benchmarking_safe}.
 
 % ============================================================
 \section{Multi-Agent RL Formulation}
@@ -817,7 +864,6 @@ Target noise clip & 0.5 \\
 \hfill
 \begin{enumerate}
     \item \textbf{Normalized performance drop}: $\Delta_\sigma = (R_\sigma - R_0)/|R_0|$ --- relative performance change under noise level $\sigma$ compared to clean baseline $R_0$.
-    \item \textbf{Noise sensitivity coefficient}: $\kappa = -\partial \Delta_\sigma / \partial \sigma |_{\sigma=0}$ --- linearized sensitivity of performance to noise (higher $\kappa$ indicates more sensitive).
     \item \textbf{Reward--cost Pareto metric}: For safe RL, we report both reward and cost, and evaluate whether the policy achieves reward close to the unconstrained optimum while satisfying the constraint budget $d$.
 \end{enumerate}
 \end{definition}
@@ -826,78 +872,23 @@ Target noise clip & 0.5 \\
 \subsection{Statistical Methodology}
 \label{sec:stat_methods}
 
-Following~\citet{agarwal2021deep}, we employ the following statistical methodology to ensure reliable evaluation.
+Informed by~\citet{agarwal2021deep}, we employ the following statistical methodology to ensure reliable evaluation.
 
-\paragraph{Multiple seeds.} Each configuration is trained with 5 independent random seeds: $\{42, 43, 44, 45, 46\}$. This provides sufficient samples to estimate variability while remaining computationally feasible.
+\paragraph{Evaluation episodes.} Each trained model is evaluated over $K = 1000$ episodes under deterministic policy execution (or $K = 100$ for computationally expensive configurations). The large episode count provides sufficient samples to estimate distributional properties without requiring multiple training seeds per configuration, which would be prohibitively expensive given the scale of our noise sweep (200+ unique configurations).
 
-\paragraph{Interquartile mean (IQM).} We report the IQM of episode returns across seeds:
+\paragraph{Summary statistics.} We report the mean episode return $\bar{R} = \frac{1}{K}\sum_{i=1}^K R_i$ with standard deviation $\sigma_R$ and 95\% bootstrap confidence intervals. The bootstrap CI is computed by resampling $K$ episodes with replacement $B = 10{,}000$ times:
 \begin{equation}
-    \text{IQM}(\{R_1, \ldots, R_K\}) = \frac{1}{\lfloor 0.75K \rfloor - \lceil 0.25K \rceil} \sum_{i=\lceil 0.25K \rceil}^{\lfloor 0.75K \rfloor} R_{(i)},
-    \label{eq:iqm}
+    \text{CI}_{95\%} = \left[\text{quantile}(\bar{R}^*_{1:B}, 0.025),\; \text{quantile}(\bar{R}^*_{1:B}, 0.975)\right],
+    \label{eq:bootstrap_ci}
 \end{equation}
-where $R_{(i)}$ is the $i$-th order statistic and $K$ is the total number of evaluation episodes across seeds. The IQM is more robust to outliers than the mean while being more sample-efficient than the median.
+where $\bar{R}^*_b$ is the mean of the $b$-th bootstrap resample. With $K = 1000$, the bootstrap CIs are tight and reliable.
 
-\paragraph{Bootstrap confidence intervals.} 95\% confidence intervals are computed using the stratified bootstrap:
+\paragraph{Distributional analysis.} Following the spirit of~\citet{agarwal2021deep}'s recommendation to look beyond point estimates, we complement summary statistics with violin plots that visualize the full reward distribution across evaluation episodes. These plots reveal multimodality (e.g., high- vs.\ low-occupancy days in Building), skewness, and tail behavior that are invisible in mean$\pm$std reporting. Where relevant, we also report quantiles (Q25, median, Q75) and environment-specific metrics (profit ratio, temperature violation, fuel cost).
 
-\begin{algorithm}[htbp]
-\caption{Stratified Bootstrap Confidence Interval}
-\label{alg:bootstrap}
-\begin{algorithmic}[1]
-\Require Results $R = \{R_{s,e}\}$ for seeds $s \in [S]$, episodes $e \in [E]$; $B = 10{,}000$
-\For{$b = 1, \ldots, B$}
-    \For{each seed $s$}
-        \State Resample $E$ episodes with replacement: $R^*_{s,1}, \ldots, R^*_{s,E}$
-    \EndFor
-    \State Compute $\text{IQM}(R^*)$ across all resampled episodes
-\EndFor
-\State $\text{CI} \gets [\text{quantile}(\text{IQM}^*, \alpha/2), \text{quantile}(\text{IQM}^*, 1{-}\alpha/2)]$
-\end{algorithmic}
-\end{algorithm}
-
-The stratified bootstrap preserves the seed structure: for each bootstrap replicate, episodes are resampled within each seed (rather than across seeds), ensuring that inter-seed variability is properly captured.
-
-% ------------------------------------------------------------
-\subsection{Baseline Methods}
-\label{sec:baselines}
-
-We compare against several non-RL baselines provided by SustainGym and additional baselines implemented for this thesis.
-
-\paragraph{Non-RL baselines (from SustainGym):}
-\begin{enumerate}
-    \item \textbf{Random}: Actions sampled uniformly from the action space at each timestep. Applicable to all environments.
-    \item \textbf{Offline Optimal (EV Charging only)}: LP solution with perfect foresight of all arrivals, departures, and demands. Represents the theoretical upper bound.
-    \item \textbf{MPC-3 (EV Charging only)}: LP-based model predictive control with a 3-step lookahead window.
-    \item \textbf{Greedy (EV Charging only)}: Charge all connected vehicles at maximum rate without regard for carbon intensity or network constraints.
-\end{enumerate}
-
-\paragraph{Additional baselines:}
-\begin{enumerate}
-    \setcounter{enumi}{4}
-    \item \textbf{Do-Nothing}: Zero action at all timesteps ($a_t = \mathbf{0}, \forall t$). Applicable to all environments.
-    \item \textbf{Thermostat / Bang-Bang (Building only)}: Rule-based controller --- if $T_i > T_i^* + \delta$, set $a_i = -1$ (cool); if $T_i < T_i^* - \delta$, set $a_i = +1$ (heat); otherwise $a_i = 0$.
-    \item \textbf{Load-Following (Cogeneration only)}: Equal power distribution across gas turbines: $P_{\text{GT},k} = T_{\text{power}} / 3$, with fixed steam turbine and condenser settings.
-\end{enumerate}
-
-\Cref{tab:baselines} summarizes the baseline methods.
-
-\begin{table}[htbp]
-\centering
-\caption{Baseline methods.}
-\label{tab:baselines}
-\begin{tabular}{@{}lll@{}}
-\toprule
-\textbf{Baseline} & \textbf{Type} & \textbf{Applicable Environments} \\
-\midrule
-Random & Non-RL & All \\
-Do-Nothing & Non-RL & All \\
-Offline Optimal & Oracle & EV Charging \\
-MPC-3 & Optimization & EV Charging \\
-Greedy & Heuristic & EV Charging \\
-Thermostat (bang-bang) & Rule-based & Building \\
-Load-Following & Rule-based & Cogeneration \\
-\bottomrule
-\end{tabular}
-\end{table}
+% Non-RL baselines (Random, Do-Nothing, Greedy, MPC, Thermostat, Load-Following)
+% are available via SustainGym but are not evaluated in this thesis.
+% The focus is on comparative robustness across RL algorithms rather than
+% RL-vs-non-RL performance. Non-RL baseline evaluation is identified as future work.
 
 % ------------------------------------------------------------
 \subsection{VecNormalize and Observation Normalization}
@@ -923,7 +914,65 @@ All experiments are conducted on the Virginia Tech Advanced Research Computing (
 
 Training scripts support checkpointing and resumption for long-running jobs, and evaluation scripts load trained models for standardized testing across noise levels.
 
-\textbf{[Figure~4.3: Experimental workflow diagram showing the SLURM job submission pipeline, from hyperparameter configuration through training, evaluation, and statistical analysis.]}
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    block/.style={draw, rounded corners=3pt, minimum width=2.2cm, minimum height=0.9cm, align=center, font=\small},
+    io/.style={draw, rounded corners=3pt, minimum width=2.0cm, minimum height=0.7cm, align=center, font=\scriptsize, fill=gray!8},
+    arrow/.style={-{Stealth[length=2.5mm]}, thick},
+    darrow/.style={-{Stealth[length=2.5mm]}, thick, dashed, gray!60},
+    phase/.style={font=\footnotesize\bfseries, text=gray!50!black},
+]
+
+% --- Phase 1: Configuration ---
+\node[block, fill=blue!10] (config) at (0, 0) {Config\\{\scriptsize algo, env, noise}};
+
+% --- Phase 2: SLURM Submission ---
+\node[block, fill=orange!10] (slurm) at (3.2, 0) {SLURM\\{\scriptsize ARC HPC}};
+
+% --- Phase 3: Training ---
+\node[block, fill=green!10] (sb3) at (6.8, 0.8) {SB3\\{\scriptsize PPO/SAC/TD3}};
+\node[block, fill=green!10] (omni) at (6.8, -0.0) {OmniSafe\\{\scriptsize PPOLag/CPO/...}};
+\node[block, fill=green!10] (rllib) at (6.8, -0.8) {RLlib\\{\scriptsize MAPPO/APPO/...}};
+
+% --- Phase 4: Checkpoints ---
+\node[block, fill=yellow!15] (ckpt) at (10.4, 0) {Checkpoints\\{\scriptsize .zip / .pkl}};
+
+% --- Phase 5: Evaluation ---
+\node[block, fill=purple!10] (eval) at (13.4, 0) {Evaluation\\{\scriptsize 1000 episodes}};
+
+% --- Phase 6: Analysis ---
+\node[io] (stats) at (13.4, -1.8) {Statistics\\{\scriptsize mean, CI, quantiles}};
+\node[io] (violin) at (10.4, -1.8) {Violin Plots\\{\scriptsize distributional}};
+\node[io] (curves) at (7.4, -1.8) {Training Curves\\{\scriptsize convergence}};
+
+% --- Arrows ---
+\draw[arrow] (config) -- (slurm);
+\draw[arrow] (slurm) -- (sb3.west);
+\draw[arrow] (slurm) -- (omni.west);
+\draw[arrow] (slurm) -- (rllib.west);
+\draw[arrow] (sb3.east) -- (ckpt);
+\draw[arrow] (omni.east) -- (ckpt);
+\draw[arrow] (rllib.east) -- (ckpt);
+\draw[arrow] (ckpt) -- (eval);
+\draw[arrow] (eval) -- (stats);
+\draw[arrow] (eval.south) -- ++(0,-0.5) -| (violin);
+\draw[darrow] (ckpt.south) -- ++(0,-0.3) -| (curves);
+
+% --- Phase labels ---
+\node[phase] at (0, 1.3) {Configure};
+\node[phase] at (3.2, 1.3) {Submit};
+\node[phase] at (6.8, 1.5) {Train};
+\node[phase] at (10.4, 1.3) {Save};
+\node[phase] at (13.4, 1.3) {Evaluate};
+
+% --- Noise injection annotation ---
+\draw[darrow] (config.south) -- ++(0,-0.6) node[below, font=\scriptsize, text=gray!60!black] {noise params: $\sigma_{\text{obs}}, \sigma_{\text{act}}, \sigma_{\text{env}}$};
+
+\end{tikzpicture}
+\caption{Experimental workflow. Each configuration specifies an algorithm, environment, and noise level. SLURM dispatches training jobs to ARC HPC, producing checkpoints that are evaluated over 1000 episodes. Outputs include summary statistics, distributional violin plots, and training convergence curves.}
+\label{fig:workflow}
+\end{figure}
 
 % ------------------------------------------------------------
 \subsection{Experiment Matrix}
@@ -933,25 +982,27 @@ Training scripts support checkpointing and resumption for long-running jobs, and
 
 \begin{table}[htbp]
 \centering
-\caption{Complete experiment matrix.}
+\caption{Complete experiment matrix. Standard RL trains each algorithm under three independent noise channels (observation, action, environment) at varying intensities.}
 \label{tab:experiment_matrix}
-\begin{tabular}{@{}llllll@{}}
+\begin{tabular}{@{}lllll@{}}
 \toprule
-\textbf{Axis} & \textbf{Environment} & \textbf{Algorithms} & \textbf{Noise Levels} & \textbf{Seeds} & \textbf{Configs} \\
+\textbf{Axis} & \textbf{Environment} & \textbf{Algorithms} & \textbf{Variations} & \textbf{Configs} \\
 \midrule
-Standard RL & EVCharging & PPO, SAC, TD3 & 10 obs & 5 & 150 \\
-Standard RL & Building & PPO, SAC, TD3 & 9 act & 5 & 135 \\
-Standard RL & Cogen & PPO, SAC, TD3 & 7 obs & 5 & 105 \\
-Safe RL & EVCharging & OnCRPO & 3 noise & 5 & 15 \\
-Safe RL & Building & OnCRPO & 3 noise & 5 & 15 \\
-Safe RL & Cogen & OnCRPO & 3 noise & 5 & 15 \\
-MARL & EVCharging & APPO & 1 & 3 & 3 \\
-MARL & Building & SAC & 1 & 3 & 3 \\
-MARL & Cogen & PPO & 1 & 3 & 3 \\
+Standard RL & EVCharging & PPO, SAC & 10 obs + 9 act + 10 env & 52 \\
+Standard RL & Building & PPO, SAC & 9 obs + 9 act + 9 env & 48 \\
+Standard RL & Cogen & PPO, SAC, TD3 & 7 obs + 6 act + 7 env & 49 \\
+\addlinespace
+Safe RL & EVCharging & PPOLag, CPO, OnCRPO, FOCOPS & 5 cost limits & 20 \\
+Safe RL & Building & PPOLag, CPO, OnCRPO, FOCOPS & 4 cost limits & 16 \\
+Safe RL & Cogen & PPOLag, CPO, OnCRPO, FOCOPS & 4 cost limits & 16 \\
+\addlinespace
+MARL & EVCharging & PPO, SAC, APPO, IMPALA & --- & 4 \\
+MARL & Building & PPO, SAC, APPO, IMPALA & --- & 4 \\
+MARL & Cogen & PPO, APPO, IMPALA & --- & 3 \\
 \midrule
-\textbf{Total} & & & & & $\sim$\textbf{444} \\
+\textbf{Total} & & & & \textbf{212} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Each configuration involves a full training run (3M--9M timesteps) followed by evaluation over 100 episodes, resulting in an estimated total of approximately 735 individual training runs across all experimental axes.
+Each configuration involves a full training run (3M--9M timesteps) followed by evaluation. TD3 baselines are trained for all three environments but excluded from systematic noise experiments due to training instability (\Cref{sec:noise_findings}). Including seed repetitions, hyperparameter sweeps, and post-training evaluation runs, the total exceeds 300 individual runs across all experimental axes.

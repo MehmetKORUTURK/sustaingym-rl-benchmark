@@ -73,18 +73,28 @@ ALGO_COLORS = {
     "CPO":    "#D55E00",  # vermilion
     "OnCRPO": "#009E73",  # teal
     "FOCOPS": "#F0E442",  # yellow
+    # Non-RL baselines
+    "Random":         "#999999",  # grey
+    "Greedy":         "#8B4513",  # saddle brown
+    "MPC":            "#800080",  # purple
+    "OfflineOptimal": "#2F4F4F",  # dark slate
+    "DoNothing":      "#BC8F8F",  # rosy brown
 }
 
 ALGO_MARKERS = {
     "PPO": "o",  "SAC": "s",  "TD3": "^",
     "APPO": "D", "IMPALA": "v",
     "PPOLag": "o", "CPO": "^", "OnCRPO": "s", "FOCOPS": "D",
+    # Non-RL baselines
+    "Random": "x", "Greedy": "P", "MPC": "*", "OfflineOptimal": "H", "DoNothing": "X",
 }
 
 ALGO_LINESTYLES = {
     "PPO": "-",  "SAC": "--",  "TD3": "-.",
     "APPO": ":", "IMPALA": "-",
     "PPOLag": "-", "CPO": "--", "OnCRPO": "-.", "FOCOPS": ":",
+    # Non-RL baselines
+    "Random": ":", "Greedy": "-.", "MPC": "--", "OfflineOptimal": "-", "DoNothing": ":",
 }
 
 
@@ -126,9 +136,9 @@ FILL_ALPHA = 0.20
 # ============================================================================
 
 ENV_TITLES = {
-    "evcharging": "EVCharging-v0",
-    "building": "Building-v0",
-    "cogen": "Cogen-v0",
+    "evcharging": "EV Charging",
+    "building": "Building",
+    "cogen": "Cogeneration",
 }
 
 ENV_SHORT = {

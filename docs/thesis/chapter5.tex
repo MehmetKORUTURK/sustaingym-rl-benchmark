@@ -8,6 +8,8 @@
 
 This chapter presents experimental results across the three evaluation axes of the SustainRL-Bench framework introduced in \Cref{ch:methodology}: noise robustness (\Cref{sec:results_noise}), safe reinforcement learning (\Cref{sec:results_saferl}), and a consolidated cross-axis discussion (\Cref{sec:results_discussion}). Multi-agent RL results will be presented in \Cref{sec:results_marl} upon completion of ongoing experiments. For each axis, we report results across all three environments---EV Charging, Building, and Cogeneration---highlighting both positive findings and negative results, addressing the research questions posed in \Cref{sec:research_questions}.
 
+\paragraph{A note on figure axes.} The training progress figures in this chapter use different x-axis units depending on the RL framework. Standard RL training curves (SB3) plot \emph{training episodes}, as episode reward is the natural monitoring unit for on-policy and off-policy algorithms. Safe RL training curves (OmniSafe) plot \emph{training epochs}, where each epoch corresponds to a fixed number of environment steps ($\text{steps\_per\_epoch} = 2000$). The test-time evaluation figures (violin plots, panel summaries) plot \emph{noise level} ($\sigma$) on the x-axis. These different units reflect the natural output format of each framework and are not directly comparable across axes.
+
 % ============================================================
 \section{Noise Robustness}
 \label{sec:results_noise}
@@ -71,7 +73,7 @@ We evaluate the noise robustness of three standard RL algorithms---PPO, SAC, and
 
 Several environment-specific observations emerge from the baselines:
 
-\paragraph{EV Charging.} PPO significantly outperforms SAC and TD3 in absolute reward ($6.01$ vs.\ $3.79$ and $3.16$), though SAC achieves a slightly higher profit ratio ($0.730$ vs.\ $0.695$). The variance is substantial across all algorithms ($\text{std} \approx 3.1$--$3.5$), reflecting the stochastic nature of EV arrival/departure patterns.
+\paragraph{EV Charging.} PPO significantly outperforms SAC and TD3 in absolute reward ($6.01$ vs.\ $3.79$ and $3.16$). The variance is substantial across all algorithms ($\text{std} \approx 3.1$--$3.5$), reflecting the stochastic nature of EV arrival/departure patterns.
 
 \paragraph{Building.} PPO achieves the best baseline reward ($-32.10$), substantially outperforming TD3 ($-63.20$) and SAC ($-97.71$). The large gap suggests that PPO's on-policy optimization is better suited to the Building environment's multi-zone thermal dynamics. TD3's high variance ($\text{std} = 26.85$) indicates inconsistent HVAC control across episodes.
 
@@ -86,50 +88,50 @@ The EV Charging environment exhibits remarkable robustness to all noise types ac
 % --- EV PPO ---
 \subsubsection{EV Charging --- PPO}
 
-\paragraph{Training curves.} \Cref{fig:stdrl_ev_ppo_ds,fig:stdrl_ev_ppo_da,fig:stdrl_ev_ppo_de} show PPO training curves under observation, action, and environment noise respectively. Convergence is virtually unaffected across all noise levels, with final rewards clustering tightly around the clean baseline.
+\paragraph{Training curves.} \Cref{fig:stdrl_ev_ppo_noise} shows PPO training curves under observation, action, and environment noise respectively. Convergence is virtually unaffected across all noise levels, with final rewards clustering tightly around the clean baseline.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/ev/PPO/DS_2026-03-16_23-32-01.png}
-\caption{EV Charging PPO: Training curves under observation noise (DS) at varying intensities.}
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/ev/PPO/DS_2026-03-16_23-32-01.png}
+\caption{Observation noise}
 \label{fig:stdrl_ev_ppo_ds}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/ev/PPO/DA_2026-03-16_23-32-03.png}
-\caption{EV Charging PPO: Training curves under action noise (DA) at varying intensities.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/ev/PPO/DA_2026-03-16_23-32-03.png}
+\caption{Action noise}
 \label{fig:stdrl_ev_ppo_da}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/ev/PPO/DE_2026-03-16_23-32-04.png}
-\caption{EV Charging PPO: Training curves under environment noise (DE) at varying intensities.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/ev/PPO/DE_2026-03-16_23-32-04.png}
+\caption{Environment noise}
 \label{fig:stdrl_ev_ppo_de}
+\end{subfigure}
+\caption{EV Charging PPO: Training curves under (a) observation, (b) action, and (c) environment noise at varying intensities.}
+\label{fig:stdrl_ev_ppo_noise}
 \end{figure}
 
-\paragraph{Test-time robustness.} The violin plots in \Cref{fig:violin_ev_ppo_obs,fig:violin_ev_ppo_act,fig:violin_ev_ppo_env} confirm that the reward distribution remains stable across all noise channels. The distributional shape is virtually unchanged even at extreme noise levels, with no shift in the mode or emergence of heavy tails.
+\paragraph{Test-time robustness.} The violin plots in \Cref{fig:violin_ev_ppo_noise} confirm that the reward distribution remains stable across all noise channels. The distributional shape is virtually unchanged even at extreme noise levels, with no shift in the mode or emergence of heavy tails.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/evcharging/PPO/obs_violin.png}
-\caption{EV Charging PPO: Reward distribution under observation noise. The distribution remains stable across noise levels, confirming exceptional robustness to sensor uncertainty.}
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/evcharging/PPO/obs_violin.png}
+\caption{Observation noise}
 \label{fig:violin_ev_ppo_obs}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/evcharging/PPO/action_violin.png}
-\caption{EV Charging PPO: Reward distribution under action noise.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/evcharging/PPO/action_violin.png}
+\caption{Action noise}
 \label{fig:violin_ev_ppo_act}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/evcharging/PPO/env_violin.png}
-\caption{EV Charging PPO: Reward distribution under environment noise.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/evcharging/PPO/env_violin.png}
+\caption{Environment noise}
 \label{fig:violin_ev_ppo_env}
+\end{subfigure}
+\caption{EV Charging PPO: Reward distribution under (a) observation, (b) action, and (c) environment noise. Distribution remains stable across all noise levels, confirming exceptional robustness.}
+\label{fig:violin_ev_ppo_noise}
 \end{figure}
 
 \begin{figure}[htbp]
@@ -142,50 +144,50 @@ The EV Charging environment exhibits remarkable robustness to all noise types ac
 % --- EV SAC ---
 \subsubsection{EV Charging --- SAC}
 
-\paragraph{Training curves.} \Cref{fig:stdrl_ev_sac_ds,fig:stdrl_ev_sac_da,fig:stdrl_ev_sac_de} show SAC training curves under all noise types.
+\paragraph{Training curves.} \Cref{fig:stdrl_ev_sac_noise} shows SAC training curves under all noise types.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/ev/SAC/DS_2026-03-16_23-32-06.png}
-\caption{EV Charging SAC: Training curves under observation noise (DS).}
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/ev/SAC/DS_2026-03-16_23-32-06.png}
+\caption{Observation noise}
 \label{fig:stdrl_ev_sac_ds}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/ev/SAC/DA_2026-03-16_23-32-09.png}
-\caption{EV Charging SAC: Training curves under action noise (DA).}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/ev/SAC/DA_2026-03-16_23-32-09.png}
+\caption{Action noise}
 \label{fig:stdrl_ev_sac_da}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/ev/SAC/DE_2026-03-16_23-32-10.png}
-\caption{EV Charging SAC: Training curves under environment noise (DE).}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/ev/SAC/DE_2026-03-16_23-32-10.png}
+\caption{Environment noise}
 \label{fig:stdrl_ev_sac_de}
+\end{subfigure}
+\caption{EV Charging SAC: Training curves under (a) observation, (b) action, and (c) environment noise at varying intensities.}
+\label{fig:stdrl_ev_sac_noise}
 \end{figure}
 
-\paragraph{Test-time robustness.} Counterintuitively, SAC's performance \emph{improves} under observation noise (\Cref{fig:violin_ev_sac_obs}): the distribution shifts slightly rightward at higher noise levels, suggesting that noise acts as implicit regularization. SAC's entropy-based exploration benefits from additional stochasticity, preventing overfitting to specific EV arrival patterns.
+\paragraph{Test-time robustness.} The violin plots in \Cref{fig:violin_ev_sac_noise} reveal that, counterintuitively, SAC's performance \emph{improves} under observation noise: the distribution shifts slightly rightward at higher noise levels, suggesting that noise acts as implicit regularization. SAC's entropy-based exploration benefits from additional stochasticity, preventing overfitting to specific EV arrival patterns. Environment noise broadens the distribution at high levels, indicating increased episode-to-episode variability in MOER-dependent rewards.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/evcharging/SAC/obs_violin.png}
-\caption{EV Charging SAC: Reward distribution under observation noise. Slight rightward shift at higher noise suggests implicit regularization.}
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/evcharging/SAC/obs_violin.png}
+\caption{Observation noise}
 \label{fig:violin_ev_sac_obs}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/evcharging/SAC/action_violin.png}
-\caption{EV Charging SAC: Reward distribution under action noise.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/evcharging/SAC/action_violin.png}
+\caption{Action noise}
 \label{fig:violin_ev_sac_act}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/evcharging/SAC/env_violin.png}
-\caption{EV Charging SAC: Reward distribution under environment noise. Distribution broadens at high noise, indicating increased episode-to-episode variability in MOER-dependent rewards.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/evcharging/SAC/env_violin.png}
+\caption{Environment noise}
 \label{fig:violin_ev_sac_env}
+\end{subfigure}
+\caption{EV Charging SAC: Reward distribution under (a) observation, (b) action, and (c) environment noise. Observation noise causes slight rightward shift (implicit regularization); environment noise broadens the distribution.}
+\label{fig:violin_ev_sac_noise}
 \end{figure}
 
 \begin{figure}[htbp]
@@ -193,6 +195,18 @@ The EV Charging environment exhibits remarkable robustness to all noise types ac
 \includegraphics[width=0.9\textwidth]{figures/C_POST/evcharging/SAC/panel.png}
 \caption{EV Charging SAC: Summary panel across all three noise channels.}
 \label{fig:post_ev_sac_panel}
+\end{figure}
+
+% --- EV TD3 ---
+\subsubsection{EV Charging --- TD3}
+
+TD3 exhibits the weakest baseline performance among the three algorithms (mean reward $3.16$, compared to PPO's $6.01$ and SAC's $3.79$). The training curve (\Cref{fig:stdrl_ev_td3_ds}) shows a monotonically declining trajectory---reward starts at $\sim6.5$ in early training and gradually deteriorates to $\sim5.5$, indicating that TD3's deterministic policy fails to adapt to the stochastic EV arrival patterns. Due to this poor and unstable baseline performance, systematic noise robustness experiments were not conducted for TD3 in EV Charging.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{figures/C_STDRL/ev/TD3/DS_2026-03-16_23-32-12.png}
+\caption{EV Charging TD3: Baseline training curve. Monotonically declining performance indicates failure to learn a stable charging policy.}
+\label{fig:stdrl_ev_td3_ds}
 \end{figure}
 
 % ============================================================
@@ -204,50 +218,50 @@ The Building environment is the most noise-sensitive of the three environments, 
 % --- Building PPO ---
 \subsubsection{Building --- PPO}
 
-\paragraph{Training curves.} \Cref{fig:stdrl_bu_ppo_ds} shows a clear separation between noise levels during training: higher observation noise leads to lower converged reward. Action noise (\Cref{fig:stdrl_bu_ppo_da}) and environment noise (\Cref{fig:stdrl_bu_ppo_de}) show similar but more severe training degradation patterns.
+\paragraph{Training curves.} \Cref{fig:stdrl_bu_ppo_noise} shows a clear separation between noise levels during training: higher observation noise leads to lower converged reward, and action and environment noise show similar but more severe training degradation patterns.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/bu/PPO/DS_2026-03-16_23-32-18.png}
-\caption{Building PPO: Training curves under observation noise (DS).}
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/bu/PPO/DS_2026-03-16_23-32-18.png}
+\caption{Observation noise}
 \label{fig:stdrl_bu_ppo_ds}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/bu/PPO/DA_2026-03-16_23-32-19.png}
-\caption{Building PPO: Training curves under action noise (DA).}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/bu/PPO/DA_2026-03-16_23-32-19.png}
+\caption{Action noise}
 \label{fig:stdrl_bu_ppo_da}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/bu/PPO/DE_2026-03-16_23-32-21.png}
-\caption{Building PPO: Training curves under environment noise (DE).}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/bu/PPO/DE_2026-03-16_23-32-21.png}
+\caption{Environment noise}
 \label{fig:stdrl_bu_ppo_de}
+\end{subfigure}
+\caption{Building PPO: Training curves under (a) observation, (b) action, and (c) environment noise at varying intensities.}
+\label{fig:stdrl_bu_ppo_noise}
 \end{figure}
 
-\paragraph{Test-time robustness.} The violin plots reveal the distributional impact of noise. Under observation noise (\Cref{fig:violin_bu_ppo_obs}), the bimodal reward structure---driven by high-occupancy vs.\ low-occupancy days---shifts entirely downward at $\sigma \geq 0.15$, with the high-reward mode collapsing. Under action noise (\Cref{fig:violin_bu_ppo_act}), the distribution shape is largely preserved up to $\sigma_{\text{act}} = 0.2$, consistent with the HVAC system's bang-bang control nature. Under environment noise (\Cref{fig:violin_bu_ppo_env}), the entire distribution collapses catastrophically as thermal dynamics amplify weather prediction errors.
+\paragraph{Test-time robustness.} The violin plots in \Cref{fig:violin_bu_ppo_noise} reveal the distributional impact of noise. Under observation noise, the bimodal reward structure---driven by high-occupancy vs.\ low-occupancy days---shifts entirely downward at $\sigma \geq 0.15$, with the high-reward mode collapsing. Under action noise, the distribution shape is largely preserved up to $\sigma_{\text{act}} = 0.2$, consistent with the HVAC system's bang-bang control nature. Under environment noise, the entire distribution collapses catastrophically as thermal dynamics amplify weather prediction errors.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/building/PPO/obs_violin.png}
-\caption{Building PPO: Reward distribution under observation noise. The bimodal structure shifts downward with increasing noise; the high-reward mode collapses at $\sigma \geq 0.15$.}
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/building/PPO/obs_violin.png}
+\caption{Observation noise}
 \label{fig:violin_bu_ppo_obs}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/building/PPO/action_violin.png}
-\caption{Building PPO: Reward distribution under action noise. Distribution shape preserved up to $\sigma_{\text{act}} = 0.2$, consistent with bang-bang HVAC control.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/building/PPO/action_violin.png}
+\caption{Action noise}
 \label{fig:violin_bu_ppo_act}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/building/PPO/env_violin.png}
-\caption{Building PPO: Reward distribution under environment noise. Catastrophic degradation: the entire distribution collapses as thermal dynamics amplify weather prediction errors.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/building/PPO/env_violin.png}
+\caption{Environment noise}
 \label{fig:violin_bu_ppo_env}
+\end{subfigure}
+\caption{Building PPO: Reward distribution under (a) observation, (b) action, and (c) environment noise. Observation noise collapses the bimodal structure at $\sigma \geq 0.15$; action noise preserves distribution shape up to $\sigma_{\text{act}} = 0.2$; environment noise causes catastrophic degradation.}
+\label{fig:violin_bu_ppo_noise}
 \end{figure}
 
 \begin{figure}[htbp]
@@ -260,50 +274,50 @@ The Building environment is the most noise-sensitive of the three environments, 
 % --- Building SAC ---
 \subsubsection{Building --- SAC}
 
-\paragraph{Training curves.} SAC's training curves (\Cref{fig:stdrl_bu_sac_ds,fig:stdrl_bu_sac_da,fig:stdrl_bu_sac_de}) show a similar pattern to PPO but with lower absolute performance due to SAC's weaker baseline in this environment.
+\paragraph{Training curves.} SAC's training curves (\Cref{fig:stdrl_bu_sac_noise}) show a similar pattern to PPO but with lower absolute performance due to SAC's weaker baseline in this environment.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/bu/SAC/DS_2026-03-16_23-32-23.png}
-\caption{Building SAC: Training curves under observation noise (DS).}
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/bu/SAC/DS_2026-03-16_23-32-23.png}
+\caption{Observation noise}
 \label{fig:stdrl_bu_sac_ds}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/bu/SAC/DA_2026-03-16_23-32-25.png}
-\caption{Building SAC: Training curves under action noise (DA).}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/bu/SAC/DA_2026-03-16_23-32-25.png}
+\caption{Action noise}
 \label{fig:stdrl_bu_sac_da}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/bu/SAC/DE_2026-03-16_23-32-27.png}
-\caption{Building SAC: Training curves under environment noise (DE).}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/bu/SAC/DE_2026-03-16_23-32-27.png}
+\caption{Environment noise}
 \label{fig:stdrl_bu_sac_de}
+\end{subfigure}
+\caption{Building SAC: Training curves under (a) observation, (b) action, and (c) environment noise at varying intensities.}
+\label{fig:stdrl_bu_sac_noise}
 \end{figure}
 
-\paragraph{Test-time robustness.} SAC's reward distributions (\Cref{fig:violin_bu_sac_obs,fig:violin_bu_sac_act,fig:violin_bu_sac_env}) show similar degradation patterns to PPO, confirming that the Building environment's noise sensitivity is environment-driven rather than algorithm-specific.
+\paragraph{Test-time robustness.} SAC's reward distributions (\Cref{fig:violin_bu_sac_noise}) show similar degradation patterns to PPO, confirming that the Building environment's noise sensitivity is environment-driven rather than algorithm-specific.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/building/SAC/obs_violin.png}
-\caption{Building SAC: Reward distribution under observation noise.}
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/building/SAC/obs_violin.png}
+\caption{Observation noise}
 \label{fig:violin_bu_sac_obs}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/building/SAC/action_violin.png}
-\caption{Building SAC: Reward distribution under action noise.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/building/SAC/action_violin.png}
+\caption{Action noise}
 \label{fig:violin_bu_sac_act}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/building/SAC/env_violin.png}
-\caption{Building SAC: Reward distribution under environment noise.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/building/SAC/env_violin.png}
+\caption{Environment noise}
 \label{fig:violin_bu_sac_env}
+\end{subfigure}
+\caption{Building SAC: Reward distribution under (a) observation, (b) action, and (c) environment noise. Similar degradation patterns to PPO confirm environment-driven noise sensitivity.}
+\label{fig:violin_bu_sac_noise}
 \end{figure}
 
 \begin{figure}[htbp]
@@ -313,59 +327,71 @@ The Building environment is the most noise-sensitive of the three environments, 
 \label{fig:post_bu_sac_panel}
 \end{figure}
 
+% --- Building TD3 ---
+\subsubsection{Building --- TD3}
+
+TD3 exhibits catastrophic training instability in the Building environment. The training curve (\Cref{fig:stdrl_bu_td3_ds}) shows a continuously worsening trajectory: reward starts at $\sim-50$ in early training and degrades monotonically to $\sim-150$ by 9M steps, with high-amplitude oscillations throughout. Despite this, the best model (evaluated at the 1M-step checkpoint, reward $-59.9$) outperforms SAC's baseline ($-97.7$), suggesting that TD3 initially discovers a reasonable HVAC policy but cannot maintain it due to value overestimation compounding over the long training horizon. The test-time evaluation of the best model yields a mean reward of $-63.2$ with very high variance ($\text{std} = 26.85$), confirming inconsistent control across episodes. Due to this severe instability, systematic noise experiments were not conducted for TD3 in Building.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{figures/C_STDRL/bu/TD3/DS_2026-03-16_23-32-29.png}
+\caption{Building TD3: Baseline training curve. Catastrophic degradation---reward worsens continuously from $-50$ to $-150$ over 9M steps with large oscillations.}
+\label{fig:stdrl_bu_td3_ds}
+\end{figure}
+
 % ============================================================
 \subsection{Cogeneration: Noise Robustness}
 \label{sec:noise_co}
 
-The Cogeneration environment reveals a striking algorithm-dependent divergence under noise: PPO is virtually immune to all noise types, while SAC degrades catastrophically under observation noise. This reflects fundamental differences in policy conservatism.
+The Cogeneration environment reveals a striking algorithm-dependent divergence under noise: PPO is virtually immune to all noise types, while SAC degrades catastrophically under observation noise, and TD3 exhibits a distinctive mid-training crash-and-recovery pattern. These differences reflect fundamental algorithmic properties in policy conservatism and exploration.
 
 % --- Cogen PPO ---
 \subsubsection{Cogeneration --- PPO}
 
-\paragraph{Training curves.} PPO training curves (\Cref{fig:stdrl_co_ppo_ds,fig:stdrl_co_ppo_da,fig:stdrl_co_ppo_de}) are indistinguishable across noise levels, reflecting the conservative fuel-minimizing strategy that inherently tolerates perturbations.
+\paragraph{Training curves.} PPO training curves (\Cref{fig:stdrl_co_ppo_noise}) are indistinguishable across noise levels, reflecting the conservative fuel-minimizing strategy that inherently tolerates perturbations.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/co/PPO/DS_2026-03-16_23-32-34.png}
-\caption{Cogen PPO: Training curves under observation noise (DS).}
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/co/PPO/DS_2026-03-16_23-32-34.png}
+\caption{Observation noise}
 \label{fig:stdrl_co_ppo_ds}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/co/PPO/DA_2026-03-16_23-32-36.png}
-\caption{Cogen PPO: Training curves under action noise (DA).}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/co/PPO/DA_2026-03-16_23-32-36.png}
+\caption{Action noise}
 \label{fig:stdrl_co_ppo_da}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/co/PPO/DE_2026-03-16_23-32-38.png}
-\caption{Cogen PPO: Training curves under environment noise (DE).}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/co/PPO/DE_2026-03-16_23-32-38.png}
+\caption{Environment noise}
 \label{fig:stdrl_co_ppo_de}
+\end{subfigure}
+\caption{Cogeneration PPO: Training curves under (a) observation, (b) action, and (c) environment noise at varying intensities.}
+\label{fig:stdrl_co_ppo_noise}
 \end{figure}
 
-\paragraph{Test-time robustness.} The violin plots (\Cref{fig:violin_co_ppo_obs,fig:violin_co_ppo_act,fig:violin_co_ppo_env}) confirm that PPO's tight reward distribution remains virtually unchanged across the full noise range ($\sigma = 0$ to $5$). Less than $0.3\%$ degradation is observed across all noise channels, reflecting the conservative fuel-minimizing strategy where small actions are inherently insensitive to input perturbations.
+\paragraph{Test-time robustness.} The violin plots in \Cref{fig:violin_co_ppo_noise} confirm that PPO's tight reward distribution remains virtually unchanged across the full noise range ($\sigma = 0$ to $5$). Less than $0.3\%$ degradation is observed across all noise channels, reflecting the conservative fuel-minimizing strategy where small actions are inherently insensitive to input perturbations.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/cogen/PPO/obs_violin.png}
-\caption{Cogen PPO: Reward distribution under observation noise. The tight distribution remains unchanged across the full noise range ($\sigma = 0$ to $5$).}
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/cogen/PPO/obs_violin.png}
+\caption{Observation noise}
 \label{fig:violin_co_ppo_obs}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/cogen/PPO/action_violin.png}
-\caption{Cogen PPO: Reward distribution under action noise.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/cogen/PPO/action_violin.png}
+\caption{Action noise}
 \label{fig:violin_co_ppo_act}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/cogen/PPO/env_violin.png}
-\caption{Cogen PPO: Reward distribution under environment noise.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/cogen/PPO/env_violin.png}
+\caption{Environment noise}
 \label{fig:violin_co_ppo_env}
+\end{subfigure}
+\caption{Cogeneration PPO: Reward distribution under (a) observation, (b) action, and (c) environment noise. Distribution remains virtually unchanged across the full noise range, confirming exceptional robustness.}
+\label{fig:violin_co_ppo_noise}
 \end{figure}
 
 \begin{figure}[htbp]
@@ -378,43 +404,50 @@ The Cogeneration environment reveals a striking algorithm-dependent divergence u
 % --- Cogen SAC ---
 \subsubsection{Cogeneration --- SAC}
 
-\paragraph{Training curves.} SAC training curves (\Cref{fig:stdrl_co_sac_ds,fig:stdrl_co_sac_da,fig:stdrl_co_sac_de}) show clear noise sensitivity, particularly under observation noise where convergence is disrupted at higher noise levels.
+\paragraph{Training curves.} SAC training curves (\Cref{fig:stdrl_co_sac_noise}) show clear noise sensitivity, particularly under observation noise where convergence is disrupted at higher noise levels.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/co/SAC/DS_2026-03-16_23-32-40.png}
-\caption{Cogen SAC: Training curves under observation noise (DS).}
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/co/SAC/DS_2026-03-16_23-32-40.png}
+\caption{Observation noise}
 \label{fig:stdrl_co_sac_ds}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/co/SAC/DA_2026-03-16_23-32-42.png}
-\caption{Cogen SAC: Training curves under action noise (DA).}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/co/SAC/DA_2026-03-16_23-32-42.png}
+\caption{Action noise}
 \label{fig:stdrl_co_sac_da}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_STDRL/co/SAC/DE_2026-03-16_23-32-44.png}
-\caption{Cogen SAC: Training curves under environment noise (DE).}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_STDRL/co/SAC/DE_2026-03-16_23-32-44.png}
+\caption{Environment noise}
 \label{fig:stdrl_co_sac_de}
+\end{subfigure}
+\caption{Cogeneration SAC: Training curves under (a) observation, (b) action, and (c) environment noise at varying intensities.}
+\label{fig:stdrl_co_sac_noise}
 \end{figure}
 
-\paragraph{Test-time robustness.} SAC's observation noise violin plot (\Cref{fig:violin_co_sac_obs}) shows dramatic degradation: the distribution broadens and shifts leftward, with heavy left tails emerging at $\sigma \geq 2$ indicating frequent constraint violations. SAC's aggressive optimization near the constraint boundary is fragile to observation perturbations. Environment noise (\Cref{fig:violin_co_sac_env}) causes moderate degradation through ONNX model output perturbations.
+\paragraph{Test-time robustness.} The violin plots in \Cref{fig:violin_co_sac_noise} show dramatic degradation under observation noise: the distribution broadens and shifts leftward, with heavy left tails emerging at $\sigma \geq 2$ indicating frequent constraint violations. SAC's aggressive optimization near the constraint boundary is fragile to observation perturbations. Action noise causes progressive degradation from $-0.03$ at baseline to $-2.5$ at $\sigma_{\text{act}} = 0.4$, with the distribution spreading substantially beyond $\sigma_{\text{act}} = 0.15$. Environment noise causes the most severe degradation through ONNX model output perturbations ($>100\times$ at $\sigma_{\text{env}} = 5$).
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/cogen/SAC/obs_violin.png}
-\caption{Cogen SAC: Reward distribution under observation noise. Heavy left tails emerge at $\sigma \geq 2$, indicating constraint violations from aggressive near-boundary optimization.}
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/cogen/SAC/obs_violin.png}
+\caption{Observation noise}
 \label{fig:violin_co_sac_obs}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/C_POST/cogen/SAC/env_violin.png}
-\caption{Cogen SAC: Reward distribution under environment noise. ONNX model output perturbations cause moderate degradation with increasing tail weight.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/cogen/SAC/action_violin.png}
+\caption{Action noise}
+\label{fig:violin_co_sac_act}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+\includegraphics[width=\textwidth]{figures/C_POST/cogen/SAC/env_violin.png}
+\caption{Environment noise}
 \label{fig:violin_co_sac_env}
+\end{subfigure}
+\caption{Cogeneration SAC: Reward distribution under (a) observation, (b) action, and (c) environment noise. Observation noise causes heavy left tails at $\sigma \geq 2$; action noise degrades progressively; environment noise causes the most severe degradation via ONNX model perturbations.}
+\label{fig:violin_co_sac_noise}
 \end{figure}
 
 \begin{figure}[htbp]
@@ -424,11 +457,27 @@ The Cogeneration environment reveals a striking algorithm-dependent divergence u
 \label{fig:post_co_sac_panel}
 \end{figure}
 
+% --- Cogen TD3 ---
+\subsubsection{Cogeneration --- TD3}
+
+\paragraph{Training curves.} TD3 exhibits a distinctive \emph{mid-training crash} in the Cogeneration environment (\Cref{fig:stdrl_co_td3_ds}): the baseline (noise $= 0$) converges to near-optimal performance ($\approx -0.05$) by episode 10,000, then catastrophically collapses to $-1.8$ around episode 15,000--20,000, before gradually recovering to $-0.7$ by the end of training. This U-shaped pattern is characteristic of TD3's value overestimation instability in environments with complex, nonlinear dynamics.
+
+Paradoxically, noise-trained TD3 agents (observation noise $\sigma = 10, 17, 25$) exhibit \emph{more stable} training than the clean baseline---they converge smoothly to $\approx -0.2$ without any mid-training collapse. The observation noise acts as implicit regularization, preventing the Q-function from overfitting to narrow state-action regions and thus avoiding the catastrophic overestimation that destabilizes the clean-trained agent.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{figures/C_STDRL/co/TD3/DS_2026-03-16_23-32-46.png}
+\caption{Cogen TD3: Training curves under observation noise. The baseline ($\sigma = 0$) exhibits a dramatic mid-training crash and recovery, while noise-trained agents converge smoothly---noise acts as implicit regularization.}
+\label{fig:stdrl_co_td3_ds}
+\end{figure}
+
+\paragraph{Test-time performance.} Despite the training instability, TD3's best model achieves competitive test-time performance ($-0.040 \pm 0.073$), comparable to SAC ($-0.033 \pm 0.079$). However, the training instability means that model selection (choosing the right checkpoint) is critical for TD3 in Cogeneration, whereas SAC provides more reliable convergence.
+
 % ============================================================
 \subsection{Noise Robustness Findings}
 \label{sec:noise_findings}
 
-\begin{finding}[Environment-Dependent Noise Sensitivity (RQ1, RQ6)]
+\begin{finding}[Environment-Dependent Noise Sensitivity (RQ1, RQ5)]
 \label{find:noise_sensitivity}
 Noise robustness varies dramatically across environments: EV Charging policies are exceptionally robust to all noise types ($<1\%$ degradation at moderate noise), while Building policies degrade rapidly under observation and environment noise ($>100\%$ degradation at $\sigma \geq 0.15$). This reflects fundamental differences in environment dynamics: EV Charging's reward depends primarily on aggregate daily charging patterns that are noise-resistant, while Building's RC thermal model amplifies per-timestep observation errors through coupled zone dynamics.
 \end{finding}
@@ -441,6 +490,11 @@ Across all environments, observation noise causes significantly more degradation
 \begin{finding}[Algorithm-Specific Robustness (RQ1)]
 \label{find:algo_robustness}
 PPO consistently demonstrates superior noise robustness compared to SAC and TD3, with the most dramatic difference in Cogeneration (PPO: $<0.3\%$ degradation; SAC: $>2000\%$ degradation). PPO's on-policy training and clipped surrogate objective create naturally conservative policies that tolerate input perturbations, while SAC's entropy-maximizing exploration can amplify noise in the policy output.
+\end{finding}
+
+\begin{finding}[TD3 Training Instability (RQ1)]
+\label{find:td3_instability}
+TD3 exhibits severe training instability across all three environments: monotonic performance decline in EV Charging, catastrophic degradation in Building (reward worsening from $-50$ to $-150$ over training), and a dramatic mid-training crash in Cogeneration. This instability is attributable to TD3's deterministic policy and value overestimation compounding over long training horizons with complex dynamics. Notably, in Cogeneration, observation noise during training acts as \emph{implicit regularization} that stabilizes TD3---noise-trained agents converge smoothly while the clean-trained agent crashes. This suggests that noise injection may serve a dual purpose: not only testing robustness but also improving training stability for off-policy deterministic algorithms.
 \end{finding}
 
 % ============================================================
@@ -462,7 +516,7 @@ PPOLag achieves the clearest cost limit differentiation (\Cref{fig:cogen_ppolag}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/cogen/saferl_cogen_PPOLag_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/cogen/saferl_cogen_PPOLag_3000ep_200ema.png}
 \caption{Cogen PPOLag: Dual-panel training curves (reward left, cost right) for cost limits $d \in \{10, 25, 50, 200\}$. Clear monotonic differentiation with dashed red line indicating $d = 25$ reference.}
 \label{fig:cogen_ppolag}
 \end{figure}
@@ -474,7 +528,7 @@ CPO reduces cost rapidly ($\sim$500 epochs) but exhibits weaker limit differenti
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/cogen/saferl_cogen_CPO_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/cogen/saferl_cogen_CPO_3000ep_200ema.png}
 \caption{Cogen CPO: Training curves across four cost limits. Trust-region method converges rapidly but shows limited limit differentiation.}
 \label{fig:srl_co_cpo}
 \end{figure}
@@ -486,7 +540,7 @@ OnCRPO shows similar behavior to CPO with rapid cost reduction but produces cost
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/cogen/saferl_cogen_OnCRPO_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/cogen/saferl_cogen_OnCRPO_3000ep_200ema.png}
 \caption{Cogen OnCRPO: Rapid cost reduction but weak limit separation across all four cost limits.}
 \label{fig:srl_co_oncrpo}
 \end{figure}
@@ -498,7 +552,7 @@ FOCOPS shows good monotonic differentiation ($d=10 \to 8$, $d=25 \to 17$, $d=50 
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/cogen/saferl_cogen_FOCOPS_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/cogen/saferl_cogen_FOCOPS_3000ep_200ema.png}
 \caption{Cogen FOCOPS: Slowest convergence but good monotonic cost differentiation.}
 \label{fig:srl_co_focops}
 \end{figure}
@@ -513,28 +567,28 @@ FOCOPS shows good monotonic differentiation ($d=10 \to 8$, $d=25 \to 17$, $d=50 
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/cogen/saferl_cogen_compare_CL10_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/cogen/saferl_cogen_compare_CL10_3000ep_200ema.png}
 \caption{Cogen cross-algorithm comparison at tightest limit $d = 10$.}
 \label{fig:srl_co_cmp10}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/cogen/saferl_cogen_compare_CL25_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/cogen/saferl_cogen_compare_CL25_3000ep_200ema.png}
 \caption{Cogen cross-algorithm comparison at $d = 25$. PPOLag achieves the best reward while satisfying the constraint; FOCOPS converges slowest.}
 \label{fig:cogen_compare}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/cogen/saferl_cogen_compare_CL50_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/cogen/saferl_cogen_compare_CL50_3000ep_200ema.png}
 \caption{Cogen cross-algorithm comparison at moderate limit $d = 50$.}
 \label{fig:srl_co_cmp50}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/cogen/saferl_cogen_compare_CL200_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/cogen/saferl_cogen_compare_CL200_3000ep_200ema.png}
 \caption{Cogen cross-algorithm comparison at loosest limit $d = 200$.}
 \label{fig:srl_co_cmp200}
 \end{figure}
@@ -543,7 +597,7 @@ FOCOPS shows good monotonic differentiation ($d=10 \to 8$, $d=25 \to 17$, $d=50 
 \subsection{EV Charging: Precise Constraint Tracking}
 \label{sec:saferl_ev}
 
-The EV Charging CMDP cost (excess charge violations, $\alpha_c = 100$) is structurally orthogonal to the reward. With cost limits $d \in \{3, 5, 25\}$, all algorithms demonstrate strong constraint satisfaction (\Cref{tab:ev_saferl}).
+The EV Charging CMDP cost (excess charge violations, $\alpha_c = 100$) is structurally orthogonal to the reward. With cost limits $d \in \{3, 5, 25, 1000, 10{,}000\}$, spanning from tight constraint enforcement to near-unconstrained operation, all algorithms demonstrate strong constraint satisfaction at tight limits (\Cref{tab:ev_saferl}).
 
 \begin{table}[htbp]
 \centering
@@ -553,9 +607,11 @@ The EV Charging CMDP cost (excess charge violations, $\alpha_c = 100$) is struct
 \toprule
 \textbf{$d$} & \textbf{PPOLag} & \textbf{CPO} & \textbf{OnCRPO} & \textbf{FOCOPS} \\
 \midrule
-$3$  & $\mathbf{2.6}$ & $3.3$ & $4.5$ & $\mathbf{3.1}$ \\
-$5$  & $\mathbf{5.1}$ & $\mathbf{5.7}$ & $6.9$ & $\mathbf{3.6}$ \\
-$25$ & $\mathbf{21.5}$ & $\mathbf{20.7}$ & $27.5$ & $26.2$ \\
+$3$      & $\mathbf{2.8}$   & $3.0$            & $4.4$   & $\mathbf{3.0}$ \\
+$5$      & $\mathbf{5.1}$   & $\mathbf{5.6}$   & $7.1$   & $\mathbf{3.7}$ \\
+$25$     & $\mathbf{21.5}$  & $\mathbf{22.1}$  & $27.2$  & $26.1$ \\
+$1000$   & $\mathbf{153.7}$ & $\mathbf{159.3}$ & $\mathbf{185.1}$ & $\mathbf{133.2}$ \\
+$10000$  & $\mathbf{163.3}$ & $\mathbf{128.5}$ & $\mathbf{174.3}$ & $\mathbf{186.2}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -567,7 +623,7 @@ PPOLag achieves near-exact constraint satisfaction at all levels (\Cref{fig:ev_p
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/evcharging/saferl_evcharging_PPOLag_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/evcharging/saferl_evcharging_PPOLag_3000ep_200ema.png}
 \caption{EV Charging PPOLag: Training curves across five cost limits. Tight limits ($d = 3, 5$) are precisely satisfied; loose limits show natural cost reduction.}
 \label{fig:ev_ppolag}
 \end{figure}
@@ -575,11 +631,11 @@ PPOLag achieves near-exact constraint satisfaction at all levels (\Cref{fig:ev_p
 % --- EV CPO ---
 \subsubsection{EV Charging --- CPO}
 
-CPO satisfies the constraint at moderate and loose limits but slightly overshoots at the tightest limit ($d = 3$, final cost $= 3.3$), as shown in \Cref{fig:srl_ev_cpo}.
+CPO satisfies the constraint at moderate limits but slightly overshoots at the tightest limit ($d = 3$, final cost $= 3.0$), as shown in \Cref{fig:srl_ev_cpo}. At loose limits ($d = 1000, 10000$), CPO reduces cost to $\sim$130--160, comparable to PPOLag.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/evcharging/saferl_evcharging_CPO_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/evcharging/saferl_evcharging_CPO_3000ep_200ema.png}
 \caption{EV Charging CPO: Training curves across cost limits.}
 \label{fig:srl_ev_cpo}
 \end{figure}
@@ -587,11 +643,11 @@ CPO satisfies the constraint at moderate and loose limits but slightly overshoot
 % --- EV OnCRPO ---
 \subsubsection{EV Charging --- OnCRPO}
 
-OnCRPO consistently overshoots the prescribed cost limits (\Cref{fig:srl_ev_oncrpo}), with final costs exceeding the target at all three levels ($d = 3 \to 4.5$, $d = 5 \to 6.9$, $d = 25 \to 27.5$).
+OnCRPO consistently overshoots the prescribed cost limits at tight levels (\Cref{fig:srl_ev_oncrpo}), with final costs exceeding the target ($d = 3 \to 4.4$, $d = 5 \to 7.1$, $d = 25 \to 27.2$). At loose limits, cost converges to $\sim$175--185, the highest among all algorithms.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/evcharging/saferl_evcharging_OnCRPO_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/evcharging/saferl_evcharging_OnCRPO_3000ep_200ema.png}
 \caption{EV Charging OnCRPO: Training curves across cost limits.}
 \label{fig:srl_ev_oncrpo}
 \end{figure}
@@ -599,11 +655,11 @@ OnCRPO consistently overshoots the prescribed cost limits (\Cref{fig:srl_ev_oncr
 % --- EV FOCOPS ---
 \subsubsection{EV Charging --- FOCOPS}
 
-FOCOPS achieves strong constraint satisfaction at tight limits ($d = 3 \to 3.1$, $d = 5 \to 3.6$) but slightly overshoots at loose limits ($d = 25 \to 26.2$), as shown in \Cref{fig:srl_ev_focops}.
+FOCOPS achieves strong constraint satisfaction at tight limits ($d = 3 \to 3.0$, $d = 5 \to 3.7$) but slightly overshoots at the moderate limit ($d = 25 \to 26.1$), as shown in \Cref{fig:srl_ev_focops}. At loose limits, FOCOPS converges to $\sim$133--186, with the widest variance among algorithms.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/evcharging/saferl_evcharging_FOCOPS_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/evcharging/saferl_evcharging_FOCOPS_3000ep_200ema.png}
 \caption{EV Charging FOCOPS: Training curves across cost limits.}
 \label{fig:srl_ev_focops}
 \end{figure}
@@ -611,20 +667,34 @@ FOCOPS achieves strong constraint satisfaction at tight limits ($d = 3 \to 3.1$,
 % --- EV Cross-Algorithm ---
 \subsubsection{EV Charging --- Cross-Algorithm Comparisons}
 
-\Cref{fig:srl_ev_cmp3,fig:srl_ev_cmp25} compare all four algorithms at the tightest and moderate cost limits respectively.
+\Cref{fig:srl_ev_cmp3,fig:srl_ev_cmp5,fig:srl_ev_cmp25,fig:srl_ev_cmp1000} compare all four algorithms at representative cost limits.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/evcharging/saferl_evcharging_compare_CL3_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/evcharging/saferl_evcharging_compare_CL3_3000ep_200ema.png}
 \caption{EV Charging cross-algorithm comparison at tightest limit $d = 3$.}
 \label{fig:srl_ev_cmp3}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/evcharging/saferl_evcharging_compare_CL25_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/evcharging/saferl_evcharging_compare_CL5_3000ep_200ema.png}
+\caption{EV Charging cross-algorithm comparison at $d = 5$.}
+\label{fig:srl_ev_cmp5}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/evcharging/saferl_evcharging_compare_CL25_3000ep_200ema.png}
 \caption{EV Charging cross-algorithm comparison at moderate limit $d = 25$.}
 \label{fig:srl_ev_cmp25}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/evcharging/saferl_evcharging_compare_CL1000_3000ep_200ema.png}
+\caption{EV Charging cross-algorithm comparison at loose limit $d = 1000$. All algorithms converge to $\sim$130--185 episode cost without active constraint enforcement.}
+\label{fig:srl_ev_cmp1000}
 \end{figure}
 
 % ------------------------------------------------------------
@@ -639,7 +709,7 @@ Despite testing three cost function designs---raw temperature error, HVAC rampin
 \label{tab:building_saferl}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-\textbf{Cost Function} & \textbf{$d_1$} & \textbf{$d_2$} & \textbf{$d_3$} & \textbf{$d_4$} \\
+\textbf{Cost Function} & \textbf{$d=25$} & \textbf{$d=50$} & \textbf{$d=100$} & \textbf{$d=200$} \\
 \midrule
 Raw temp error & $6.7$ & $15.4$ & $12.4$ & $8.4$ \\
 HVAC ramping & $6.5$ & $6.8$ & $7.2$ & $8.8$ \\
@@ -657,7 +727,7 @@ All four cost limits produce nearly identical training curves (\Cref{fig:buildin
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/building/saferl_building_PPOLag_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/building/saferl_building_PPOLag_3000ep_200ema.png}
 \caption{Building PPOLag: All four cost limits produce nearly identical training curves, demonstrating the absence of constraint differentiation.}
 \label{fig:building_ppolag}
 \end{figure}
@@ -665,11 +735,11 @@ All four cost limits produce nearly identical training curves (\Cref{fig:buildin
 % --- Building CPO ---
 \subsubsection{Building --- CPO}
 
-CPO exhibits divergence at loose limits ($d = 200, 500$), while tight limits lack differentiation (\Cref{fig:srl_bu_cpo}). This confirms the trust-region instability under nearly inactive constraints.
+CPO exhibits divergence at loose limits ($d = 100, 200$), while tight limits lack differentiation (\Cref{fig:srl_bu_cpo}). This confirms the trust-region instability under nearly inactive constraints.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/building/saferl_building_CPO_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/building/saferl_building_CPO_3000ep_200ema.png}
 \caption{Building CPO: Loose limits ($d = 200, 500$) diverge; tight limits lack differentiation.}
 \label{fig:srl_bu_cpo}
 \end{figure}
@@ -681,7 +751,7 @@ OnCRPO shows a similar divergence pattern to CPO at loose limits (\Cref{fig:srl_
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/building/saferl_building_OnCRPO_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/building/saferl_building_OnCRPO_3000ep_200ema.png}
 \caption{Building OnCRPO: Similar divergence pattern to CPO at loose limits.}
 \label{fig:srl_bu_oncrpo}
 \end{figure}
@@ -693,7 +763,7 @@ FOCOPS exhibits late-training cost increases at loose limits (\Cref{fig:srl_bu_f
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/C_SRL/building/saferl_building_FOCOPS_3000ep_200ema.png}
+\includegraphics[width=1.0\textwidth]{figures/C_SRL/building/saferl_building_FOCOPS_3000ep_200ema.png}
 \caption{Building FOCOPS: Late-training cost increase at loose limits indicates Lagrangian oscillation.}
 \label{fig:srl_bu_focops}
 \end{figure}
@@ -707,17 +777,17 @@ SACLag (SAC with Lagrangian relaxation) failed consistently across all three env
 % ------------------------------------------------------------
 \subsection{Safe RL Findings}
 
-\begin{finding}[Reward--Cost Orthogonality Is Necessary (RQ4)]
+\begin{finding}[Reward--Cost Orthogonality Is Necessary (RQ3)]
 \label{find:orthogonality}
 CMDP formulations require the cost signal to measure an objective not adequately incentivized by the reward. When reward and cost are aligned (Building: $\beta = 0.5$ comfort term), constraints are trivially satisfied. When orthogonal (Cogen: ramp stress; EV: excess charge), CMDP enables precise safety--performance tradeoff control.
 \end{finding}
 
-\begin{finding}[PPOLag Is the Most Robust CMDP Algorithm (RQ4)]
+\begin{finding}[PPOLag Is the Most Robust CMDP Algorithm (RQ3)]
 \label{find:ppolag_best}
 Across all environments, PPOLag provides the best cost limit differentiation, precise constraint tracking, and graceful degradation under inactive constraints ($\lambda \to 0 \Rightarrow$ standard PPO). Trust-region methods (CPO, OnCRPO) converge faster but are vulnerable to numerical instability under loose constraints.
 \end{finding}
 
-\begin{finding}[Off-Policy CMDP Methods Fail (RQ4)]
+\begin{finding}[Off-Policy CMDP Methods Fail (RQ3)]
 \label{find:saclag}
 SACLag's replay buffer staleness prevents accurate Lagrange multiplier tracking. This negative finding suggests that on-policy methods are currently the only reliable approach for CMDP-based Safe RL.
 \end{finding}

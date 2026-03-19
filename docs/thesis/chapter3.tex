@@ -562,29 +562,6 @@ A key design principle of our noise framework is \textbf{channel independence}: 
 
 This independence enables controlled experiments where the contribution of each noise channel can be isolated through ablation studies.
 
-\subsection{Distribution Shift Protocols}
-
-We formalize two distribution shift protocols:
-
-\begin{definition}[TCTN Protocol]
-\textbf{Train-Clean-Test-Noisy:} Train the policy $\pi^*$ under clean conditions ($\sigma = 0$) and evaluate under noise level $\sigma > 0$:
-\begin{equation}
-    \text{TCTN}(\sigma) = J_\sigma(\pi^*_0), \quad \pi^*_0 = \argmax_\pi J_0(\pi).
-\end{equation}
-\end{definition}
-
-\begin{definition}[TNTC Protocol]
-\textbf{Train-Noisy-Test-Clean:} Train the policy $\pi^*_\sigma$ under noise level $\sigma$ and evaluate under clean conditions:
-\begin{equation}
-    \text{TNTC}(\sigma) = J_0(\pi^*_\sigma), \quad \pi^*_\sigma = \argmax_\pi J_\sigma(\pi).
-\end{equation}
-\end{definition}
-
-The benefit of noise-aware training is measured by the \emph{distribution shift gap}:
-\begin{equation}
-    \Delta_{\text{shift}}(\sigma) = J_\sigma(\pi^*_\sigma) - \text{TCTN}(\sigma).
-\end{equation}
-
 \section{SustainGym: Sustainable Energy RL Environments}
 \label{sec:sustaingym}
 

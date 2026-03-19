@@ -26,6 +26,8 @@
 \usepackage{natbib}
 \usepackage{tcolorbox}
 \usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc}
 
 % ---- Theorem environments ----
 \newtheorem{definition}{Definition}[chapter]
@@ -79,8 +81,8 @@ in partial fulfillment of the requirements for the degree of\\[0.5cm]
 in\\
 {\large Computer Engineering}\\[1.5cm]
 Ming Jin, Chair\\
-Committee Member 2\\
-Committee Member 3\\[1.5cm]
+Ali Mehrizi-Sani\\
+Alkan Soysal\\[1.5cm]
 \today\\
 Blacksburg, Virginia\\[0.5cm]
 Keywords: Reinforcement Learning, Sustainable Energy, Safe RL, Multi-Agent RL, Benchmarking\\[0.3cm]
@@ -95,7 +97,7 @@ Reinforcement learning (RL) has emerged as a promising approach for sequential d
 
 For noise robustness, we develop a three-channel noise injection framework that independently perturbs observations, actions, and environment dynamics at varying intensities, characterizing policy degradation curves for PPO, SAC, and TD3 across ten or more noise levels per environment. For safety, we formulate each environment as a Constrained Markov Decision Process (CMDP) with physically meaningful cost signals and evaluate safe RL algorithms from the OmniSafe framework. For multi-agent coordination, we decompose each environment into cooperative agents using the PettingZoo interface and compare centralized single-agent versus decentralized multi-agent performance using Ray RLlib.
 
-Our evaluation employs rigorous statistical methodology following current best practices: five independent seeds per configuration, interquartile mean (IQM) reporting, and bootstrap 95\% confidence intervals. The resulting benchmark comprises over 700 training runs across three environments, three algorithms, and multiple noise levels, providing actionable insights for practitioners deploying RL controllers in real-world energy systems.
+Our evaluation spans over 200 unique configurations---including noise-injected standard RL, CMDP-based safe RL with four algorithms and multiple cost limits, and multi-agent RL with up to 54 cooperative agents---totaling over 300 training runs across three environments and multiple noise levels, providing actionable insights for practitioners deploying RL controllers in real-world energy systems.
 
 % ---- General Audience Abstract ----
 \chapter*{General Audience Abstract}
@@ -119,7 +121,13 @@ This thesis addresses these gaps by creating a comprehensive testing framework f
 \chapter*{Acknowledgments}
 \addcontentsline{toc}{chapter}{Acknowledgments}
 
-[To be written.]
+I would like to express my sincere gratitude to my advisor, Dr.\ Ming Jin, for his guidance, patience, and unwavering support throughout this research. His mentorship shaped both the direction of this work and my growth as a researcher.
+
+I am deeply grateful to my family for their unconditional love and encouragement across the distance. Their belief in me has been a constant source of strength throughout this journey.
+
+I also want to thank my friends in Blacksburg who made this challenging process not only bearable but genuinely enjoyable. Their companionship, late-night conversations, and shared meals turned a demanding graduate experience into a memorable chapter of my life.
+
+Finally, I gratefully acknowledge the financial support of the Republic of Turkey Ministry of National Education through the YLSY scholarship program. This work would not have been possible without their investment in international graduate education.
 
 % ---- Table of Contents ----
 \tableofcontents
@@ -168,9 +176,7 @@ RL & Reinforcement Learning \\
 SAC & Soft Actor-Critic \\
 SB3 & Stable-Baselines3 \\
 SLURM & Simple Linux Utility for Resource Management \\
-TCTN & Train-Clean-Test-Noisy \\
 TD3 & Twin Delayed Deep Deterministic Policy Gradient \\
-TNTC & Train-Noisy-Test-Clean \\
 ZOH & Zero-Order Hold \\
 \bottomrule
 \end{tabular}
@@ -181,6 +187,7 @@ ZOH & Zero-Order Hold \\
 \input{chapter3}
 \input{chapter4}
 \input{chapter5}
+\input{chapter6}
 
 % ---- Bibliography ----
 \bibliographystyle{plainnat}

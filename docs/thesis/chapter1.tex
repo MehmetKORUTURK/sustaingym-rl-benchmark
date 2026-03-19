@@ -9,7 +9,7 @@
 
 The global imperative to transition toward sustainable energy systems has intensified research efforts across power systems engineering, building science, and transportation electrification. As energy infrastructure grows increasingly complex---with distributed generation, demand-responsive loads, and multi-scale coordination requirements---traditional model-based control approaches face fundamental limitations in scalability, adaptability, and computational tractability. Reinforcement learning (RL), with its capacity to learn complex control policies from interaction data without requiring explicit system models, has emerged as a promising paradigm for sequential decision-making in energy systems.
 
-Recent years have witnessed a proliferation of RL applications in sustainable energy domains. In electric vehicle (EV) charging management, RL agents have demonstrated the ability to coordinate charging schedules across large networks while balancing grid constraints, user satisfaction, and carbon emissions~\citep{lee2021acndata, qiu2023marl_ev}. In building energy management, RL-based HVAC controllers have achieved significant energy savings while maintaining occupant comfort in commercial and residential buildings~\citep{wei2017deep_hvac, zhang2019model_hvac}. In power plant operations, RL has been applied to optimize the dispatch and coordination of gas turbines, steam turbines, and auxiliary equipment in combined heat and power (cogeneration) facilities~\citep{vu2021gas_turbine}.
+Recent years have witnessed a proliferation of RL applications in sustainable energy domains. In electric vehicle (EV) charging management, RL agents have demonstrated the ability to coordinate charging schedules across large networks while balancing grid constraints, user satisfaction, and carbon emissions~\citep{lee2019acndata, qiu2023marl_ev}. In building energy management, RL-based HVAC controllers have achieved significant energy savings while maintaining occupant comfort in commercial and residential buildings~\citep{wei2017deep_hvac, zhang2019model_hvac}. In power plant operations, RL has been applied to optimize the dispatch and coordination of gas turbines, steam turbines, and auxiliary equipment in combined heat and power (cogeneration) facilities~\citep{vu2021gas_turbine}.
 
 Despite this growing body of work, a critical gap persists in the systematic evaluation of RL algorithms across sustainable energy domains. Most studies evaluate a single algorithm on a single environment under idealized conditions, providing limited insight into algorithm robustness, scalability, and comparative performance. Three fundamental challenges remain largely unaddressed:
 
@@ -62,13 +62,11 @@ The specific research questions addressed in this thesis are:
 
     \item[RQ2 (Noise Decomposition):] What is the relative contribution of each noise channel (observation, action, environment) to policy degradation? Can we identify which noise channel is most critical for each environment-algorithm pair?
 
-    \item[RQ3 (Distribution Shift):] How do policies trained under clean conditions perform when evaluated under noisy conditions (Train-Clean-Test-Noisy), and vice versa? What is the transfer gap between training and deployment noise regimes?
+    \item[RQ3 (Safe RL):] Can safe RL algorithms (e.g., PPOLag, CPO, OnCRPO, FOCOPS) achieve competitive reward performance while satisfying environment-specific safety constraints? What is the Pareto frontier between reward and constraint satisfaction?
 
-    \item[RQ4 (Safe RL):] Can safe RL algorithms (e.g., OnCRPO) achieve competitive reward performance while satisfying environment-specific safety constraints? What is the Pareto frontier between reward and constraint satisfaction?
+    \item[RQ4 (Multi-Agent RL):] Does multi-agent decomposition improve or degrade performance compared to centralized single-agent control? How does the choice of agent granularity (e.g., per-station, per-zone, per-turbine) affect learning efficiency and final performance?
 
-    \item[RQ5 (Multi-Agent RL):] Does multi-agent decomposition improve or degrade performance compared to centralized single-agent control? How does the choice of agent granularity (e.g., per-station, per-zone, per-turbine) affect learning efficiency and final performance?
-
-    \item[RQ6 (Cross-Environment Insights):] Are there universal patterns in algorithm performance and noise sensitivity across the three environments, or is performance highly environment-specific?
+    \item[RQ5 (Cross-Environment Insights):] Are there universal patterns in algorithm performance and noise sensitivity across the three environments, or is performance highly environment-specific?
 \end{description}
 
 The objectives of this thesis are:
@@ -117,4 +115,4 @@ The remainder of this thesis is organized as follows:
 
 \textbf{Chapter~\ref{ch:results}: Experimental Results and Discussion} presents the results of our comprehensive benchmarking study, organized by experimental axis: noise robustness results (including degradation curves and algorithm-specific failure modes), safe RL results (including reward--cost orthogonality analysis and negative findings), and MARL results (including single-agent versus multi-agent comparisons). Cross-environment patterns and actionable insights are discussed.
 
-\textbf{Chapter~6: Conclusion and Future Work} summarizes the key findings of this thesis, discusses limitations, and outlines directions for future research including transfer learning across environments, curriculum-based noise training, and real-world deployment considerations.
+\textbf{Chapter~\ref{ch:conclusion}: Conclusion and Future Work} summarizes the key findings of this thesis, discusses limitations, and outlines directions for future research including transfer learning across environments, curriculum-based noise training, and real-world deployment considerations.
