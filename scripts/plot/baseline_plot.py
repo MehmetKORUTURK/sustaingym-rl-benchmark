@@ -27,6 +27,7 @@ import json
 import argparse
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from typing import List, Dict, Optional
 
 import numpy as np
@@ -36,7 +37,8 @@ import seaborn as sns
 
 from style import (ALGO_COLORS, ALGO_MARKERS, ALGO_LINESTYLES,
                    get_color, get_marker, get_linestyle,
-                   style_axis)
+                   ENV_TITLES, style_axis)
+# style.py auto-applies rcParams on import
 
 
 # ============================================================================
@@ -45,12 +47,6 @@ from style import (ALGO_COLORS, ALGO_MARKERS, ALGO_LINESTYLES,
 OUTPUT_DIR = "./graphs/C_BASEL/"
 BASELINE_LOG_ROOT = "./logs_baseline_test"
 RL_LOG_ROOT = "./logs_std_test"
-
-ENV_TITLES = {
-    "evcharging": "EV Charging",
-    "building": "Building",
-    "cogen": "Cogeneration",
-}
 
 # Canonical ordering for baselines (worst → best expected)
 BASELINE_ORDER = ["DoNothing", "Random", "Greedy", "MPC", "OfflineOptimal"]
@@ -80,7 +76,7 @@ SAVE_FORMATS = ["png"]
 
 
 # ============================================================================
-# Data Loading (reuses stdrl_post_plot.py logic)
+# Data Loading
 # ============================================================================
 
 def load_test_run(run_dir: str) -> Optional[Dict]:
@@ -147,7 +143,6 @@ def discover_runs(env: str = None, algo: str = None,
 def discover_baselines(env: str, root: str = BASELINE_LOG_ROOT) -> List[Dict]:
     """Discover baseline-only runs for a given env."""
     runs = discover_runs(env=env, root=root)
-    # Only keep noise=0 runs (baseline reference point)
     runs = [r for r in runs
             if r["noise_obs"] == 0 and r["noise_action"] == 0 and r["noise_env"] == 0]
     print(f"  Discovered {len(runs)} baseline runs for {env}")
@@ -157,7 +152,6 @@ def discover_baselines(env: str, root: str = BASELINE_LOG_ROOT) -> List[Dict]:
 def discover_rl(env: str, root: str = RL_LOG_ROOT) -> List[Dict]:
     """Discover RL runs at noise=0 for comparison."""
     runs = discover_runs(env=env, root=root)
-    # Only keep noise=0 runs
     runs = [r for r in runs
             if r["noise_obs"] == 0 and r["noise_action"] == 0 and r["noise_env"] == 0]
     print(f"  Discovered {len(runs)} RL runs for {env}")
@@ -170,12 +164,27 @@ def _sort_algos(algos: list, include_rl: bool = False) -> list:
     return sorted(algos, key=lambda a: order.index(a) if a in order else 999)
 
 
+def _get_algo_data(runs, algos):
+    """Compute mean/ci95 per algorithm from runs."""
+    means, cis = [], []
+    for alg in algos:
+        alg_runs = [r for r in runs if r["algo"] == alg]
+        if alg_runs:
+            all_rewards = np.concatenate([r["df"]["total_reward"].values for r in alg_runs])
+            means.append(np.mean(all_rewards))
+            cis.append(1.96 * np.std(all_rewards) / np.sqrt(len(all_rewards)))
+        else:
+            means.append(np.nan)
+            cis.append(0)
+    return means, cis
+
+
 # ============================================================================
 # Save helper
 # ============================================================================
 
 def _save(plot_type: str, env: str):
-    """Save figure to graphs/C_BASELINE/{env}/{plot_type}.{ext}."""
+    """Save figure to graphs/C_BASEL/{env}/{plot_type}.{ext}."""
     subdir = os.path.join(OUTPUT_DIR, env)
     os.makedirs(subdir, exist_ok=True)
 
@@ -197,49 +206,30 @@ def plot_bar(runs: List[Dict], env: str, save: bool = True):
 
     algos = _sort_algos(list(set(r["algo"] for r in runs)), include_rl=True)
     n_algos = len(algos)
-
-    means, cis, colors = [], [], []
-    for alg in algos:
-        alg_runs = [r for r in runs if r["algo"] == alg]
-        if alg_runs:
-            # If multiple runs for same algo, combine episodes
-            all_rewards = np.concatenate([r["df"]["total_reward"].values for r in alg_runs])
-            means.append(np.mean(all_rewards))
-            cis.append(1.96 * np.std(all_rewards) / np.sqrt(len(all_rewards)))
-        else:
-            means.append(np.nan)
-            cis.append(0)
-        colors.append(get_color(alg))
+    means, cis = _get_algo_data(runs, algos)
+    colors = [get_color(alg) for alg in algos]
 
     x = np.arange(n_algos)
-    fig, ax = plt.subplots(figsize=(max(6, n_algos * 1.2 + 1), 4.5))
+    fig, ax = plt.subplots(figsize=(max(7, n_algos * 1.1 + 2), 4.5))
 
-    bars = ax.bar(x, means, yerr=cis, capsize=3.5,
-                  color=colors, alpha=0.85,
-                  edgecolor="white", linewidth=0.8,
-                  error_kw={"linewidth": 1.0, "capthick": 0.8, "color": "0.3"},
-                  width=0.65)
-
-    # Value labels on bars
-    for bar, m, ci in zip(bars, means, cis):
-        if not np.isnan(m):
-            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + ci + abs(m) * 0.01,
-                    f"{m:.2f}", ha="center", va="bottom", fontsize=8, fontweight="bold")
+    ax.bar(x, means, yerr=cis, capsize=2.5,
+           color=colors, alpha=0.85,
+           edgecolor="white", linewidth=0.6, width=0.65,
+           error_kw={"linewidth": 1.0, "capthick": 0.8, "color": "0.3"})
 
     # Y-axis auto-range
     valid = [(m, c) for m, c in zip(means, cis) if not np.isnan(m)]
     if valid:
         ymin = min(m - c for m, c in valid)
         ymax = max(m + c for m, c in valid)
-        margin = (ymax - ymin) * 0.15 if ymax != ymin else abs(ymax) * 0.1
-        ax.set_ylim(ymin - margin, ymax + margin * 2)
+        margin = (ymax - ymin) * 0.12 if ymax != ymin else abs(ymax) * 0.1
+        ax.set_ylim(ymin - margin, ymax + margin)
 
     ax.set_xticks(x)
-    ax.set_xticklabels(algos, rotation=15, ha="right")
+    ax.set_xticklabels(algos)
     ax.set_ylabel("Mean Episode Reward")
-    ax.set_title(f"{ENV_TITLES.get(env, env)} — Algorithm Comparison")
-    ax.yaxis.grid(True, alpha=0.25, linestyle="--", linewidth=0.5)
-    ax.set_axisbelow(True)
+    ax.set_title(f"{ENV_TITLES.get(env, env)} \u2014 Algorithm Comparison")
+    style_axis(ax, grid_y_only=True)
     fig.tight_layout()
 
     if save:
@@ -265,7 +255,6 @@ def plot_breakdown(runs: List[Dict], env: str, save: bool = True):
     labels = metric_cfg["labels"]
     colors = metric_cfg["colors"]
 
-    # Check available columns
     sample_df = runs[0]["df"]
     avail = [(c, l, clr) for c, l, clr in zip(columns, labels, colors)
              if c in sample_df.columns]
@@ -277,14 +266,12 @@ def plot_breakdown(runs: List[Dict], env: str, save: bool = True):
     n_metrics = len(avail)
     n_algos = len(algos)
 
-    fig, axes = plt.subplots(1, n_metrics,
-                              figsize=(4.5 * n_metrics, max(4, n_algos * 0.4 + 2)),
-                              sharey=True)
+    fig, axes = plt.subplots(1, n_metrics, figsize=(4.2 * n_metrics, 4.5),
+                              sharey=False)
     if n_metrics == 1:
         axes = [axes]
 
     x = np.arange(n_algos)
-    bar_width = 0.65
 
     for ax, (col, lbl, clr) in zip(axes, avail):
         means, cis = [], []
@@ -304,20 +291,29 @@ def plot_breakdown(runs: List[Dict], env: str, save: bool = True):
                 cis.append(0)
             bar_colors.append(get_color(alg))
 
-        ax.barh(x, means, xerr=cis, capsize=2.5,
-                color=bar_colors, alpha=0.80,
-                edgecolor="white", linewidth=0.5, height=bar_width,
-                error_kw={"linewidth": 0.8, "capthick": 0.7, "color": "0.3"})
+        ax.bar(x, means, yerr=cis, capsize=2.5,
+               color=bar_colors, alpha=0.85,
+               edgecolor="white", linewidth=0.6, width=0.65,
+               error_kw={"linewidth": 0.8, "capthick": 0.7, "color": "0.3"})
 
-        ax.set_yticks(x)
-        ax.set_yticklabels(algos)
-        ax.set_xlabel(lbl)
-        ax.set_title(lbl, fontweight="bold")
-        ax.xaxis.grid(True, alpha=0.2, linestyle="--", linewidth=0.5)
-        ax.set_axisbelow(True)
+        # Y-axis auto-range (don't force zero)
+        valid = [(m, c) for m, c in zip(means, cis) if not np.isnan(m)]
+        if valid:
+            ymin = min(m - c for m, c in valid)
+            ymax = max(m + c for m, c in valid)
+            margin = (ymax - ymin) * 0.12 if ymax != ymin else abs(ymax) * 0.1
+            # Only pull up from zero if data is far from it
+            if ymin > 0 and ymin > ymax * 0.3:
+                ax.set_ylim(ymin - margin, ymax + margin)
 
-    fig.suptitle(f"{ENV_TITLES.get(env, env)} — Metric Breakdown",
-                 fontsize=13, fontweight="bold", y=1.02)
+        ax.set_xticks(x)
+        ax.set_xticklabels(algos, fontsize=8, rotation=20, ha="right")
+        ax.set_ylabel(lbl)
+        ax.set_title(lbl)
+        style_axis(ax, grid_y_only=True)
+
+    fig.suptitle(f"{ENV_TITLES.get(env, env)} \u2014 Metric Breakdown",
+                 fontsize=14, fontweight="bold", y=1.02)
     fig.tight_layout()
 
     if save:
@@ -329,7 +325,7 @@ def plot_breakdown(runs: List[Dict], env: str, save: bool = True):
 # ============================================================================
 
 def plot_violin(runs: List[Dict], env: str, save: bool = True):
-    """Violin plot showing full reward distribution per algorithm."""
+    """Raincloud plot: half-violin + box + jittered points."""
     if not runs:
         print("  No data for violin")
         return
@@ -346,23 +342,68 @@ def plot_violin(runs: List[Dict], env: str, save: bool = True):
     algos = _sort_algos(list(vdf["algo"].unique()), include_rl=True)
     n_algos = len(algos)
 
-    fig, ax = plt.subplots(figsize=(max(6, n_algos * 1.3 + 1), 5))
+    fig, ax = plt.subplots(figsize=(max(7, n_algos * 1.5 + 1), 5))
 
-    palette = {alg: get_color(alg) for alg in algos}
-    sns.violinplot(data=vdf, x="algo", y="reward", order=algos,
-                   palette=palette, inner="quartile",
-                   linewidth=0.8, saturation=0.8, cut=0, ax=ax)
+    rng = np.random.default_rng(42)
+    offset_v = 0.15   # half-violin shift
+    offset_s = -0.15  # strip shift
+    bw = 0.12         # box width
 
-    # Overlay strip for individual episode data points
-    sns.stripplot(data=vdf, x="algo", y="reward", order=algos,
-                  color="0.3", size=2, alpha=0.25, jitter=True, ax=ax)
+    for i, alg in enumerate(algos):
+        data = vdf[vdf["algo"] == alg]["reward"].values
+        color = get_color(alg)
 
+        if len(data) < 2:
+            continue
+
+        # --- Half-violin (right side) ---
+        from scipy.stats import gaussian_kde
+        kde = gaussian_kde(data, bw_method=0.3)
+        y_grid = np.linspace(data.min(), data.max(), 200)
+        density = kde(y_grid)
+        # Scale density to fit width ~0.3
+        density = density / density.max() * 0.3
+        ax.fill_betweenx(y_grid, i + offset_v, i + offset_v + density,
+                         color=color, alpha=0.45, linewidth=0)
+        ax.plot(i + offset_v + density, y_grid, color=color,
+                linewidth=0.8, alpha=0.7)
+
+        # --- Box plot (center) ---
+        q1, med, q3 = np.percentile(data, [25, 50, 75])
+        iqr = q3 - q1
+        whisker_lo = max(data.min(), q1 - 1.5 * iqr)
+        whisker_hi = min(data.max(), q3 + 1.5 * iqr)
+
+        # Box
+        box = plt.Rectangle((i - bw / 2, q1), bw, iqr,
+                             facecolor=color, alpha=0.6,
+                             edgecolor="0.3", linewidth=0.8)
+        ax.add_patch(box)
+        # Median line
+        ax.plot([i - bw / 2, i + bw / 2], [med, med],
+                color="white", linewidth=1.8, solid_capstyle="round")
+        ax.plot([i - bw / 2, i + bw / 2], [med, med],
+                color="0.2", linewidth=1.0, solid_capstyle="round")
+        # Whiskers
+        ax.plot([i, i], [whisker_lo, q1], color="0.3", linewidth=0.8)
+        ax.plot([i, i], [q3, whisker_hi], color="0.3", linewidth=0.8)
+        ax.plot([i - bw / 4, i + bw / 4], [whisker_lo, whisker_lo],
+                color="0.3", linewidth=0.8)
+        ax.plot([i - bw / 4, i + bw / 4], [whisker_hi, whisker_hi],
+                color="0.3", linewidth=0.8)
+
+        # --- Jittered strip (left side) ---
+        jitter = rng.uniform(-0.08, 0.02, len(data))
+        ax.scatter(i + offset_s + jitter, data,
+                   s=6, alpha=0.35, color=color,
+                   edgecolors="none", zorder=2)
+
+    ax.set_xticks(range(n_algos))
+    ax.set_xticklabels(algos)
     ax.set_xlabel("Algorithm")
     ax.set_ylabel("Episode Reward")
-    ax.set_title(f"{ENV_TITLES.get(env, env)} — Reward Distribution")
-    ax.set_xticklabels(algos, rotation=15, ha="right")
-    ax.grid(axis="y", alpha=0.2, linestyle="--", linewidth=0.5)
-    ax.set_axisbelow(True)
+    ax.set_title(f"{ENV_TITLES.get(env, env)} \u2014 Reward Distribution")
+    style_axis(ax, grid_y_only=True)
     fig.tight_layout()
 
     if save:
@@ -375,7 +416,7 @@ def plot_violin(runs: List[Dict], env: str, save: bool = True):
 
 def plot_compare(baseline_runs: List[Dict], rl_runs: List[Dict],
                  env: str, save: bool = True):
-    """Side-by-side comparison: baselines (left group) vs RL (right group)."""
+    """Side-by-side comparison: baselines vs RL with hatch distinction."""
     all_runs = baseline_runs + rl_runs
     if not all_runs:
         print("  No data for comparison")
@@ -391,63 +432,48 @@ def plot_compare(baseline_runs: List[Dict], rl_runs: List[Dict],
         print("  No algorithms found for comparison")
         return
 
-    means, cis, colors, hatches = [], [], [], []
-    for alg in all_algos:
-        alg_runs = [r for r in all_runs if r["algo"] == alg]
-        if alg_runs:
-            all_rewards = np.concatenate([r["df"]["total_reward"].values for r in alg_runs])
-            means.append(np.mean(all_rewards))
-            cis.append(1.96 * np.std(all_rewards) / np.sqrt(len(all_rewards)))
-        else:
-            means.append(np.nan)
-            cis.append(0)
-        colors.append(get_color(alg))
-        hatches.append("" if alg in BASELINE_ORDER else "///")
+    means, cis = _get_algo_data(all_runs, all_algos)
+    colors = [get_color(alg) for alg in all_algos]
+    is_rl = [alg in RL_ORDER for alg in all_algos]
 
     x = np.arange(n_total)
-    fig, ax = plt.subplots(figsize=(max(7, n_total * 1.2 + 1), 4.5))
+    fig, ax = plt.subplots(figsize=(max(7, n_total * 1.1 + 2), 4.5))
 
-    bars = ax.bar(x, means, yerr=cis, capsize=3,
+    bars = ax.bar(x, means, yerr=cis, capsize=2.5,
                   color=colors, alpha=0.85,
-                  edgecolor="white", linewidth=0.8, width=0.65,
+                  edgecolor="white", linewidth=0.6, width=0.65,
                   error_kw={"linewidth": 1.0, "capthick": 0.8, "color": "0.3"})
 
-    # Hatch RL bars to distinguish from baselines
-    for bar, h in zip(bars, hatches):
-        bar.set_hatch(h)
-        if h:
+    # Hatch RL bars to visually distinguish from baselines
+    for bar, rl in zip(bars, is_rl):
+        if rl:
+            bar.set_hatch("///")
             bar.set_edgecolor("0.4")
 
-    # Value labels
-    for bar, m, ci in zip(bars, means, cis):
-        if not np.isnan(m):
-            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + ci + abs(m) * 0.01,
-                    f"{m:.2f}", ha="center", va="bottom", fontsize=7.5, fontweight="bold")
-
-    # Divider between baselines and RL
+    # Divider line between baselines and RL
     if baseline_algos and rl_algos:
         div_x = len(baseline_algos) - 0.5
         ax.axvline(div_x, color="0.6", linestyle="--", linewidth=1.0, alpha=0.5)
-        ypos = ax.get_ylim()[1]
-        ax.text(div_x / 2, ypos * 0.98, "Baselines", ha="center", va="top",
-                fontsize=9, fontstyle="italic", color="0.5")
-        ax.text(div_x + (n_total - div_x) / 2, ypos * 0.98, "RL", ha="center", va="top",
-                fontsize=9, fontstyle="italic", color="0.5")
 
     # Y-axis auto-range
     valid = [(m, c) for m, c in zip(means, cis) if not np.isnan(m)]
     if valid:
         ymin = min(m - c for m, c in valid)
         ymax = max(m + c for m, c in valid)
-        margin = (ymax - ymin) * 0.15 if ymax != ymin else abs(ymax) * 0.1
-        ax.set_ylim(ymin - margin, ymax + margin * 2)
+        margin = (ymax - ymin) * 0.12 if ymax != ymin else abs(ymax) * 0.1
+        ax.set_ylim(ymin - margin, ymax + margin)
 
     ax.set_xticks(x)
-    ax.set_xticklabels(all_algos, rotation=15, ha="right")
+    ax.set_xticklabels(all_algos)
     ax.set_ylabel("Mean Episode Reward")
-    ax.set_title(f"{ENV_TITLES.get(env, env)} — Baselines vs RL")
-    ax.yaxis.grid(True, alpha=0.25, linestyle="--", linewidth=0.5)
-    ax.set_axisbelow(True)
+    ax.set_title(f"{ENV_TITLES.get(env, env)} \u2014 Baselines vs RL")
+
+    # Legend: solid = baseline, hatched = RL
+    from matplotlib.patches import Patch
+    legend_handles = [Patch(facecolor="0.7", edgecolor="white", label="Baseline"),
+                      Patch(facecolor="0.7", edgecolor="0.4", hatch="///", label="RL")]
+    ax.legend(handles=legend_handles, loc="best", frameon=True)
+    style_axis(ax, grid_y_only=True)
     fig.tight_layout()
 
     if save:
@@ -509,7 +535,7 @@ def main():
     print("Available runs:")
     for r in baseline_runs + rl_runs:
         tag = "BL" if r.get("baseline") or r["algo"] in BASELINE_ORDER else "RL"
-        print(f"  [{tag}] {r['algo']:18s}  reward={r['mean_reward']:.4f} ± {r['std_reward']:.4f}  "
+        print(f"  [{tag}] {r['algo']:18s}  reward={r['mean_reward']:.4f} \u00b1 {r['std_reward']:.4f}  "
               f"({r['n_episodes']} eps)")
     print(f"{'='*60}\n")
 

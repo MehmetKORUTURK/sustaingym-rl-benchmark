@@ -73,12 +73,12 @@ ALGO_COLORS = {
     "CPO":    "#D55E00",  # vermilion
     "OnCRPO": "#009E73",  # teal
     "FOCOPS": "#F0E442",  # yellow
-    # Non-RL baselines
-    "Random":         "#999999",  # grey
-    "Greedy":         "#8B4513",  # saddle brown
-    "MPC":            "#800080",  # purple
-    "OfflineOptimal": "#2F4F4F",  # dark slate
-    "DoNothing":      "#BC8F8F",  # rosy brown
+    # Non-RL baselines (soft, paper-friendly)
+    "Random":         "#B0B0B0",  # soft grey
+    "Greedy":         "#E8916E",  # soft coral
+    "MPC":            "#9B8EC5",  # soft lavender
+    "OfflineOptimal": "#6DB6A0",  # soft sage
+    "DoNothing":      "#D4A5A5",  # soft rose
 }
 
 ALGO_MARKERS = {
