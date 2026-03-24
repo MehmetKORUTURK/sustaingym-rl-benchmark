@@ -7,6 +7,8 @@ Usage:
     python scripts/plot/stdrl_plot.py --env evcharging --algo PPO --dt DS
     python scripts/plot/stdrl_plot.py --env building --algo SAC --dt DA --auto_ylim
     python scripts/plot/stdrl_plot.py --env cogen --algo PPO --dt DE
+    python scripts/plot/stdrl_plot.py --env cogen --algo PPO --dt all   # 1x3 subplot
+    python scripts/plot/stdrl_plot.py --env evcharging --compare --zoom 25000 29000 6 7
 
     # Baseline algorithm comparison (PPO vs SAC vs TD3, noise=0):
     python scripts/plot/stdrl_plot.py --env evcharging --compare
@@ -37,9 +39,9 @@ from style import (COLORS_INDEXED, LINE_STYLES, MARKERS,
 # ============================================================================
 
 ENV_DEFAULTS = {
-    "evcharging": {"title": "EV Charging", "t_steps": 32000, "std_band": 0.03, "ylim": None},
-    "building":   {"title": "Building",   "t_steps": 32000, "std_band": 0.03, "ylim": None},
-    "cogen":      {"title": "Cogeneration",      "t_steps": 32000, "std_band": 0.03, "ylim": None},
+    "evcharging": {"title": "EV Charging", "t_steps": 30250, "std_band": 0.03, "ylim": (5, 8), "total_steps": 9_000_000},
+    "building":   {"title": "Building",   "t_steps": 20250, "std_band": 0.03, "ylim": None, "total_steps": 9_000_000},
+    "cogen":      {"title": "Cogeneration",      "t_steps": 14250, "std_band": 0.03, "ylim": None, "total_steps": 3_000_000},
 }
 
 OUTPUT_DIR = "./graphs/C_STDRL/"
@@ -62,7 +64,7 @@ EV_CONFIG = {
             # (r"logs_std_train/evcharging_PPO/2026-02-09-14-49-08_DS_0.2_DA_0.0/monitor.csv", "PPO_0.2"),
             # (r"logs_std_train/evcharging_PPO/2026-02-10-13-00-36_DS_0.4_DA_0.0/monitor.csv", "PPO_0.4"),
             # (r"logs_std_train/evcharging_PPO/2026-02-10-13-00-36_DS_0.5_DA_0.0/monitor.csv", "PPO_0.5"),
-        ], None),
+        ], (4.5, 8)),
         "DA": ([
             (r"logs_std_train/evcharging_PPO/2026-02-05-20-06-35_DS_0.0_DA_0.0/monitor.csv", "PPO_0.0"),
             (r"logs_std_train/evcharging_PPO/2026-02-11-03-20-57_DS_0.0_DA_0.1/monitor.csv", "PPO_0.1"),
@@ -73,7 +75,7 @@ EV_CONFIG = {
             # (r"logs_std_train/evcharging_PPO/2026-02-11-03-22-23_DS_0.0_DA_0.15/monitor.csv", "PPO_0.15"),
             # (r"logs_std_train/evcharging_PPO/2026-02-11-05-41-17_DS_0.0_DA_0.2/monitor.csv", "PPO_0.2"),
             # (r"logs_std_train/evcharging_PPO/2026-02-11-10-13-34_DS_0.0_DA_0.4/monitor.csv", "PPO_0.4"),
-        ], None),
+        ], (4.5, 8)),
         "DE": ([
             (r"logs_std_train/evcharging_PPO/2026-02-05-20-06-35_DS_0.0_DA_0.0/monitor.csv", "PPO_0.0"),
             (r"logs_std_train/evcharging_PPO/2026-03-04-22-47-02_NOISE_0.0_ACT_0.0_ENV_0.05/monitor.csv", "PPO_0.05"),
@@ -83,7 +85,7 @@ EV_CONFIG = {
             # (r"logs_std_train/evcharging_PPO/2026-03-04-22-32-09_NOISE_0.0_ACT_0.0_ENV_0.02/monitor.csv", "PPO_0.02"),
             # (r"logs_std_train/evcharging_PPO/2026-03-04-23-38-39_NOISE_0.0_ACT_0.0_ENV_0.1/monitor.csv", "PPO_0.1"),
             # (r"logs_std_train/evcharging_PPO/2026-03-05-03-39-07_NOISE_0.0_ACT_0.0_ENV_0.2/monitor.csv", "PPO_0.2"),
-        ], None),
+        ], (4.5, 8)),
     },
     "SAC": {
         "DS": ([
@@ -97,7 +99,7 @@ EV_CONFIG = {
             # (r"logs_std_train/evcharging_SAC/2026-02-13-18-18-09_NOISE_0.2_ACT_0.0/monitor.csv", "SAC_0.2"),
             # (r"logs_std_train/evcharging_SAC/2026-02-13-18-25-51_NOISE_0.4_ACT_0.0/monitor.csv", "SAC_0.4"),
             # (r"logs_std_train/evcharging_SAC/2026-02-13-18-45-20_NOISE_0.5_ACT_0.0/monitor.csv", "SAC_0.5"),
-        ], None),
+        ], (2.7, 7)),
         "DA": ([
             (r"logs_std_train/evcharging_SAC/2026-02-09-12-45-20_DS_0.0_DA_0.0/monitor.csv", "SAC_0.0"),
             (r"logs_std_train/evcharging_SAC/2026-02-19-22-32-04_NOISE_0.0_ACT_0.1/monitor.csv", "SAC_0.1"),
@@ -109,7 +111,7 @@ EV_CONFIG = {
             # (r"logs_std_train/evcharging_SAC/2026-02-19-19-02-28_NOISE_0.0_ACT_0.2/monitor.csv", "SAC_0.2"),
             # (r"logs_std_train/evcharging_SAC/2026-02-18-16-50-26_NOISE_0.0_ACT_0.4/monitor.csv", "SAC_0.4"),
             # (r"logs_std_train/evcharging_SAC/2026-02-18-16-50-26_NOISE_0.0_ACT_0.5/monitor.csv", "SAC_0.5"),
-        ], None),
+        ], (2.7, 7)),
         "DE": ([
             (r"logs_std_train/evcharging_SAC/2026-02-09-12-45-20_DS_0.0_DA_0.0/monitor.csv", "SAC_0.0"),
             (r"logs_std_train/evcharging_SAC/2026-03-04-12-34-10_NOISE_0.0_ACT_0.0_ENV_0.05/monitor.csv", "SAC_0.05"),
@@ -119,7 +121,7 @@ EV_CONFIG = {
             # (r"logs_std_train/evcharging_SAC/2026-03-04-12-02-50_NOISE_0.0_ACT_0.0_ENV_0.02/monitor.csv", "SAC_0.02"),
             # (r"logs_std_train/evcharging_SAC/2026-03-04-17-55-08_NOISE_0.0_ACT_0.0_ENV_0.15/monitor.csv", "SAC_0.15"),
             # (r"logs_std_train/evcharging_SAC/2026-03-04-22-01-04_NOISE_0.0_ACT_0.0_ENV_0.2/monitor.csv", "SAC_0.2"),
-        ], None),
+        ], (2.7, 7)),
     },
     "TD3": {
         "DS": ([
@@ -168,9 +170,11 @@ BU_CONFIG = {
         ], None),
         "DE": ([
             (r"logs_std_train/building_PPO/2026-02-09-11-18-57_DS_0.0_DA_0.0/monitor.csv", "PPO_0.0"),
-            (r"logs_std_train/building_PPO/2026-03-03-00-53-40_NOISE_0.0_ACT_0.0_ENV_0.5/monitor.csv", "PPO_0.5"),
-            (r"logs_std_train/building_PPO/2026-03-03-00-54-42_NOISE_0.0_ACT_0.0_ENV_1.0/monitor.csv", "PPO_1.0"),
-            (r"logs_std_train/building_PPO/2026-03-03-01-16-28_NOISE_0.0_ACT_0.0_ENV_3.0/monitor.csv", "PPO_3.0"),
+            (r"logs_std_train\building_PPO\2026-03-23-15-29-11_NOISE_0.0_ACT_0.0_ENV_0.05\monitor.csv", "PPO_0.05"),
+            (r"logs_std_train\building_PPO\2026-03-23-15-38-44_NOISE_0.0_ACT_0.0_ENV_0.15\monitor.csv", "PPO_0.15"),
+            # (r"logs_std_train/building_PPO/2026-03-03-00-53-40_NOISE_0.0_ACT_0.0_ENV_0.5/monitor.csv", "PPO_0.5"),
+            # (r"logs_std_train/building_PPO/2026-03-03-00-54-42_NOISE_0.0_ACT_0.0_ENV_1.0/monitor.csv", "PPO_1.0"),
+            # (r"logs_std_train/building_PPO/2026-03-03-01-16-28_NOISE_0.0_ACT_0.0_ENV_3.0/monitor.csv", "PPO_3.0"),
             # (r"logs_std_train/building_PPO/2026-03-03-00-53-41_NOISE_0.0_ACT_0.0_ENV_0.3/monitor.csv", "PPO_0.3"),
             # (r"logs_std_train/building_PPO/2026-03-03-01-13-56_NOISE_0.0_ACT_0.0_ENV_1.5/monitor.csv", "PPO_1.5"),
             # (r"logs_std_train/building_PPO/2026-03-03-01-13-56_NOISE_0.0_ACT_0.0_ENV_2.0/monitor.csv", "PPO_2.0"),
@@ -187,7 +191,7 @@ BU_CONFIG = {
             # (r"logs_std_train/building_SAC/2026-02-25-08-18-03_NOISE_0.1_ACT_0.0/monitor.csv", "SAC_0.1"),
             # (r"logs_std_train/building_SAC/2026-02-25-08-18-37_NOISE_0.15_ACT_0.0/monitor.csv", "SAC_0.15"),
             # (r"logs_std_train/building_SAC/2026-02-25-08-18-55_NOISE_0.3_ACT_0.0/monitor.csv", "SAC_0.3"),
-        ], None),
+        ], (-250, -25)),
         "DA": ([
             (r"logs_std_train/building_SAC/2026-02-09-11-18-19_DS_0.0_DA_0.0/monitor.csv", "SAC_0.0"),
             (r"logs_std_train/building_SAC/2026-02-26-15-05-50_NOISE_0.0_ACT_0.05/monitor.csv", "SAC_0.05"),
@@ -198,7 +202,7 @@ BU_CONFIG = {
             # (r"logs_std_train/building_SAC/2026-02-26-15-05-50_NOISE_0.0_ACT_0.1/monitor.csv", "SAC_0.1"),
             # (r"logs_std_train/building_SAC/2026-02-26-15-05-50_NOISE_0.0_ACT_0.15/monitor.csv", "SAC_0.15"),
             # (r"logs_std_train/building_SAC/2026-02-26-15-06-10_NOISE_0.0_ACT_0.3/monitor.csv", "SAC_0.3"),
-        ], None),
+        ], (-250, -25)),
         "DE": ([
             (r"logs_std_train/building_SAC/2026-02-09-11-18-19_DS_0.0_DA_0.0/monitor.csv", "SAC_0.0"),
             (r"logs_std_train/building_SAC/2026-03-04-07-56-07_NOISE_0.0_ACT_0.0_ENV_0.5/monitor.csv", "SAC_0.5"),
@@ -208,7 +212,7 @@ BU_CONFIG = {
             # (r"logs_std_train/building_SAC/2026-03-04-07-56-07_NOISE_0.0_ACT_0.0_ENV_0.3/monitor.csv", "SAC_0.3"),
             # (r"logs_std_train/building_SAC/2026-03-04-08-24-43_NOISE_0.0_ACT_0.0_ENV_1.5/monitor.csv", "SAC_1.5"),
             # (r"logs_std_train/building_SAC/2026-03-04-08-34-02_NOISE_0.0_ACT_0.0_ENV_2.0/monitor.csv", "SAC_2.0"),
-        ], None),
+        ], (-250, -25)),
     },
     "TD3": {
         "DS": ([
@@ -235,83 +239,94 @@ CO_CONFIG = {
     "PPO": {
         "DS": ([
             (r"logs_std_train/cogen_PPO/2026-02-09-18-02-55_DS_0.0_DA_0.0/monitor.csv", "PPO_0.0"),
-            (r"logs_std_train/cogen_PPO/2026-02-25-21-00-28_NOISE_1.0_ACT_0.0/monitor.csv", "PPO_1.0"),
-            (r"logs_std_train/cogen_PPO/2026-02-26-00-58-13_NOISE_5.0_ACT_0.0/monitor.csv", "PPO_5.0"),
+            (r"logs_std_train/cogen_PPO/2026-02-26-15-06-54_NOISE_10.0_ACT_0.0/monitor.csv", "PPO_10.0"),
             (r"logs_std_train/cogen_PPO/2026-02-26-15-12-21_NOISE_20.0_ACT_0.0/monitor.csv", "PPO_20.0"),
+            # (r"logs_std_train/cogen_PPO/2026-02-25-21-00-28_NOISE_1.0_ACT_0.0/monitor.csv", "PPO_1.0"),
+            # (r"logs_std_train/cogen_PPO/2026-02-26-00-58-13_NOISE_5.0_ACT_0.0/monitor.csv", "PPO_5.0"),
             # (r"logs_std_train/cogen_PPO/2026-02-25-20-33-57_NOISE_0.5_ACT_0.0/monitor.csv", "PPO_0.5"),
             # (r"logs_std_train/cogen_PPO/2026-02-25-23-21-59_NOISE_2.0_ACT_0.0/monitor.csv", "PPO_2.0"),
             # (r"logs_std_train/cogen_PPO/2026-02-26-00-24-39_NOISE_3.0_ACT_0.0/monitor.csv", "PPO_3.0"),
             # (r"logs_std_train/cogen_PPO/2026-02-26-00-24-39_NOISE_4.0_ACT_0.0/monitor.csv", "PPO_4.0"),
-            # (r"logs_std_train/cogen_PPO/2026-02-26-15-06-54_NOISE_10.0_ACT_0.0/monitor.csv", "PPO_10.0"),
             # (r"logs_std_train/cogen_PPO/2026-02-26-15-12-21_NOISE_12.0_ACT_0.0/monitor.csv", "PPO_12.0"),
             # (r"logs_std_train/cogen_PPO/2026-02-26-15-12-21_NOISE_15.0_ACT_0.0/monitor.csv", "PPO_15.0"),
             # (r"logs_std_train/cogen_PPO/2026-02-26-15-12-21_NOISE_17.0_ACT_0.0/monitor.csv", "PPO_17.0"),
-        ], None),
+        ], (-2.6, -1.7)),
         "DA": ([
             (r"logs_std_train/cogen_PPO/2026-02-09-18-02-55_DS_0.0_DA_0.0/monitor.csv", "PPO_0.0"),
             (r"logs_std_train/cogen_PPO/2026-03-01-13-02-21_NOISE_0.0_ACT_0.1/monitor.csv", "PPO_0.1"),
             (r"logs_std_train/cogen_PPO/2026-03-01-13-02-50_NOISE_0.0_ACT_0.2/monitor.csv", "PPO_0.2"),
-            (r"logs_std_train/cogen_PPO/2026-03-01-13-05-10_NOISE_0.0_ACT_0.4/monitor.csv", "PPO_0.4"),
+            # (r"logs_std_train/cogen_PPO/2026-03-01-13-05-10_NOISE_0.0_ACT_0.4/monitor.csv", "PPO_0.4"),
             # (r"logs_std_train/cogen_PPO/2026-03-01-13-02-11_NOISE_0.0_ACT_0.05/monitor.csv", "PPO_0.05"),
             # (r"logs_std_train/cogen_PPO/2026-03-01-13-02-21_NOISE_0.0_ACT_0.15/monitor.csv", "PPO_0.15"),
             # (r"logs_std_train/cogen_PPO/2026-03-01-13-03-14_NOISE_0.0_ACT_0.3/monitor.csv", "PPO_0.3"),
-        ], None),
+        ], (-2.6, -1.7)),
         "DE": ([
             (r"logs_std_train/cogen_PPO/2026-02-09-18-02-55_DS_0.0_DA_0.0/monitor.csv", "PPO_0.0"),
-            # PPO has no env noise runs for Cogen
-        ], None),
+            (r"logs_std_train\cogen_PPO\2026-03-18-04-43-37_NOISE_0.0_ACT_0.0_ENV_0.3\monitor.csv", "PPO_0.3"),
+            (r"logs_std_train\cogen_PPO\2026-03-18-07-30-19_NOISE_0.0_ACT_0.0_ENV_0.5\monitor.csv", "PPO_0.5"),
+            # (r"logs_std_train\cogen_PPO\2026-03-18-03-50-20_NOISE_0.0_ACT_0.0_ENV_0.1\monitor.csv", "PPO_0.1"),
+            # (r"logs_std_train\cogen_PPO\2026-03-18-08-36-57_NOISE_0.0_ACT_0.0_ENV_1.0\monitor.csv", "PPO_1.0"),
+            # (r"logs_std_train\cogen_PPO\2026-03-18-09-18-23_NOISE_0.0_ACT_0.0_ENV_1.5\monitor.csv", "PPO_1.5"),
+            # (r"logs_std_train\cogen_PPO\2026-03-18-11-27-00_NOISE_0.0_ACT_0.0_ENV_2.0\monitor.csv", "PPO_2.0"),
+            # (r"logs_std_train\cogen_PPO\2026-03-18-12-16-04_NOISE_0.0_ACT_0.0_ENV_3.0\monitor.csv", "PPO_3.0"),
+        ], (-2.6, -1.7)),
     },
     "SAC": {
         "DS": ([
-            (r"logs_std_train/cogen_SAC/2026-02-09-18-03-16_DS_0.0_DA_0.0/monitor.csv", "SAC_0.0"),
+            (r"logs_std_train/cogen_SAC/2026-03-21-16-19-37_NOISE_0.0_ACT_0.0_ENV_0.0/monitor.csv", "SAC_0.0"),
             (r"logs_std_train/cogen_SAC/2026-03-03-00-52-08_NOISE_10.0_ACT_0.0_ENV_0.0/monitor.csv", "SAC_10.0"),
-            (r"logs_std_train/cogen_SAC/2026-03-03-00-52-08_NOISE_17.0_ACT_0.0_ENV_0.0/monitor.csv", "SAC_17.0"),
-            (r"logs_std_train/cogen_SAC/2026-03-03-03-07-27_NOISE_25.0_ACT_0.0_ENV_0.0/monitor.csv", "SAC_25.0"),
+            (r"logs_std_train/cogen_SAC/2026-03-03-03-07-27_NOISE_20.0_ACT_0.0_ENV_0.0/monitor.csv", "SAC_20.0"),
+            # (r"logs_std_train/cogen_SAC/2026-02-09-18-03-16_DS_0.0_DA_0.0/monitor.csv", "SAC_0.0"),
+            # (r"logs_std_train/cogen_SAC/2026-03-03-00-52-08_NOISE_17.0_ACT_0.0_ENV_0.0/monitor.csv", "SAC_17.0"),
+            # (r"logs_std_train/cogen_SAC/2026-03-03-03-07-27_NOISE_25.0_ACT_0.0_ENV_0.0/monitor.csv", "SAC_25.0"),
             # (r"logs_std_train/cogen_SAC/2026-03-03-00-52-08_NOISE_12.0_ACT_0.0_ENV_0.0/monitor.csv", "SAC_12.0"),
-            # (r"logs_std_train/cogen_SAC/2026-03-03-03-07-27_NOISE_20.0_ACT_0.0_ENV_0.0/monitor.csv", "SAC_20.0"),
             # NOTE: SAC has no runs at noise 1-5 range; only 10+ available
         ], None),
         "DA": ([
-            (r"logs_std_train/cogen_SAC/2026-02-09-18-03-16_DS_0.0_DA_0.0/monitor.csv", "SAC_0.0"),
+            (r"logs_std_train/cogen_SAC/2026-03-21-16-19-37_NOISE_0.0_ACT_0.0_ENV_0.0/monitor.csv", "SAC_0.0"),
             (r"logs_std_train/cogen_SAC/2026-03-01-13-53-58_NOISE_0.0_ACT_0.1/monitor.csv", "SAC_0.1"),
             (r"logs_std_train/cogen_SAC/2026-03-01-13-54-26_NOISE_0.0_ACT_0.2/monitor.csv", "SAC_0.2"),
-            (r"logs_std_train/cogen_SAC/2026-03-01-13-55-28_NOISE_0.0_ACT_0.4/monitor.csv", "SAC_0.4"),
+            # (r"logs_std_train/cogen_SAC/2026-03-01-13-55-28_NOISE_0.0_ACT_0.4/monitor.csv", "SAC_0.4"),
             # (r"logs_std_train/cogen_SAC/2026-03-01-13-53-35_NOISE_0.0_ACT_0.05/monitor.csv", "SAC_0.05"),
             # (r"logs_std_train/cogen_SAC/2026-03-01-13-53-58_NOISE_0.0_ACT_0.15/monitor.csv", "SAC_0.15"),
             # (r"logs_std_train/cogen_SAC/2026-03-01-13-55-18_NOISE_0.0_ACT_0.3/monitor.csv", "SAC_0.3"),
         ], None),
         "DE": ([
-            (r"logs_std_train/cogen_SAC/2026-02-09-18-03-16_DS_0.0_DA_0.0/monitor.csv", "SAC_0.0"),
-            # SAC has no env noise runs for Cogen
+            (r"logs_std_train/cogen_SAC/2026-03-21-16-19-37_NOISE_0.0_ACT_0.0_ENV_0.0/monitor.csv", "SAC_0.0"),
+            (r"logs_std_train\cogen_SAC\2026-03-18-14-27-51_NOISE_0.0_ACT_0.0_ENV_0.3\monitor.csv", "SAC_0.3"),
+            (r"logs_std_train\cogen_SAC\2026-03-18-21-17-22_NOISE_0.0_ACT_0.0_ENV_0.5\monitor.csv", "SAC_0.5"),
+            # (r"logs_std_train\cogen_SAC\2026-03-18-13-32-04_NOISE_0.0_ACT_0.0_ENV_0.1\monitor.csv", "SAC_0.1"),
+            # (r"logs_std_train\cogen_SAC\2026-03-18-23-25-23_NOISE_0.0_ACT_0.0_ENV_1.0\monitor.csv", "SAC_1.0"),
+            # (r"logs_std_train\cogen_SAC\2026-03-19-00-17-47_NOISE_0.0_ACT_0.0_ENV_1.5\monitor.csv", "SAC_1.5"),
+            # (r"logs_std_train\cogen_SAC\2026-03-19-08-57-10_NOISE_0.0_ACT_0.0_ENV_2.0\monitor.csv", "SAC_2.0"),
+            # (r"logs_std_train\cogen_SAC\2026-03-19-15-09-38_NOISE_0.0_ACT_0.0_ENV_3.0\monitor.csv", "SAC_3.0"),
         ], None),
     },
     "TD3": {
         "DS": ([
             (r"logs_std_train/cogen_TD3/2026-02-09-18-03-50_DS_0.0_DA_0.0/monitor.csv", "TD3_0.0"),
             (r"logs_std_train/cogen_TD3/2026-03-01-17-02-51_NOISE_10.0_ACT_0.0/monitor.csv", "TD3_10.0"),
-            (r"logs_std_train/cogen_TD3/2026-03-01-17-06-27_NOISE_17.0_ACT_0.0/monitor.csv", "TD3_17.0"),
-            (r"logs_std_train/cogen_TD3/2026-03-01-17-11-37_NOISE_25.0_ACT_0.0/monitor.csv", "TD3_25.0"),
+            (r"logs_std_train/cogen_TD3/2026-03-01-17-07-54_NOISE_20.0_ACT_0.0/monitor.csv", "TD3_20.0"),
+            # (r"logs_std_train/cogen_TD3/2026-03-01-17-06-27_NOISE_17.0_ACT_0.0/monitor.csv", "TD3_17.0"),
+            # (r"logs_std_train/cogen_TD3/2026-03-01-17-11-37_NOISE_25.0_ACT_0.0/monitor.csv", "TD3_25.0"),
             # (r"logs_std_train/cogen_TD3/2026-03-01-17-03-27_NOISE_12.0_ACT_0.0/monitor.csv", "TD3_12.0"),
-            # (r"logs_std_train/cogen_TD3/2026-03-01-17-07-54_NOISE_20.0_ACT_0.0/monitor.csv", "TD3_20.0"),
         ], None),
         "DA": ([
             (r"logs_std_train/cogen_TD3/2026-02-09-18-03-50_DS_0.0_DA_0.0/monitor.csv", "TD3_0.0"),
             (r"logs_std_train/cogen_TD3/2026-03-01-14-03-10_NOISE_0.0_ACT_0.1/monitor.csv", "TD3_0.1"),
             (r"logs_std_train/cogen_TD3/2026-03-01-14-05-18_NOISE_0.0_ACT_0.2/monitor.csv", "TD3_0.2"),
-            (r"logs_std_train/cogen_TD3/2026-03-01-14-06-06_NOISE_0.0_ACT_0.4/monitor.csv", "TD3_0.4"),
+            # (r"logs_std_train/cogen_TD3/2026-03-01-14-06-06_NOISE_0.0_ACT_0.4/monitor.csv", "TD3_0.4"),
             # (r"logs_std_train/cogen_TD3/2026-03-01-14-03-10_NOISE_0.0_ACT_0.05/monitor.csv", "TD3_0.05"),
             # (r"logs_std_train/cogen_TD3/2026-03-01-14-03-32_NOISE_0.0_ACT_0.15/monitor.csv", "TD3_0.15"),
             # (r"logs_std_train/cogen_TD3/2026-03-01-14-05-35_NOISE_0.0_ACT_0.3/monitor.csv", "TD3_0.3"),
         ], None),
         "DE": ([
             (r"logs_std_train/cogen_TD3/2026-02-09-18-03-50_DS_0.0_DA_0.0/monitor.csv", "TD3_0.0"),
-            (r"logs_std_train/cogen_TD3/2026-03-08-13-42-13_NOISE_0.0_ACT_0.0_ENV_0.5/monitor.csv", "TD3_0.5"),
-            (r"logs_std_train/cogen_TD3/2026-03-08-13-42-43_NOISE_0.0_ACT_0.0_ENV_1.0/monitor.csv", "TD3_1.0"),
-            (r"logs_std_train/cogen_TD3/2026-03-08-13-43-16_NOISE_0.0_ACT_0.0_ENV_3.0/monitor.csv", "TD3_3.0"),
-            # (r"logs_std_train/cogen_TD3/2026-03-08-13-41-20_NOISE_0.0_ACT_0.0_ENV_0.1/monitor.csv", "TD3_0.1"),
-            # (r"logs_std_train/cogen_TD3/2026-03-08-13-41-20_NOISE_0.0_ACT_0.0_ENV_0.3/monitor.csv", "TD3_0.3"),
-            # (r"logs_std_train/cogen_TD3/2026-03-08-13-42-51_NOISE_0.0_ACT_0.0_ENV_1.5/monitor.csv", "TD3_1.5"),
-            # (r"logs_std_train/cogen_TD3/2026-03-08-13-43-16_NOISE_0.0_ACT_0.0_ENV_2.0/monitor.csv", "TD3_2.0"),
+            (r"logs_std_train\cogen_TD3\2026-03-19-18-44-18_NOISE_0.0_ACT_0.0_ENV_0.3\monitor.csv", "TD3_0.3"),
+            (r"logs_std_train\cogen_TD3\2026-03-19-22-27-59_NOISE_0.0_ACT_0.0_ENV_0.5\monitor.csv", "TD3_0.5"),
+            # (r"logs_std_train/cogen_TD3/2026-03-08-13-42-13_NOISE_0.0_ACT_0.0_ENV_0.5/monitor.csv", "TD3_0.5"),
+            # (r"logs_std_train/cogen_TD3/2026-03-08-13-42-43_NOISE_0.0_ACT_0.0_ENV_1.0/monitor.csv", "TD3_1.0"),
+            # (r"logs_std_train/cogen_TD3/2026-03-08-13-43-16_NOISE_0.0_ACT_0.0_ENV_3.0/monitor.csv", "TD3_3.0"),
         ], None),
     },
 }
@@ -345,7 +360,7 @@ BASELINE_PATHS = {
     },
     "cogen": {
         "PPO": r"logs_std_train/cogen_PPO/2026-02-09-18-02-55_DS_0.0_DA_0.0/monitor.csv",
-        "SAC": r"logs_std_train/cogen_SAC/2026-02-09-18-03-16_DS_0.0_DA_0.0/monitor.csv",
+        "SAC": r"logs_std_train/cogen_SAC/2026-03-21-16-19-37_NOISE_0.0_ACT_0.0_ENV_0.0/monitor.csv",
         "TD3": r"logs_std_train/cogen_TD3/2026-02-09-18-03-50_DS_0.0_DA_0.0/monitor.csv",
     },
 }
@@ -384,7 +399,13 @@ def calculate_running_stats(rewards: np.ndarray, window: int) -> Tuple[np.ndarra
     return mean, std
 
 
-def plot_learning_curves(
+DT_FULL = {"DS": "Perturbation of State (PS)", "DA": "Perturbation of Action (PA)", "DE": "Perturbation of Dynamics (PD)"}
+DT_SHORT = {"DS": "PS", "DA": "PA", "DE": "PD"}
+DT_SUBFIG = {"DS": "(a) State", "DA": "(b) Action", "DE": "(c) Dynamics"}
+
+
+def _plot_on_ax(
+    ax,
     experiments: List[Tuple[str, str]],
     ylim: Optional[Tuple[float, float]] = None,
     xlim: Optional[Tuple[float, float]] = None,
@@ -396,18 +417,20 @@ def plot_learning_curves(
     auto_ylim: bool = False,
     std_band: float = 0.5,
     dt: str = "",
+    total_steps: int = 9_000_000,
+    show_ylabel: bool = True,
+    legend_loc: str = 'lower right',
+    zoom: Optional[Tuple[float, float, float, float]] = None,
 ):
-    """Plot learning curves with shaded std band."""
-
-    fig, ax = plt.subplots(figsize=(10, 6))
+    """Plot learning curves on a given axes object."""
 
     for idx, (csv_path, raw_label) in enumerate(experiments):
-        # Reformat label: "PPO_0.1" -> "PPO_DS_0.10"
+        # Reformat label: "PPO_0.1" -> "PPO_PS_0.10"
         parts = raw_label.split("_", 1)
         if len(parts) == 2 and dt:
             algo_name, noise_val = parts
             try:
-                label = f"{algo_name}_{dt}_{float(noise_val):.2f}"
+                label = f"{algo_name}_{DT_SHORT.get(dt, dt)}_{float(noise_val):.2f}"
             except ValueError:
                 label = raw_label
         else:
@@ -425,6 +448,9 @@ def plot_learning_curves(
         mean_t = mean[::step]
         std_t = std[::step]
 
+        # Shift x so that skip_initial maps to 0
+        x = x - skip_initial
+
         color = COLORS_INDEXED[idx % len(COLORS_INDEXED)]
         ls = LINE_STYLES[idx % len(LINE_STYLES)]
         marker = MARKERS[idx % len(MARKERS)]
@@ -437,13 +463,13 @@ def plot_learning_curves(
         ax.fill_between(x, mean_t - std_band * std_t, mean_t + std_band * std_t,
                         alpha=FILL_ALPHA, color=color, linewidth=0)
 
-    # X-axis limits
+    # X-axis limits (shifted so skip_initial -> 0)
     if auto_xlim:
         pass
     elif xlim:
         ax.set_xlim(xlim)
     else:
-        ax.set_xlim(skip_initial, max_steps)
+        ax.set_xlim(0, max_steps - skip_initial)
 
     # Y-axis limits
     if auto_ylim:
@@ -451,18 +477,123 @@ def plot_learning_curves(
     elif ylim:
         ax.set_ylim(ylim)
 
+    # Ensure the last x value appears as a tick, then re-apply xlim
+    x_end = max_steps - skip_initial
+    xticks = [t for t in ax.get_xticks() if 0 <= t <= x_end]
+    if x_end not in xticks:
+        xticks.append(x_end)
+    ax.set_xticks(xticks)
+    ax.set_xlim(0, x_end)
+
+    # Show total training steps (top-left corner)
+    exponent = int(np.floor(np.log10(total_steps)))
+    mantissa = total_steps / 10**exponent
+    step_str = f"Total: ~{int(round(mantissa))}e{exponent} steps"
+    ax.text(0.02, 0.97, step_str, transform=ax.transAxes,
+            fontsize=10, verticalalignment='top',
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
+
     ax.set_title(title)
     ax.set_xlabel("Training Episode")
-    ax.set_ylabel("Average Episode Reward")
+    if show_ylabel:
+        ax.set_ylabel("Average Episode Reward")
 
-    ax.legend(loc='lower right', frameon=True)
+    ax.legend(loc=legend_loc, frameon=True)
     style_axis(ax)
 
+    # Inset zoom for perturbation plots
+    if zoom:
+        zx1, zx2, zy1, zy2 = zoom
+        axins = ax.inset_axes([0.84, 0.22, 0.15, 0.20])
+        # Re-plot all lines from main axes (without markers)
+        for line in ax.get_lines():
+            axins.plot(line.get_xdata(), line.get_ydata(),
+                       color=line.get_color(), linestyle=line.get_linestyle(),
+                       linewidth=1.5)
+        axins.set_xlim(zx1, zx2)
+        axins.set_ylim(zy1, zy2)
+        x_start_k = int(np.ceil(zx1 / 1000))
+        x_end_k = int(np.floor(zx2 / 1000))
+        x_range = np.arange(x_start_k, x_end_k + 1) * 1000
+        axins.set_xticks(x_range)
+        axins.set_xticklabels([f"{int(v)}" for v in x_range])
+        axins.set_xlim(zx1, zx2)
+        axins.tick_params(labelsize=7)
+        axins.grid(True, alpha=0.3)
+        for spine in axins.spines.values():
+            spine.set_edgecolor('0.4')
+            spine.set_linewidth(1.0)
+        rect, connectors = ax.indicate_inset_zoom(axins, edgecolor='#aa2222', linewidth=2.0, alpha=0.9)
+        rect.set_facecolor('#ee9999')
+        rect.set_alpha(0.35)
+        for conn in connectors:
+            conn.set_edgecolor('#aaaaaa')
+            conn.set_linewidth(1.0)
+
+
+def plot_learning_curves(
+    experiments: List[Tuple[str, str]],
+    ylim: Optional[Tuple[float, float]] = None,
+    xlim: Optional[Tuple[float, float]] = None,
+    title: str = "",
+    window: int = 4000,
+    max_steps: int = 32000,
+    skip_initial: int = 250,
+    auto_xlim: bool = False,
+    auto_ylim: bool = False,
+    std_band: float = 0.5,
+    dt: str = "",
+    total_steps: int = 9_000_000,
+    zoom: Optional[Tuple[float, float, float, float]] = None,
+):
+    """Plot learning curves (single panel)."""
+    fig, ax = plt.subplots(figsize=(10, 6))
+    _plot_on_ax(ax, experiments, ylim, xlim, title, window, max_steps,
+                skip_initial, auto_xlim, auto_ylim, std_band, dt, total_steps,
+                zoom=zoom)
     plt.tight_layout()
 
 
+def plot_learning_curves_all_dt(
+    env_config: dict,
+    algo: str,
+    env_title: str,
+    window: int = 4000,
+    max_steps: int = 32000,
+    skip_initial: int = 250,
+    auto_xlim: bool = False,
+    auto_ylim: bool = False,
+    std_band: float = 0.5,
+    total_steps: int = 9_000_000,
+    ylim_override: Optional[Tuple[float, float]] = None,
+    xlim_override: Optional[Tuple[float, float]] = None,
+    zoom: Optional[Tuple[float, float, float, float]] = None,
+):
+    """Plot DS, DA, DE side by side in 1x3 subplots."""
+    fig, axes = plt.subplots(1, 3, figsize=(24, 6), sharey=True)
+
+    for i, dt in enumerate(["DS", "DA", "DE"]):
+        if algo not in env_config or dt not in env_config[algo]:
+            print(f"  Config not found: {algo} / {dt}, skipping")
+            continue
+
+        paths, default_ylim = env_config[algo][dt]
+        ylim = ylim_override if ylim_override else default_ylim
+        xlim = xlim_override
+
+        _plot_on_ax(
+            axes[i], paths, ylim, xlim, DT_SUBFIG[dt], window, max_steps,
+            skip_initial, auto_xlim, auto_ylim, std_band, dt, total_steps,
+            show_ylabel=(i == 0), zoom=zoom,
+        )
+
+    fig.suptitle(f"{env_title} — {algo}", fontsize=14, fontweight='bold', y=1.02)
+    plt.tight_layout()
+    return fig
+
+
 def save_plot(env: str, algo: str, dt: str, output_dir: str, save_pdf: bool = False):
-    """Save plot into organized folder: graphs/C_POST/{env}/{algo}/{dt}.png"""
+    """Save plot into organized folder: graphs/C_STDRL/{env}/{algo}/{dt}.png"""
     subdir = os.path.join(output_dir, ENV_SHORT.get(env, env), algo)
     os.makedirs(subdir, exist_ok=True)
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -488,6 +619,8 @@ def plot_comparison(
     xlim: Optional[Tuple[float, float]] = None,
     auto_xlim: bool = False,
     std_band: float = 0.03,
+    total_steps: int = 9_000_000,
+    zoom: Optional[Tuple[float, float, float, float]] = None,
 ):
     """Plot baseline (noise=0) learning curves for all algorithms on one chart."""
     baselines = BASELINE_PATHS.get(env, {})
@@ -512,6 +645,9 @@ def plot_comparison(
         mean_t = mean[::step]
         std_t = std[::step]
 
+        # Shift x so that skip_initial maps to 0
+        x = x - skip_initial
+
         color = get_color(algo)
         ls = get_linestyle(algo)
         marker = get_marker(algo)
@@ -524,25 +660,80 @@ def plot_comparison(
         ax.fill_between(x, mean_t - std_band * std_t, mean_t + std_band * std_t,
                         alpha=FILL_ALPHA, color=color, linewidth=0)
 
-    # X-axis limits
+    # X-axis limits (shifted so skip_initial -> 0)
     if auto_xlim:
         pass
     elif xlim:
         ax.set_xlim(xlim)
     else:
-        ax.set_xlim(skip_initial, max_steps)
+        ax.set_xlim(0, max_steps - skip_initial)
 
-    # Y-axis limits
+    # Y-axis limits (CLI override > env default)
+    effective_ylim = ylim if ylim else env_def.get("ylim")
     if auto_ylim:
         pass
-    elif ylim:
-        ax.set_ylim(ylim)
+    elif effective_ylim:
+        ax.set_ylim(effective_ylim)
+
+    # Ensure the last x value appears as a tick, then re-apply xlim
+    x_end = max_steps - skip_initial
+    xticks = [t for t in ax.get_xticks() if 0 <= t <= x_end]
+    if x_end not in xticks:
+        xticks.append(x_end)
+    ax.set_xticks(xticks)
+    ax.set_xlim(0, x_end)
+
+    # Show total training steps (top-left corner)
+    exponent = int(np.floor(np.log10(total_steps)))
+    mantissa = total_steps / 10**exponent
+    step_str = f"Total: ~{int(round(mantissa))}e{exponent} steps"
+    ax.text(0.02, 0.97, step_str, transform=ax.transAxes,
+            fontsize=10, verticalalignment='top',
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
 
     ax.set_title(f"{env_def['title']} — Algorithm Comparison (Baseline)")
     ax.set_xlabel("Training Episode")
     ax.set_ylabel("Average Episode Reward")
     ax.legend(loc='lower right', frameon=True)
     style_axis(ax)
+
+    # Inset zoom: zoom = (x1, x2, y1, y2) in shifted episode coordinates
+    # Done AFTER style_axis and set_xticks so main axis is finalized
+    if zoom:
+        zx1, zx2, zy1, zy2 = zoom
+        axins = ax.inset_axes([0.84, 0.45, 0.15, 0.20])
+        # Re-plot using stored data
+        for algo_name, csv_path in baselines.items():
+            rewards = load_rewards(csv_path, max_steps)
+            if rewards is None:
+                continue
+            mean_z, _ = calculate_running_stats(rewards, window)
+            x_z = np.arange(len(mean_z)) - skip_initial
+            axins.plot(x_z, mean_z, color=get_color(algo_name),
+                       linestyle=get_linestyle(algo_name), linewidth=1.5)
+        axins.set_xlim(zx1, zx2)
+        axins.set_ylim(zy1, zy2)
+        # Clean ticks: round x ticks to thousands (inclusive of both ends)
+        x_start_k = int(np.ceil(zx1 / 1000))
+        x_end_k = int(np.floor(zx2 / 1000))
+        x_range = np.arange(x_start_k, x_end_k + 1) * 1000
+        axins.set_xticks(x_range)
+        axins.set_xticklabels([f"{int(v)}" for v in x_range])
+        axins.set_xlim(zx1, zx2)
+        axins.tick_params(labelsize=7)
+        axins.grid(True, alpha=0.3)
+        for spine in axins.spines.values():
+            spine.set_edgecolor('0.4')
+            spine.set_linewidth(1.0)
+        # Indicate zoom region on main plot + connector lines (academic style)
+        rect, connectors = ax.indicate_inset_zoom(axins, edgecolor='#aa2222', linewidth=2.0, alpha=0.9)
+        rect.set_facecolor('#ee9999')
+        rect.set_alpha(0.35)
+        # Make connector lines pastel gray
+        for conn in connectors:
+            conn.set_edgecolor('#aaaaaa')
+            conn.set_linewidth(1.0)
+
     plt.tight_layout()
 
 
@@ -572,8 +763,8 @@ def main():
     parser.add_argument('--env', type=str, required=True, choices=['evcharging', 'building', 'cogen'])
     parser.add_argument('--algo', type=str, default='PPO', choices=['PPO', 'SAC', 'TD3'],
                         help='Algorithm (ignored with --compare)')
-    parser.add_argument('--dt', type=str, default='DS', choices=['DS', 'DA', 'DE'],
-                        help='Noise type (ignored with --compare)')
+    parser.add_argument('--dt', type=str, default='DS', choices=['DS', 'DA', 'DE', 'all'],
+                        help='Noise type: DS/DA/DE or "all" for 1x3 subplot')
     parser.add_argument('--t_steps', type=int, default=None, help='Training steps (default: env-specific)')
     parser.add_argument('--w_size', type=int, default=6000, help='Window size')
     parser.add_argument('--skip', type=int, default=250, help='Skip initial episodes')
@@ -586,6 +777,8 @@ def main():
     parser.add_argument('--auto_xlim', action='store_true', help='Force auto x-axis limits')
     parser.add_argument('--compare', action='store_true',
                         help='Compare all algorithms baseline (noise=0) for the given env')
+    parser.add_argument('--zoom', nargs=4, type=float, metavar=('X1', 'X2', 'Y1', 'Y2'),
+                        help='Inset zoom region (e.g., --zoom 20000 22000 -35 -25)')
 
     args = parser.parse_args()
 
@@ -594,7 +787,7 @@ def main():
     t_steps = args.t_steps if args.t_steps is not None else env_def["t_steps"]
 
     # Determine ylim / xlim
-    ylim = tuple(args.ylim) if args.ylim else (None if args.auto_ylim else None)
+    ylim = tuple(args.ylim) if args.ylim else None
     xlim = tuple(args.xlim) if args.xlim else None
     auto_xlim = args.auto_xlim and not args.xlim
 
@@ -614,8 +807,37 @@ def main():
             xlim=xlim,
             auto_xlim=auto_xlim,
             std_band=env_def["std_band"],
+            total_steps=env_def["total_steps"],
+            zoom=tuple(args.zoom) if args.zoom else None,
         )
         save_comparison_plot(args.env, OUTPUT_DIR, args.pdf)
+        plt.show()
+        return
+
+    env_config = ALL_CONFIGS[args.env]
+
+    # ── All noise types side by side (1x3 subplot) ──
+    if args.dt == "all":
+        print(f"\n{'='*70}")
+        print(f"Plotting {args.env} / {args.algo} / DS+DA+DE (1x3)")
+        print(f"{'='*70}\n")
+
+        plot_learning_curves_all_dt(
+            env_config=env_config,
+            algo=args.algo,
+            env_title=env_def["title"],
+            window=args.w_size,
+            max_steps=t_steps,
+            skip_initial=args.skip,
+            auto_xlim=auto_xlim,
+            auto_ylim=args.auto_ylim,
+            std_band=env_def["std_band"],
+            total_steps=env_def["total_steps"],
+            ylim_override=ylim,
+            xlim_override=xlim,
+            zoom=tuple(args.zoom) if args.zoom else None,
+        )
+        save_plot(args.env, args.algo, "DS_DA_DE", OUTPUT_DIR, args.pdf)
         plt.show()
         return
 
@@ -624,7 +846,6 @@ def main():
     print(f"Plotting {args.env} / {args.algo} / {args.dt}")
     print(f"{'='*70}\n")
 
-    env_config = ALL_CONFIGS[args.env]
     if args.algo not in env_config or args.dt not in env_config[args.algo]:
         print(f"Config not found: {args.env} / {args.algo} / {args.dt}")
         return
@@ -639,7 +860,7 @@ def main():
         experiments=paths,
         ylim=ylim,
         xlim=xlim,
-        title=env_def["title"],
+        title=f"{env_def['title']} — {args.algo}: {DT_FULL[args.dt]}",
         window=args.w_size,
         max_steps=t_steps,
         skip_initial=args.skip,
@@ -647,6 +868,8 @@ def main():
         auto_ylim=args.auto_ylim,
         std_band=env_def["std_band"],
         dt=args.dt,
+        total_steps=env_def["total_steps"],
+        zoom=tuple(args.zoom) if args.zoom else None,
     )
 
     save_plot(args.env, args.algo, args.dt, OUTPUT_DIR, args.pdf)
