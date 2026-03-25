@@ -72,7 +72,7 @@
 \begin{titlepage}
 \centering
 \vspace*{1in}
-{\Large\bfseries Reinforcement Learning Benchmarking for Sustainable Energy Systems:\\ Noise Robustness, Safety Constraints, and Multi-Agent Coordination}\\[2cm]
+{\Large\bfseries Reinforcement Learning Benchmarking for Sustainable Energy Systems:\\ Perturbation Robustness, Safety Constraints, and Multi-Agent Coordination}\\[2cm]
 {\large Mehmet Koruturk}\\[1cm]
 Thesis submitted to the Faculty of the\\
 Virginia Polytechnic Institute and State University\\
@@ -93,11 +93,11 @@ Copyright \the\year, Mehmet Koruturk
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-Reinforcement learning (RL) has emerged as a promising approach for sequential decision-making in sustainable energy systems, yet the lack of systematic benchmarks hinders principled algorithm comparison and deployment. This thesis presents SustainRL-Bench, a comprehensive benchmarking framework that evaluates RL algorithms across three sustainable energy environments---electric vehicle charging coordination, building HVAC control, and cogeneration plant dispatch---along three experimental axes: noise robustness, safety constraints, and multi-agent coordination.
+Reinforcement learning (RL) has emerged as a promising approach for sequential decision-making in sustainable energy systems, yet the lack of systematic benchmarks hinders principled algorithm comparison and deployment. This thesis presents SustainRL-Bench, a comprehensive benchmarking framework that evaluates RL algorithms across three sustainable energy environments---electric vehicle charging coordination, building HVAC control, and cogeneration plant dispatch---along three experimental axes: perturbation robustness, safety constraints, and multi-agent coordination.
 
-For noise robustness, we develop a three-channel noise injection framework that independently perturbs observations, actions, and environment dynamics at varying intensities, characterizing policy degradation curves for PPO, SAC, and TD3 across ten or more noise levels per environment. For safety, we formulate each environment as a Constrained Markov Decision Process (CMDP) with physically meaningful cost signals and evaluate safe RL algorithms from the OmniSafe framework. For multi-agent coordination, we decompose each environment into cooperative agents using the PettingZoo interface and compare centralized single-agent versus decentralized multi-agent performance using Ray RLlib.
+For perturbation robustness, we develop a three-channel perturbation injection framework that independently perturbs observations, actions, and environment dynamics at varying intensities, characterizing policy degradation curves for PPO, SAC, and TD3 across ten or more perturbation levels per environment. For safety, we formulate each environment as a Constrained Markov Decision Process (CMDP) with physically meaningful cost signals and evaluate safe RL algorithms from the OmniSafe framework. For multi-agent coordination, we decompose each environment into cooperative agents using the PettingZoo interface and compare centralized single-agent versus decentralized multi-agent performance using Ray RLlib.
 
-Our evaluation spans over 200 unique configurations---including noise-injected standard RL, CMDP-based safe RL with four algorithms and multiple cost limits, and multi-agent RL with up to 54 cooperative agents---totaling over 300 training runs across three environments and multiple noise levels, providing actionable insights for practitioners deploying RL controllers in real-world energy systems.
+Our evaluation spans over 200 unique configurations---including perturbation-injected standard RL, CMDP-based safe RL with four algorithms and multiple cost limits, and multi-agent RL with up to 54 cooperative agents---totaling over 300 training runs across three environments and multiple perturbation levels, providing actionable insights for practitioners deploying RL controllers in real-world energy systems.
 
 % ---- General Audience Abstract ----
 \chapter*{General Audience Abstract}
@@ -107,7 +107,7 @@ Managing energy systems efficiently is critical for reducing carbon emissions an
 
 Reinforcement learning (RL) is an artificial intelligence technique where a computer agent learns to make good decisions through trial and error. While RL has shown promise for energy system control, there is a lack of systematic studies comparing different RL algorithms under realistic conditions. Real-world deployments face noisy sensors, safety constraints, and the need to coordinate multiple subsystems---challenges that are often ignored in idealized simulations.
 
-This thesis addresses these gaps by creating a comprehensive testing framework for RL algorithms across three energy environments. We systematically evaluate how well these algorithms handle sensor noise, respect safety limits, and scale to multi-agent settings. Our results provide practical guidance for engineers and researchers seeking to deploy RL-based controllers in sustainable energy systems.
+This thesis addresses these gaps by creating a comprehensive testing framework for RL algorithms across three energy environments. We systematically evaluate how well these algorithms handle sensor perturbations, respect safety limits, and scale to multi-agent settings. Our results provide practical guidance for engineers and researchers seeking to deploy RL-based controllers in sustainable energy systems.
 
 % ---- Dedication ----
 \chapter*{Dedication}
@@ -168,9 +168,12 @@ MOER & Marginal Operating Emission Rate \\
 MPC & Model Predictive Control \\
 ONNX & Open Neural Network Exchange \\
 OnCRPO & Online Constrained Reward Policy Optimization \\
+PA & Action Perturbation \\
+PD & Dynamics Perturbation \\
 POMDP & Partially Observable MDP \\
 PPO & Proximal Policy Optimization \\
 PPOLag & PPO-Lagrangian (PPO with Lagrangian relaxation for CMDPs) \\
+PS & State Perturbation \\
 RC & Resistance-Capacitance \\
 RL & Reinforcement Learning \\
 SAC & Soft Actor-Critic \\

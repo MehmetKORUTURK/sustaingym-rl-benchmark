@@ -13,7 +13,7 @@ Recent years have witnessed a proliferation of RL applications in sustainable en
 
 Despite this growing body of work, a critical gap persists in the systematic evaluation of RL algorithms across sustainable energy domains. Most studies evaluate a single algorithm on a single environment under idealized conditions, providing limited insight into algorithm robustness, scalability, and comparative performance. Three fundamental challenges remain largely unaddressed:
 
-\paragraph{Noise Robustness.} Real-world energy systems are inherently noisy. Sensors degrade, communication channels introduce latency and corruption, actuators exhibit imprecision, and environmental conditions fluctuate stochastically. Yet, RL agents are typically trained and evaluated in deterministic or low-noise simulation environments. The sensitivity of learned policies to observation noise (sensor uncertainty), action noise (actuator imprecision), and environment noise (stochastic dynamics) remains poorly characterized. Understanding how different noise channels affect policy performance is essential for deploying RL controllers in physical energy infrastructure.
+\paragraph{Perturbation Robustness.} Real-world energy systems are inherently subject to perturbations. Sensors degrade, communication channels introduce latency and corruption, actuators exhibit imprecision, and environmental conditions fluctuate stochastically. Yet, RL agents are typically trained and evaluated in deterministic or low-perturbation simulation environments. The sensitivity of learned policies to state perturbation (sensor uncertainty), action perturbation (actuator imprecision), and dynamics perturbation (stochastic dynamics) remains poorly characterized. Understanding how different perturbation channels affect policy performance is essential for deploying RL controllers in physical energy infrastructure.
 
 \paragraph{Safety Constraints.} Energy systems operate under strict physical, regulatory, and operational constraints. Voltage limits must be respected in power distribution networks, temperature bounds must be maintained in occupied buildings, and equipment operating ranges must not be violated in power plants. Standard RL algorithms, which optimize unconstrained cumulative reward, provide no mechanism for enforcing such constraints during training or deployment. Constrained Markov Decision Processes (CMDPs)~\citep{altman1999constrained} and the associated safe RL algorithms offer a principled framework for incorporating safety constraints, yet their application to sustainable energy domains remains limited.
 
@@ -21,7 +21,7 @@ Despite this growing body of work, a critical gap persists in the systematic eva
 
 The SustainGym suite, introduced by \citet{yeh2023sustaingym}, provides a collection of RL environments grounded in real-world sustainable energy systems. SustainGym includes environments for EV charging (based on the Adaptive Charging Network at Caltech), building energy management (based on EnergyPlus RC thermal models with ASHRAE 90.1-2019 prototypes), and cogeneration plant control (based on ONNX surrogate models of industrial combined heat and power facilities). These environments offer realistic dynamics, physics-based models, and real-world data, making them suitable testbeds for rigorous RL benchmarking.
 
-However, the original SustainGym work focused primarily on demonstrating environment functionality with basic RL baselines (PPO, SAC), without systematic investigation of noise robustness, safety constraints, or multi-agent coordination. This thesis addresses these gaps through a comprehensive benchmarking study that we term \textbf{SustainRL-Bench}.
+However, the original SustainGym work focused primarily on demonstrating environment functionality with basic RL baselines (PPO, SAC), without systematic investigation of perturbation robustness, safety constraints, or multi-agent coordination. This thesis addresses these gaps through a comprehensive benchmarking study that we term \textbf{SustainRL-Bench}.
 
 \section{Problem Statement}
 \label{sec:problem}
@@ -29,7 +29,7 @@ However, the original SustainGym work focused primarily on demonstrating environ
 This thesis investigates the following overarching research question:
 
 \begin{quote}
-\textit{How do state-of-the-art reinforcement learning algorithms perform across diverse sustainable energy environments when subjected to realistic noise perturbations, safety constraints, and multi-agent decompositions?}
+\textit{How do state-of-the-art reinforcement learning algorithms perform across diverse sustainable energy environments when subjected to realistic perturbations, safety constraints, and multi-agent decompositions?}
 \end{quote}
 
 Specifically, we consider three sustainable energy control problems, each formulated as a Markov Decision Process (MDP) or its extensions:
@@ -45,7 +45,7 @@ Specifically, we consider three sustainable energy control problems, each formul
 Each problem is studied along three experimental axes:
 
 \begin{description}
-    \item[Axis~1 (Noise Robustness):] Systematic injection of observation noise, action noise, and environment noise at varying intensities to characterize policy degradation curves and identify algorithm-specific failure modes.
+    \item[Axis~1 (Perturbation Robustness):] Systematic injection of state perturbation, action perturbation, and dynamics perturbation at varying intensities to characterize policy degradation curves and identify algorithm-specific failure modes.
 
     \item[Axis~2 (Safe RL):] Reformulation of each environment as a Constrained MDP with environment-specific cost signals, and evaluation of safe RL algorithms that satisfy constraint budgets while maintaining competitive reward performance.
 
@@ -58,15 +58,15 @@ Each problem is studied along three experimental axes:
 The specific research questions addressed in this thesis are:
 
 \begin{description}
-    \item[RQ1 (Noise Sensitivity):] How sensitive are PPO, SAC, and TD3 to observation, action, and environment noise across the three sustainable energy environments? Do different algorithms exhibit different noise robustness profiles, and do these profiles depend on the environment characteristics?
+    \item[RQ1 (Perturbation Sensitivity):] How sensitive are PPO, SAC, and TD3 to state, action, and dynamics perturbation across the three sustainable energy environments? Do different algorithms exhibit different perturbation robustness profiles, and do these profiles depend on the environment characteristics?
 
-    \item[RQ2 (Noise Decomposition):] What is the relative contribution of each noise channel (observation, action, environment) to policy degradation? Can we identify which noise channel is most critical for each environment-algorithm pair?
+    \item[RQ2 (Perturbation Decomposition):] What is the relative contribution of each perturbation channel (state, action, dynamics) to policy degradation? Can we identify which perturbation channel is most critical for each environment-algorithm pair?
 
     \item[RQ3 (Safe RL):] Can safe RL algorithms (e.g., PPOLag, CPO, OnCRPO, FOCOPS) achieve competitive reward performance while satisfying environment-specific safety constraints? What is the Pareto frontier between reward and constraint satisfaction?
 
     \item[RQ4 (Multi-Agent RL):] Does multi-agent decomposition improve or degrade performance compared to centralized single-agent control? How does the choice of agent granularity (e.g., per-station, per-zone, per-turbine) affect learning efficiency and final performance?
 
-    \item[RQ5 (Cross-Environment Insights):] Are there universal patterns in algorithm performance and noise sensitivity across the three environments, or is performance highly environment-specific?
+    \item[RQ5 (Cross-Environment Insights):] Are there universal patterns in algorithm performance and perturbation sensitivity across the three environments, or is performance highly environment-specific?
 \end{description}
 
 The objectives of this thesis are:
@@ -74,7 +74,7 @@ The objectives of this thesis are:
 \begin{enumerate}
     \item To develop a unified benchmarking framework (SustainRL-Bench) that enables systematic evaluation of RL algorithms across multiple sustainable energy environments.
 
-    \item To implement and validate noise injection mechanisms for three independent noise channels (observation, action, environment) in each environment.
+    \item To implement and validate perturbation injection mechanisms for three independent perturbation channels (state, action, dynamics) in each environment.
 
     \item To formulate and implement CMDP wrappers for safe RL evaluation in all three environments.
 
@@ -82,7 +82,7 @@ The objectives of this thesis are:
 
     \item To conduct a comprehensive experimental evaluation covering standard RL, safe RL, and MARL across all three environments with rigorous statistical methodology.
 
-    \item To provide actionable insights for practitioners on algorithm selection, noise management, and multi-agent design in sustainable energy RL applications.
+    \item To provide actionable insights for practitioners on algorithm selection, perturbation management, and multi-agent design in sustainable energy RL applications.
 \end{enumerate}
 
 \section{Contributions}
@@ -91,9 +91,9 @@ The objectives of this thesis are:
 The principal contributions of this thesis are as follows:
 
 \begin{description}
-    \item[C1. Unified Three-Axis Benchmarking Framework.] We present SustainRL-Bench, the first comprehensive RL benchmark that simultaneously evaluates noise robustness, safety constraints, and multi-agent coordination across multiple sustainable energy environments. Unlike prior work that addresses these axes in isolation, our framework enables cross-axis and cross-environment comparisons within a consistent experimental methodology.
+    \item[C1. Unified Three-Axis Benchmarking Framework.] We present SustainRL-Bench, the first comprehensive RL benchmark that simultaneously evaluates perturbation robustness, safety constraints, and multi-agent coordination across multiple sustainable energy environments. Unlike prior work that addresses these axes in isolation, our framework enables cross-axis and cross-environment comparisons within a consistent experimental methodology.
 
-    \item[C2. Systematic Noise Robustness Analysis.] We develop a three-channel noise injection framework that independently perturbs observations, actions, and environment dynamics. For each environment, we design physically motivated noise models: proportional Gaussian noise for sensor measurements, multiplicative noise for actuator commands, and stochastic perturbations of environmental parameters. We characterize policy degradation curves across 10+ noise levels for three algorithms (PPO, SAC, TD3), revealing algorithm-specific and environment-specific failure modes.
+    \item[C2. Systematic Perturbation Robustness Analysis.] We develop a three-channel perturbation injection framework that independently perturbs observations, actions, and environment dynamics. For each environment, we design physically motivated perturbation models: proportional Gaussian noise for sensor measurements, multiplicative noise for actuator commands, and stochastic perturbations of environmental parameters. We characterize policy degradation curves across 10+ perturbation levels for three algorithms (PPO, SAC, TD3), revealing algorithm-specific and environment-specific failure modes.
 
     \item[C3. Safe RL Formulation for Energy Systems.] We formulate each of the three environments as a CMDP by designing environment-specific cost signals that capture physically meaningful safety constraints: network capacity violations in EV charging, temperature comfort violations in buildings, and dynamic operational constraint violations in cogeneration. We evaluate safe RL algorithms from the OmniSafe framework, providing the first systematic comparison of constrained RL methods across sustainable energy domains.
 
@@ -107,12 +107,12 @@ The principal contributions of this thesis are as follows:
 
 The remainder of this thesis is organized as follows:
 
-\textbf{Chapter~\ref{ch:literature}: Literature Review} provides a comprehensive review of related work across five domains: reinforcement learning for power and energy systems, noise robustness and distribution shift in RL, safe reinforcement learning, multi-agent reinforcement learning, and RL benchmarking methodologies. We position our contributions relative to the existing literature and identify the specific gaps that this thesis addresses.
+\textbf{Chapter~\ref{ch:literature}: Literature Review} provides a comprehensive review of related work across five domains: reinforcement learning for power and energy systems, perturbation robustness and distribution shift in RL, safe reinforcement learning, multi-agent reinforcement learning, and RL benchmarking methodologies. We position our contributions relative to the existing literature and identify the specific gaps that this thesis addresses.
 
-\textbf{Chapter~\ref{ch:preliminaries}: Preliminaries and Background} establishes the mathematical foundations required for the subsequent technical chapters. We formally define Markov Decision Processes, derive the policy gradient theorem, and present the three deep RL algorithms used in this work (PPO, SAC, TD3). We then extend the MDP framework to Constrained MDPs for safe RL, introduce multi-agent extensions including stochastic games and decentralized partially observable MDPs, and formalize the noise models used throughout the thesis. Finally, we provide an overview of the SustainGym environment suite.
+\textbf{Chapter~\ref{ch:preliminaries}: Preliminaries and Background} establishes the mathematical foundations required for the subsequent technical chapters. We formally define Markov Decision Processes, derive the policy gradient theorem, and present the three deep RL algorithms used in this work (PPO, SAC, TD3). We then extend the MDP framework to Constrained MDPs for safe RL, introduce multi-agent extensions including stochastic games and decentralized partially observable MDPs, and formalize the perturbation models used throughout the thesis. Finally, we provide an overview of the SustainGym environment suite.
 
-\textbf{Chapter~\ref{ch:methodology}: Methodology --- The SustainRL-Bench Framework} presents the core technical contribution of this thesis. We describe each of the three environments in detail, including their physical models, observation and action spaces, reward formulations, and constraint definitions. We then present the noise injection framework, safe RL formulations, and multi-agent decompositions for each environment. The chapter concludes with the experimental design, including training configurations, evaluation protocols, statistical methodology, and baseline methods.
+\textbf{Chapter~\ref{ch:methodology}: Methodology --- The SustainRL-Bench Framework} presents the core technical contribution of this thesis. We describe each of the three environments in detail, including their physical models, observation and action spaces, reward formulations, and constraint definitions. We then present the perturbation injection framework, safe RL formulations, and multi-agent decompositions for each environment. The chapter concludes with the experimental design, including training configurations, evaluation protocols, statistical methodology, and baseline methods.
 
-\textbf{Chapter~\ref{ch:results}: Experimental Results and Discussion} presents the results of our comprehensive benchmarking study, organized by experimental axis: noise robustness results (including degradation curves and algorithm-specific failure modes), safe RL results (including reward--cost orthogonality analysis and negative findings), and MARL results (including single-agent versus multi-agent comparisons). Cross-environment patterns and actionable insights are discussed.
+\textbf{Chapter~\ref{ch:results}: Experimental Results and Discussion} presents the results of our comprehensive benchmarking study, organized by experimental axis: perturbation robustness results (including degradation curves and algorithm-specific failure modes), safe RL results (including reward--cost orthogonality analysis and negative findings), and MARL results (including single-agent versus multi-agent comparisons). Cross-environment patterns and actionable insights are discussed.
 
-\textbf{Chapter~\ref{ch:conclusion}: Conclusion and Future Work} summarizes the key findings of this thesis, discusses limitations, and outlines directions for future research including transfer learning across environments, curriculum-based noise training, and real-world deployment considerations.
+\textbf{Chapter~\ref{ch:conclusion}: Conclusion and Future Work} summarizes the key findings of this thesis, discusses limitations, and outlines directions for future research including transfer learning across environments, curriculum-based perturbation training, and real-world deployment considerations.

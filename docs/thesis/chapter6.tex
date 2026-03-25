@@ -10,18 +10,18 @@ This chapter summarizes the key findings of the thesis (\Cref{sec:summary}), dis
 \section{Summary of Contributions and Findings}
 \label{sec:summary}
 
-This thesis presented SustainRL-Bench, a comprehensive benchmarking framework for evaluating reinforcement learning algorithms across three sustainable energy environments---electric vehicle charging coordination, building HVAC control, and cogeneration plant dispatch---along three experimental axes: noise robustness, safety constraints, and multi-agent coordination. We summarize the principal findings below, organized by research question.
+This thesis presented SustainRL-Bench, a comprehensive benchmarking framework for evaluating reinforcement learning algorithms across three sustainable energy environments---electric vehicle charging coordination, building HVAC control, and cogeneration plant dispatch---along three experimental axes: perturbation robustness, safety constraints, and multi-agent coordination. We summarize the principal findings below, organized by research question.
 
-\subsection{Noise Robustness (RQ1, RQ2, RQ5)}
+\subsection{Perturbation Robustness (RQ1, RQ2, RQ5)}
 
-The systematic evaluation of PPO, SAC, and TD3 under observation, action, and environment noise across ten or more noise levels per environment yielded three key insights:
+The systematic evaluation of PPO, SAC, and TD3 under state, action, and dynamics perturbation across ten or more perturbation levels per environment yielded three key insights:
 
 \begin{enumerate}
-    \item \textbf{Environment structure dominates noise sensitivity.} EV Charging policies are exceptionally robust to all noise types ($<1\%$ degradation at moderate noise levels), owing to the reward's dependence on aggregate daily charging patterns rather than instantaneous observations. In contrast, Building policies degrade rapidly ($>100\%$ degradation at $\sigma \geq 0.15$) because the RC thermal model amplifies per-timestep errors through coupled zone dynamics. Cogeneration exhibits algorithm-dependent sensitivity, with PPO virtually immune and SAC degrading catastrophically under observation noise.
+    \item \textbf{Environment structure dominates perturbation sensitivity.} EV Charging policies are exceptionally robust to all perturbation types ($<1\%$ degradation at moderate perturbation levels), owing to the reward's dependence on aggregate daily charging patterns rather than instantaneous observations. In contrast, Building policies degrade rapidly ($>100\%$ degradation at $\sigma \geq 0.15$) because the RC thermal model amplifies per-timestep errors through coupled zone dynamics. Cogeneration exhibits algorithm-dependent sensitivity, with PPO virtually immune and SAC degrading catastrophically under state perturbation.
 
-    \item \textbf{Observation noise is far more damaging than action noise.} Across all three environments and all algorithms, observation noise causes significantly greater performance degradation than action noise at equivalent scales. This finding has a clear practical implication: for real-world deployment of RL-based energy controllers, investment in sensor accuracy yields greater returns than investment in actuator precision.
+    \item \textbf{State perturbation is far more damaging than action perturbation.} Across all three environments and all algorithms, state perturbation causes significantly greater performance degradation than action perturbation at equivalent scales. This finding has a clear practical implication: for real-world deployment of RL-based energy controllers, investment in sensor accuracy yields greater returns than investment in actuator precision.
 
-    \item \textbf{PPO is the most noise-robust algorithm.} PPO consistently outperforms SAC and TD3 in noise robustness, with the most dramatic advantage in Cogeneration (PPO: $<0.3\%$ degradation; SAC: $>2000\%$). PPO's on-policy updates and clipped surrogate objective produce naturally conservative policies that tolerate input perturbations, whereas SAC's entropy-maximizing exploration can amplify noise through the policy output.
+    \item \textbf{PPO is the most perturbation-robust algorithm.} PPO consistently outperforms SAC and TD3 in perturbation robustness, with the most dramatic advantage in Cogeneration (PPO: $<0.3\%$ degradation; SAC: $>2000\%$). PPO's on-policy updates and clipped surrogate objective produce naturally conservative policies that tolerate input perturbations, whereas SAC's entropy-maximizing exploration can amplify perturbation through the policy output.
 \end{enumerate}
 
 \subsection{Safe Reinforcement Learning (RQ3)}
@@ -42,7 +42,7 @@ We designed and implemented multi-agent versions of all three environments using
 
 \subsection{Cross-Environment Insights (RQ5)}
 
-The most consistent cross-cutting finding is that \emph{environment structure matters more than algorithm choice}: the physical characteristics of each energy system---reward aggregation timescale, dynamics coupling, and reward--cost alignment---determine the effectiveness of noise robustness and safety interventions more than the choice of RL algorithm or hyperparameters. This suggests that practitioners should invest primarily in understanding their specific energy system's characteristics before selecting algorithms or robustness strategies.
+The most consistent cross-cutting finding is that \emph{environment structure matters more than algorithm choice}: the physical characteristics of each energy system---reward aggregation timescale, dynamics coupling, and reward--cost alignment---determine the effectiveness of perturbation robustness and safety interventions more than the choice of RL algorithm or hyperparameters. This suggests that practitioners should invest primarily in understanding their specific energy system's characteristics before selecting algorithms or robustness strategies.
 
 % ============================================================
 \section{Limitations}
@@ -51,7 +51,7 @@ The most consistent cross-cutting finding is that \emph{environment structure ma
 We acknowledge the following limitations of the present work:
 
 \begin{enumerate}
-    \item \textbf{Single-seed training for noise experiments.} While evaluation uses 100 episodes per configuration with bootstrap confidence intervals, each noise-level configuration was trained with a single seed due to computational constraints. Future work should extend to multiple training seeds to capture inter-seed variability in the learned policies themselves.
+    \item \textbf{Single-seed training for perturbation experiments.} While evaluation uses 100 episodes per configuration with bootstrap confidence intervals, each perturbation-level configuration was trained with a single seed due to computational constraints. Future work should extend to multiple training seeds to capture inter-seed variability in the learned policies themselves.
 
     \item \textbf{Simulation-only evaluation.} All experiments are conducted in simulation environments. While SustainGym environments are grounded in real-world data and physics-based models, the sim-to-real transfer gap remains unquantified. Real-world deployment would introduce additional challenges such as non-stationary dynamics, hardware failures, and communication delays.
 
@@ -61,7 +61,7 @@ We acknowledge the following limitations of the present work:
 
     \item \textbf{Fixed environment configurations.} Each environment uses a single configuration (e.g., OfficeSmall/Hot\_Dry for Building, Caltech site for EV Charging). Generalization across building types, weather profiles, or charging network topologies is not evaluated.
 
-    \item \textbf{No combined noise evaluation.} Noise channels are evaluated independently. Real-world systems experience simultaneous observation, action, and environment noise, and the interaction effects between channels may be non-additive.
+    \item \textbf{No combined perturbation evaluation.} Perturbation channels are evaluated independently. Real-world systems experience simultaneous state, action, and dynamics perturbation, and the interaction effects between channels may be non-additive.
 \end{enumerate}
 
 % ============================================================
@@ -70,13 +70,13 @@ We acknowledge the following limitations of the present work:
 
 Several promising directions emerge from the findings and limitations of this thesis:
 
-\subsection{Noise-Aware Training and Curriculum Learning}
+\subsection{Perturbation-Aware Training and Curriculum Learning}
 
-Our results show that policies trained under clean conditions can degrade severely under deployment noise (particularly in Building). A natural extension is \emph{curriculum-based noise training}, where the noise level is gradually increased during training to produce policies that are robust without sacrificing clean-condition performance. Domain randomization across noise levels and adversarial noise training~\citep{pinto2017rarl} are complementary approaches worth investigating in the energy domain.
+Our results show that policies trained under clean conditions can degrade severely under deployment perturbation (particularly in Building). A natural extension is \emph{curriculum-based perturbation training}, where the perturbation level is gradually increased during training to produce policies that are robust without sacrificing clean-condition performance. Domain randomization across perturbation levels and adversarial perturbation training~\citep{pinto2017rarl} are complementary approaches worth investigating in the energy domain.
 
 \subsection{Cross-Environment Transfer Learning}
 
-The three SustainGym environments share structural similarities (episodic 24-hour horizons, multi-component control, energy-comfort/cost tradeoffs) that may enable transfer learning. Pre-training on one environment and fine-tuning on another could reduce sample complexity, particularly for the data-hungry Building and Cogeneration environments. The shared noise injection framework provides a natural basis for evaluating whether noise robustness transfers across environments.
+The three SustainGym environments share structural similarities (episodic 24-hour horizons, multi-component control, energy-comfort/cost tradeoffs) that may enable transfer learning. Pre-training on one environment and fine-tuning on another could reduce sample complexity, particularly for the data-hungry Building and Cogeneration environments. The shared perturbation injection framework provides a natural basis for evaluating whether perturbation robustness transfers across environments.
 
 \subsection{Improved Safe RL Formulations}
 
@@ -88,6 +88,26 @@ The Building Safe RL negative result motivates exploration of alternative cost f
 \end{itemize}
 
 Additionally, the SACLag failure motivates research into off-policy CMDP methods that address replay buffer staleness, such as importance-weighted Lagrangian updates or cost-conditioned replay buffers.
+
+\subsection{Robustness of Constrained RL Under Perturbation}
+
+A critical open question is whether CMDP-based safety guarantees remain valid under the realistic perturbation conditions evaluated in \Cref{ch:robustness}. This thesis evaluates perturbation robustness and safe RL as independent axes; however, real-world energy systems will experience both simultaneously---a building HVAC controller must satisfy comfort constraints \emph{while} operating with noisy temperature sensors, and a cogeneration dispatcher must limit turbine ramping stress \emph{despite} uncertain ambient measurements.
+
+Recent work by \citet{gu2025robustgymnasium} demonstrates that this concern is well-founded. Their Robust-Gymnasium benchmark evaluates safe RL algorithms (PCRPO and CRPO) on SafetyWalker2d under action perturbation and cost signal perturbation, finding that CRPO's constraint satisfaction degrades rapidly under both perturbation types, while PCRPO exhibits greater resilience---and in some cases, perturbation during training actually \emph{improves} deployment performance through a regularization effect. However, their evaluation is limited to two algorithms, a single locomotion environment, and a single cost limit, leaving the interaction between perturbation robustness and constraint satisfaction largely unexplored in applied domains.
+
+Our SustainRL-Bench infrastructure is uniquely positioned to investigate this interaction comprehensively. The three independent perturbation channels (state, action, and dynamics) and four CMDP algorithms (PPOLag, CPO, OnCRPO, FOCOPS) are already implemented and validated independently; combining them requires no additional environment engineering. Several specific research questions arise:
+
+\begin{itemize}
+    \item \textbf{Constraint violation under perturbation}: Do policies trained with strict cost limits (e.g., $c_{\text{limit}} = 1$ for EV Charging) maintain constraint satisfaction when deployed under state perturbation? The Lagrange multiplier in PPOLag is calibrated to the training distribution; distribution shift from perturbation may cause the learned $\lambda$ to under- or over-correct.
+
+    \item \textbf{Perturbation-aware CMDP training}: Training CMDP algorithms under perturbation simultaneously could yield policies that satisfy safety constraints robustly. This would combine the curriculum-based perturbation training discussed in \Cref{sec:future_work} with constrained optimization, effectively solving a \emph{robust} CMDP.
+
+    \item \textbf{Environment-dependent interaction effects}: Our robustness results show that EV Charging is naturally perturbation-tolerant while Building is highly sensitive. This asymmetry likely extends to the safe RL setting: Building's tight thermal coupling may cause perturbation to amplify cost violations, while EV Charging's reward aggregation may buffer constraint satisfaction against moderate perturbation.
+
+    \item \textbf{Cost signal corruption}: Following \citet{gu2025robustgymnasium}'s cost signal attack, perturbation applied directly to the observed cost (rather than to states or actions) tests a fundamentally different failure mode---the agent receives incorrect safety feedback, potentially learning to violate constraints while believing they are satisfied.
+\end{itemize}
+
+This direction represents a natural intersection of the perturbation robustness and safe RL axes developed in this thesis, and would provide actionable guidance for deploying constrained RL controllers in real-world energy systems where both safety and robustness are non-negotiable requirements.
 
 \subsection{Scalable Multi-Agent Methods}
 
@@ -112,8 +132,8 @@ Bridging the sim-to-real gap for energy RL requires addressing several practical
 The SustainRL-Bench framework can be extended along several dimensions:
 \begin{itemize}
     \item \textbf{Additional environments}: incorporating SustainGym's electricity market and data center cooling environments.
-    \item \textbf{Additional algorithms}: evaluating model-based RL methods (e.g., Dreamer, MBPO) that may offer improved sample efficiency and noise robustness through learned dynamics models.
-    \item \textbf{Combined noise evaluation}: systematically evaluating all combinations of observation, action, and environment noise to characterize interaction effects.
+    \item \textbf{Additional algorithms}: evaluating model-based RL methods (e.g., Dreamer, MBPO) that may offer improved sample efficiency and perturbation robustness through learned dynamics models.
+    \item \textbf{Combined perturbation evaluation}: systematically evaluating all combinations of state, action, and dynamics perturbation to characterize interaction effects.
     \item \textbf{Longer horizons}: extending the evaluation to multi-day or seasonal horizons to capture long-term dynamics and distribution shift.
 \end{itemize}
 
@@ -121,4 +141,4 @@ The SustainRL-Bench framework can be extended along several dimensions:
 \section{Closing Remarks}
 \label{sec:closing}
 
-This thesis demonstrates that reinforcement learning holds significant promise for sustainable energy system control, but that principled evaluation across noise, safety, and multi-agent dimensions is essential for understanding the practical deployment landscape. The SustainRL-Bench framework, associated environments, and experimental infrastructure provide a foundation for the research community to systematically evaluate and improve RL algorithms for real-world energy applications. We hope that the findings, negative results, and open questions presented in this work will guide future research toward more robust, safe, and scalable RL-based energy controllers.
+This thesis demonstrates that reinforcement learning holds significant promise for sustainable energy system control, but that principled evaluation across perturbation, safety, and multi-agent dimensions is essential for understanding the practical deployment landscape. The SustainRL-Bench framework, associated environments, and experimental infrastructure provide a foundation for the research community to systematically evaluate and improve RL algorithms for real-world energy applications. We hope that the findings, negative results, and open questions presented in this work will guide future research toward more robust, safe, and scalable RL-based energy controllers.

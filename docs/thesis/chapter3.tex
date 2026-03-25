@@ -4,7 +4,7 @@
 \chapter{Preliminaries and Background}
 \label{ch:preliminaries}
 
-This chapter establishes the mathematical foundations required for the subsequent technical chapters. We begin with the Markov Decision Process framework (\Cref{sec:mdp}), present the deep RL algorithms used in this work (\Cref{sec:algorithms}), extend the framework to constrained MDPs for safe RL (\Cref{sec:cmdp_prelim}) and multi-agent settings (\Cref{sec:marl_prelim}), formalize the noise models (\Cref{sec:noise_models}), and provide an overview of the SustainGym environment suite (\Cref{sec:sustaingym}).
+This chapter establishes the mathematical foundations required for the subsequent technical chapters. We begin with the Markov Decision Process framework (\Cref{sec:mdp}), present the deep RL algorithms used in this work (\Cref{sec:algorithms}), extend the framework to constrained MDPs for safe RL (\Cref{sec:cmdp_prelim}) and multi-agent settings (\Cref{sec:marl_prelim}), formalize the perturbation models (\Cref{sec:noise_models}), and provide an overview of the SustainGym environment suite (\Cref{sec:sustaingym}).
 
 \section{Markov Decision Processes}
 \label{sec:mdp}
@@ -472,45 +472,45 @@ PettingZoo~\citep{terry2021pettingzoo} provides a standardized interface for mul
 
 This interface is compatible with Ray RLlib's multi-agent training infrastructure, enabling seamless integration of our PettingZoo environments with standard MARL algorithms.
 
-\section{Noise Models and Robustness Theory}
+\section{Perturbation Models and Robustness Theory}
 \label{sec:noise_models}
 
-A central contribution of this thesis is the systematic characterization of RL algorithm robustness to noise. This section formalizes the three noise channels used in our framework.
+A central contribution of this thesis is the systematic characterization of RL algorithm robustness to perturbation. This section formalizes the three perturbation channels used in our framework.
 
-\subsection{Observation Noise Model}
+\subsection{State Perturbation Model}
 
-Observation noise models sensor uncertainty and measurement errors. Given the true state $s_t$, the agent observes a noisy version $\tilde{s}_t$:
+State perturbation models sensor uncertainty and measurement errors. Given the true state $s_t$, the agent observes a perturbed version $\tilde{s}_t$:
 \begin{equation}
     \tilde{s}_t = h_{\text{obs}}(s_t, \xi_t^{\text{obs}}),
     \label{eq:obs_noise}
 \end{equation}
-where $\xi_t^{\text{obs}}$ is the noise random variable and $h_{\text{obs}}$ is the noise injection function. We consider two common models:
+where $\xi_t^{\text{obs}}$ is the perturbation random variable and $h_{\text{obs}}$ is the perturbation injection function. We consider two common models:
 
 \begin{definition}[Additive Gaussian Noise]
 \begin{equation}
-    \tilde{s}_t = s_t + \epsilon_t, \quad \epsilon_t \sim \mathcal{N}(0, \sigma_{\text{obs}}^2 I),
+    \tilde{s}_t = s_t + \epsilon_t, \quad \epsilon_t \sim \mathcal{N}(0, \sigma_s^2 I),
 \end{equation}
-where $\sigma_{\text{obs}}$ is the observation noise standard deviation. This model is used for MOER values and departure estimates in the EV charging environment.
+where $\sigma_s$ is the state perturbation standard deviation. This model is used for MOER values and departure estimates in the EV charging environment.
 \end{definition}
 
 \begin{definition}[Proportional (Multiplicative) Gaussian Noise]
 \begin{equation}
-    \tilde{s}_t = s_t \odot (1 + \epsilon_t), \quad \epsilon_t \sim \mathcal{N}(0, \sigma_{\text{obs}}^2 I),
+    \tilde{s}_t = s_t \odot (1 + \epsilon_t), \quad \epsilon_t \sim \mathcal{N}(0, \sigma_s^2 I),
 \end{equation}
-where $\odot$ denotes element-wise multiplication. This model scales the noise magnitude with the signal magnitude, which is physically appropriate for percentage-based sensor errors. This model is used for the building environment observations and cogeneration environment sensor readings.
+where $\odot$ denotes element-wise multiplication. This model scales the perturbation magnitude with the signal magnitude, which is physically appropriate for percentage-based sensor errors. This model is used for the building environment observations and cogeneration environment sensor readings.
 \end{definition}
 
-\paragraph{Mixed noise.} In the EV charging environment, different observation components use different noise models:
+\paragraph{Mixed perturbation.} In the EV charging environment, different observation components use different perturbation models:
 \begin{align}
     \tilde{o}_{\text{moer}} &= \clip(o_{\text{moer}} + \epsilon, 0, 1), & \epsilon &\sim \mathcal{N}(0, \sigma^2), \\
     \tilde{o}_{\text{dep}} &= \clip(o_{\text{dep}} + \epsilon, -288, 288), & \epsilon &\sim \mathcal{N}(0, (50\sigma)^2), \\
     \tilde{o}_{\text{dem}} &= o_{\text{dem}} \odot \clip(1 + \epsilon, 0.5, 1.5), & \epsilon &\sim \mathcal{N}(0, \sigma^2).
 \end{align}
-Note the factor of 50 applied to departure time noise, reflecting the larger scale and higher uncertainty of departure estimates compared to MOER values.
+Note the factor of 50 applied to departure time perturbation, reflecting the larger scale and higher uncertainty of departure estimates compared to MOER values.
 
-\subsection{Action Noise Model}
+\subsection{Action Perturbation Model}
 
-Action noise models actuator imprecision and command execution errors. Given the policy output $a_t = \pi(s_t)$, the executed action is:
+Action perturbation models actuator imprecision and command execution errors. Given the policy output $a_t = \pi(s_t)$, the executed action is:
 \begin{equation}
     \tilde{a}_t = h_{\text{act}}(a_t, \xi_t^{\text{act}}).
     \label{eq:act_noise}
@@ -518,12 +518,12 @@ Action noise models actuator imprecision and command execution errors. Given the
 
 \paragraph{Additive Gaussian noise (continuous actions):}
 \begin{equation}
-    \tilde{a}_t = \clip(a_t + \epsilon_t, a_{\min}, a_{\max}), \quad \epsilon_t \sim \mathcal{N}(0, \sigma_{\text{act}}^2 I).
+    \tilde{a}_t = \clip(a_t + \epsilon_t, a_{\min}, a_{\max}), \quad \epsilon_t \sim \mathcal{N}(0, \sigma_a^2 I).
 \end{equation}
 
 \paragraph{Multiplicative Gaussian noise (continuous actions):}
 \begin{equation}
-    \tilde{a}_t = \clip(a_t + a_t \odot \epsilon_t, a_{\min}, a_{\max}), \quad \epsilon_t \sim \mathcal{N}(0, \sigma_{\text{act}}^2 I).
+    \tilde{a}_t = \clip(a_t + a_t \odot \epsilon_t, a_{\min}, a_{\max}), \quad \epsilon_t \sim \mathcal{N}(0, \sigma_a^2 I).
 \end{equation}
 
 \paragraph{Bernoulli flip noise (discrete actions):} For discrete actions (e.g., cooling bay count in cogeneration), with probability $p_{\text{act}}$, the action is perturbed:
@@ -534,33 +534,33 @@ Action noise models actuator imprecision and command execution errors. Given the
     \end{cases}
 \end{equation}
 
-\subsection{Environment Noise Model}
+\subsection{Dynamics Perturbation Model}
 
-Environment noise models stochastic perturbations in the system dynamics that are not directly observable to the agent. Given the true environment parameters $\theta_{\text{env}}$, the perturbed parameters are:
+Dynamics perturbation models stochastic perturbations in the system dynamics that are not directly observable to the agent. Given the true environment parameters $\theta_{\text{env}}$, the perturbed parameters are:
 \begin{equation}
-    \tilde{\theta}_{\text{env}} = \theta_{\text{env}} + \epsilon_{\text{env}}, \quad \epsilon_{\text{env}} \sim \mathcal{N}(0, \Sigma_{\text{env}}).
+    \tilde{\theta}_{\text{env}} = \theta_{\text{env}} + \epsilon_{\text{env}}, \quad \epsilon_{\text{env}} \sim \mathcal{N}(0, \Sigma_d).
     \label{eq:env_noise}
 \end{equation}
 
-Environment noise affects the dynamics and/or reward computation but is not reflected in the agent's observations. Specific implementations:
+Dynamics perturbation affects the dynamics and/or reward computation but is not reflected in the agent's observations. Specific implementations:
 \begin{itemize}
     \item \textbf{EV Charging:} MOER value used in reward computation is perturbed: $\tilde{m}_t = \clip(m_t + \epsilon, 0, 1)$.
     \item \textbf{Building:} Outdoor temperature, ground temperature, and solar irradiance are perturbed before the RC thermal model step.
     \item \textbf{Cogeneration:} Ambient temperature, pressure, and humidity fed to the ONNX surrogate model are perturbed.
 \end{itemize}
 
-\subsection{Noise Channel Independence}
+\subsection{Perturbation Channel Independence}
 
-A key design principle of our noise framework is \textbf{channel independence}: observation noise, action noise, and environment noise are sampled independently at each timestep.
+A key design principle of our perturbation framework is \textbf{channel independence}: state perturbation, action perturbation, and dynamics perturbation are sampled independently at each timestep.
 
-\begin{assumption}[Noise Channel Independence]
+\begin{assumption}[Perturbation Channel Independence]
 \label{ass:independence}
 \begin{equation}
     \xi_t^{\text{obs}} \perp \xi_t^{\text{act}} \perp \xi_t^{\text{env}}, \quad \forall t.
 \end{equation}
 \end{assumption}
 
-This independence enables controlled experiments where the contribution of each noise channel can be isolated through ablation studies.
+This independence enables controlled experiments where the contribution of each perturbation channel can be isolated through ablation studies.
 
 \section{SustainGym: Sustainable Energy RL Environments}
 \label{sec:sustaingym}
@@ -595,4 +595,4 @@ CogenEnv & 96 steps (24h) & Dict ($\sim$119) & 15 (mixed) & $[\sim{-}5, 0]$ (sca
 \end{tabular}
 \end{table}
 
-Each environment is described in full technical detail in \Cref{ch:methodology}, including the physical models, observation and action space definitions, reward formulations, and noise injection mechanisms.
+Each environment is described in full technical detail in \Cref{ch:methodology}, including the physical models, observation and action space definitions, reward formulations, and perturbation injection mechanisms.

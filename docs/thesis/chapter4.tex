@@ -4,13 +4,13 @@
 \chapter{Methodology --- The SustainRL-Bench Framework}
 \label{ch:methodology}
 
-This chapter presents the core technical contribution of this thesis: the SustainRL-Bench framework for comprehensive RL benchmarking across sustainable energy environments. We begin with a framework overview (\Cref{sec:framework}), then describe each environment in detail (\Cref{sec:environments}), present the noise injection framework (\Cref{sec:noise_framework}), safe RL formulations (\Cref{sec:safe_rl}), multi-agent decompositions (\Cref{sec:marl_formulation}), and the experimental design (\Cref{sec:experimental_design}).
+This chapter presents the core technical contribution of this thesis: the SustainRL-Bench framework for comprehensive RL benchmarking across sustainable energy environments. We begin with a framework overview (\Cref{sec:framework}), then describe each environment in detail (\Cref{sec:environments}), present the perturbation injection framework (\Cref{sec:noise_framework}), safe RL formulations (\Cref{sec:safe_rl}), multi-agent decompositions (\Cref{sec:marl_formulation}), and the experimental design (\Cref{sec:experimental_design}).
 
 % ============================================================
 \section{Framework Overview}
 \label{sec:framework}
 
-SustainRL-Bench is a unified benchmarking framework that evaluates reinforcement learning algorithms across three axes---noise robustness, safety constraints, and multi-agent coordination---on three sustainable energy environments. The framework is built on top of the SustainGym environment suite~\citep{yeh2023sustaingym} and integrates three RL frameworks:
+SustainRL-Bench is a unified benchmarking framework that evaluates reinforcement learning algorithms across three axes---perturbation robustness, safety constraints, and multi-agent coordination---on three sustainable energy environments. The framework is built on top of the SustainGym environment suite~\citep{yeh2023sustaingym} and integrates three RL frameworks:
 
 \begin{enumerate}
     \item \textbf{Stable-Baselines3 (SB3)} for single-agent standard RL (PPO, SAC, TD3),
@@ -21,9 +21,9 @@ SustainRL-Bench is a unified benchmarking framework that evaluates reinforcement
 The framework architecture consists of four layers:
 
 \begin{description}
-    \item[Environment Layer.] Provides the three SustainGym environments (EVChargingEnv, BuildingEnv, CogenEnv via MyCogenEnv wrapper), each implementing the Gymnasium interface with configurable noise parameters.
+    \item[Environment Layer.] Provides the three SustainGym environments (EVChargingEnv, BuildingEnv, CogenEnv via MyCogenEnv wrapper), each implementing the Gymnasium interface with configurable perturbation parameters.
 
-    \item[Noise Injection Layer.] Implements three independent noise channels---observation noise (sensor uncertainty), action noise (actuator imprecision), and environment noise (stochastic dynamics)---that can be activated individually or in combination.
+    \item[Perturbation Injection Layer.] Implements three independent perturbation channels---state perturbation (sensor uncertainty), action perturbation (actuator imprecision), and dynamics perturbation (stochastic dynamics)---that can be activated individually or in combination.
 
     \item[Training Layer.] Integrates the three RL frameworks: SB3 for standard single-agent RL, OmniSafe for CMDP-based safe RL, and Ray RLlib for multi-agent RL with PettingZoo environments.
 
@@ -41,16 +41,16 @@ The framework architecture consists of four layers:
 % Layer 1: Environment
 \node[layer, fill=blue!8] (env) at (0, 0) {
     \textbf{EVChargingEnv} \quad\quad \textbf{BuildingEnv} \quad\quad \textbf{CogenEnv (MyCogenEnv)}\\[2pt]
-    {\scriptsize Gymnasium API \,$\cdot$\, configurable noise params \,$\cdot$\, MARL via PettingZoo}
+    {\scriptsize Gymnasium API \,$\cdot$\, configurable perturbation params \,$\cdot$\, MARL via PettingZoo}
 };
 \node[layerlabel] at (-7.5, 0) {Environment\\Layer};
 
-% Layer 2: Noise Injection
+% Layer 2: Perturbation Injection
 \node[layer, fill=orange!10] (noise) at (0, 2.4) {
-    \textbf{Observation Noise} \quad\quad \textbf{Action Noise} \quad\quad \textbf{Environment Noise}\\[2pt]
+    \textbf{State Perturbation (PS)} \quad\quad \textbf{Action Perturbation (PA)} \quad\quad \textbf{Dynamics Perturbation (PD)}\\[2pt]
     {\scriptsize sensor uncertainty \hspace{1.5cm} actuator imprecision \hspace{1.2cm} stochastic dynamics}
 };
-\node[layerlabel] at (-7.5, 2.4) {Noise Injection\\Layer};
+\node[layerlabel] at (-7.5, 2.4) {Perturbation\\Injection Layer};
 
 % Layer 3: Training
 \node[layer, fill=green!8] (train) at (0, 4.8) {
@@ -62,7 +62,7 @@ The framework architecture consists of four layers:
 % Layer 4: Evaluation
 \node[layer, fill=purple!8] (eval) at (0, 7.2) {
     \textbf{Mean $\pm$ Bootstrap CI} \quad\quad \textbf{Violin Plots} \quad\quad \textbf{Training Curves} \quad\quad \textbf{Cross-Env Comparison}\\[2pt]
-    {\scriptsize 1000 episodes \hspace{1.5cm} distributional analysis \hspace{1cm} convergence \hspace{1.5cm} noise sensitivity}
+    {\scriptsize 1000 episodes \hspace{1.5cm} distributional analysis \hspace{1cm} convergence \hspace{1.5cm} perturbation sensitivity}
 };
 \node[layerlabel] at (-7.5, 7.2) {Evaluation\\Layer};
 
@@ -75,7 +75,7 @@ The framework architecture consists of four layers:
 \draw[arrow, dashed] (train.south west) -- +(-0.8,-1.2) -- +(-0.8,-2.4) -| (env.south west) node[midway, left, font=\scriptsize, xshift=-5pt] {$a_t$};
 
 \end{tikzpicture}
-\caption{SustainRL-Bench framework architecture. Four layers operate in sequence: environments provide Gymnasium-compatible interfaces; the noise injection layer independently perturbs observations, actions, and dynamics; the training layer supports three RL paradigms; the evaluation layer produces statistical summaries and distributional analyses.}
+\caption{SustainRL-Bench framework architecture. Four layers operate in sequence: environments provide Gymnasium-compatible interfaces; the perturbation injection layer independently perturbs observations, actions, and dynamics; the training layer supports three RL paradigms; the evaluation layer produces statistical summaries and distributional analyses.}
 \label{fig:framework}
 \end{figure}
 
@@ -384,79 +384,79 @@ The raw reward is on the order of $10^7$ due to the physical units. The MyCogenE
 This scaling brings the reward to the approximate range $[-5, 0]$, which is compatible with standard RL algorithm hyperparameters.
 
 % ============================================================
-\section{Noise Injection Framework}
+\section{Perturbation Injection Framework}
 \label{sec:noise_framework}
 
-A central contribution of SustainRL-Bench is the systematic noise injection framework that enables controlled evaluation of RL algorithm robustness. This section describes the noise injection mechanisms for each environment across three independent channels.
+A central contribution of SustainRL-Bench is the systematic perturbation injection framework that enables controlled evaluation of RL algorithm robustness. This section describes the perturbation injection mechanisms for each environment across three independent channels.
 
 % ------------------------------------------------------------
-\subsection{Observation Noise}
+\subsection{State Perturbation (PS)}
 \label{sec:obs_noise}
 
-Observation noise simulates sensor degradation, measurement uncertainty, and communication errors. The noise is injected after the environment computes the true state and before the agent receives the observation.
+State perturbation simulates sensor degradation, measurement uncertainty, and communication errors. The perturbation is injected after the environment computes the true state and before the agent receives the observation.
 
-\paragraph{EV Charging observation noise.} Different observation components have distinct noise characteristics, reflecting the physical nature of each measurement:
+\paragraph{EV Charging state perturbation.} Different observation components have distinct perturbation characteristics, reflecting the physical nature of each measurement:
 \begin{align}
-    \tilde{o}_{\text{moer}} &= \clip(o_{\text{moer}} + \epsilon_1, 0, 1), & \epsilon_1 &\sim \mathcal{N}(0, \sigma_{\text{obs}}^2), \label{eq:ev_obs_moer} \\
-    \tilde{o}_{\text{dep},i} &= \clip(o_{\text{dep},i} + \epsilon_2, -288, 288), & \epsilon_2 &\sim \mathcal{N}(0, (50\sigma_{\text{obs}})^2), \label{eq:ev_obs_dep} \\
-    \tilde{o}_{\text{dem},i} &= o_{\text{dem},i} \cdot \clip(1 + \epsilon_3, 0.5, 1.5), & \epsilon_3 &\sim \mathcal{N}(0, \sigma_{\text{obs}}^2), \label{eq:ev_obs_dem} \\
-    \tilde{o}_{\text{fmoer}} &= \clip(o_{\text{fmoer}} + \epsilon_4, 0, 1), & \epsilon_4 &\sim \mathcal{N}(0, \sigma_{\text{obs}}^2). \label{eq:ev_obs_fmoer}
+    \tilde{o}_{\text{moer}} &= \clip(o_{\text{moer}} + \epsilon_1, 0, 1), & \epsilon_1 &\sim \mathcal{N}(0, \sigma_s^2), \label{eq:ev_obs_moer} \\
+    \tilde{o}_{\text{dep},i} &= \clip(o_{\text{dep},i} + \epsilon_2, -288, 288), & \epsilon_2 &\sim \mathcal{N}(0, (50\sigma_s)^2), \label{eq:ev_obs_dep} \\
+    \tilde{o}_{\text{dem},i} &= o_{\text{dem},i} \cdot \clip(1 + \epsilon_3, 0.5, 1.5), & \epsilon_3 &\sim \mathcal{N}(0, \sigma_s^2), \label{eq:ev_obs_dem} \\
+    \tilde{o}_{\text{fmoer}} &= \clip(o_{\text{fmoer}} + \epsilon_4, 0, 1), & \epsilon_4 &\sim \mathcal{N}(0, \sigma_s^2). \label{eq:ev_obs_fmoer}
 \end{align}
 
-The departure time noise has a scaling factor of 50 relative to the base noise level, reflecting the higher uncertainty in predicting when vehicles will depart. Energy demand noise is multiplicative and clipped to $[0.5, 1.5]$ of the true value to prevent negative or excessively large demands.
+The departure time perturbation has a scaling factor of 50 relative to the base perturbation level, reflecting the higher uncertainty in predicting when vehicles will depart. Energy demand perturbation is multiplicative and clipped to $[0.5, 1.5]$ of the true value to prevent negative or excessively large demands.
 
 \begin{remark}[Implementation Detail]
-Deep copies of the observation arrays are created before noise injection to avoid mutating the environment's internal state, which would corrupt future computations.
+Deep copies of the observation arrays are created before perturbation injection to avoid mutating the environment's internal state, which would corrupt future computations.
 \end{remark}
 
-\paragraph{Building observation noise.} The building environment uses proportional Gaussian noise:
+\paragraph{Building state perturbation.} The building environment uses proportional Gaussian noise:
 \begin{equation}
-    \tilde{o} = \clip\!\left(o + \epsilon, o_{\min}, o_{\max}\right), \quad \epsilon \sim \mathcal{N}(0, \sigma_{\text{obs}}^2 |o|^2),
+    \tilde{o} = \clip\!\left(o + \epsilon, o_{\min}, o_{\max}\right), \quad \epsilon \sim \mathcal{N}(0, \sigma_s^2 |o|^2),
     \label{eq:bldg_obs_noise}
 \end{equation}
-where the noise standard deviation scales with the absolute value of each observation component. This proportional model is physically appropriate because sensor accuracy is typically specified as a percentage of reading.
+where the perturbation standard deviation scales with the absolute value of each observation component. This proportional model is physically appropriate because sensor accuracy is typically specified as a percentage of reading.
 
-\paragraph{Cogeneration observation noise.} The cogeneration environment uses a more detailed noise model with component-specific noise ratios:
+\paragraph{Cogeneration state perturbation.} The cogeneration environment uses a more detailed perturbation model with component-specific ratios:
 \begin{align}
-    \tilde{o}_{\text{amb},0} &= o_{\text{amb},0} + \mathcal{N}(0, (0.02\sigma_{\text{obs}} |o_{\text{amb},0}|)^2), \label{eq:cogen_obs_amb0} \\
-    \tilde{o}_{\text{amb},i} &= o_{\text{amb},i} + \mathcal{N}(0, (0.05\sigma_{\text{obs}} (1{+}0.2(i{-}1)) |o_{\text{amb},i}|)^2), \; i \geq 1, \label{eq:cogen_obs_ambi} \\
-    \tilde{o}_{\text{target}} &= o_{\text{target}} + \mathcal{N}(0, (0.01\sigma_{\text{obs}} |o_{\text{target}}|)^2), \label{eq:cogen_obs_target} \\
-    \tilde{o}_{\text{price}} &= o_{\text{price}} + \mathcal{N}(0, (0.03\sigma_{\text{obs}} |o_{\text{price}}|)^2). \label{eq:cogen_obs_price}
+    \tilde{o}_{\text{amb},0} &= o_{\text{amb},0} + \mathcal{N}(0, (0.02\sigma_s |o_{\text{amb},0}|)^2), \label{eq:cogen_obs_amb0} \\
+    \tilde{o}_{\text{amb},i} &= o_{\text{amb},i} + \mathcal{N}(0, (0.05\sigma_s (1{+}0.2(i{-}1)) |o_{\text{amb},i}|)^2), \; i \geq 1, \label{eq:cogen_obs_ambi} \\
+    \tilde{o}_{\text{target}} &= o_{\text{target}} + \mathcal{N}(0, (0.01\sigma_s |o_{\text{target}}|)^2), \label{eq:cogen_obs_target} \\
+    \tilde{o}_{\text{price}} &= o_{\text{price}} + \mathcal{N}(0, (0.03\sigma_s |o_{\text{price}}|)^2). \label{eq:cogen_obs_price}
 \end{align}
 
-The noise ratios (0.02, 0.05, 0.01, 0.03) reflect the relative accuracy of different sensor types: ambient sensors are moderately noisy, forecasts become noisier with horizon (the factor $1 + 0.2(i-1)$ increases noise linearly with forecast step), demand targets are relatively precise, and market prices have moderate uncertainty.
+The perturbation ratios (0.02, 0.05, 0.01, 0.03) reflect the relative accuracy of different sensor types: ambient sensors are moderately noisy, forecasts become noisier with horizon (the factor $1 + 0.2(i-1)$ increases perturbation linearly with forecast step), demand targets are relatively precise, and market prices have moderate uncertainty.
 
 % ------------------------------------------------------------
-\subsection{Action Noise}
+\subsection{Action Perturbation (PA)}
 \label{sec:act_noise}
 
-Action noise simulates actuator imprecision and control signal corruption. The noise is injected after the agent outputs an action and before the environment processes it.
+Action perturbation simulates actuator imprecision and control signal corruption. The perturbation is injected after the agent outputs an action and before the environment processes it.
 
-\paragraph{EV Charging action noise.} Additive Gaussian noise:
+\paragraph{EV Charging action perturbation.} Additive Gaussian noise:
 \begin{equation}
-    \tilde{a}_i(t) = \clip\!\left(a_i(t) + \epsilon_i, \, 0, \, 1\right), \quad \epsilon_i \sim \mathcal{N}(0, \sigma_{\text{act}}^2).
+    \tilde{a}_i(t) = \clip\!\left(a_i(t) + \epsilon_i, \, 0, \, 1\right), \quad \epsilon_i \sim \mathcal{N}(0, \sigma_a^2).
     \label{eq:ev_act_noise}
 \end{equation}
 
-\paragraph{Building action noise.} Multiplicative Gaussian noise (proportional to action magnitude):
+\paragraph{Building action perturbation.} Multiplicative Gaussian noise (proportional to action magnitude):
 \begin{equation}
-    \tilde{a}_i(t) = \clip\!\left(a_i(t) + a_i(t) \cdot \epsilon_i, \, -1, \, 1\right), \quad \epsilon_i \sim \mathcal{N}(0, \sigma_{\text{act}}^2).
+    \tilde{a}_i(t) = \clip\!\left(a_i(t) + a_i(t) \cdot \epsilon_i, \, -1, \, 1\right), \quad \epsilon_i \sim \mathcal{N}(0, \sigma_a^2).
     \label{eq:bldg_act_noise}
 \end{equation}
 
-\paragraph{Cogeneration action noise.} Mixed continuous-discrete noise model:
+\paragraph{Cogeneration action perturbation.} Mixed continuous-discrete perturbation model:
 
 For continuous sub-actions:
 \begin{equation}
-    \tilde{a}_j(t) = \clip\!\left(a_j(t) + a_j(t) \cdot \epsilon_j, \, a_j^{\min}, \, a_j^{\max}\right), \quad \epsilon_j \sim \mathcal{N}(0, \sigma_{\text{act}}^2).
+    \tilde{a}_j(t) = \clip\!\left(a_j(t) + a_j(t) \cdot \epsilon_j, \, a_j^{\min}, \, a_j^{\max}\right), \quad \epsilon_j \sim \mathcal{N}(0, \sigma_a^2).
     \label{eq:cogen_act_cont}
 \end{equation}
 
 For discrete sub-actions (Bernoulli flip):
 \begin{equation}
     \tilde{a}_j(t) = \begin{cases}
-    1 - a_j(t) & \text{w.p.\ } \sigma_{\text{act}}, \quad \text{if } a_j \in \{0, 1\} \\
-    \clip(a_j(t) + U(\{-1, +1\}), \, s, \, s{+}n{-}1) & \text{w.p.\ } \sigma_{\text{act}}, \quad \text{if } |A_j| > 2 \\
+    1 - a_j(t) & \text{w.p.\ } \sigma_a, \quad \text{if } a_j \in \{0, 1\} \\
+    \clip(a_j(t) + U(\{-1, +1\}), \, s, \, s{+}n{-}1) & \text{w.p.\ } \sigma_a, \quad \text{if } |A_j| > 2 \\
     a_j(t) & \text{otherwise}
     \end{cases}
     \label{eq:cogen_act_disc}
@@ -464,63 +464,63 @@ For discrete sub-actions (Bernoulli flip):
 This mixed model reflects the different physical characteristics of continuous valve positions versus discrete operating mode selections.
 
 % ------------------------------------------------------------
-\subsection{Environment Noise}
+\subsection{Dynamics Perturbation (PD)}
 \label{sec:env_noise}
 
-Environment noise simulates stochastic perturbations in the physical dynamics that are not directly observable to the agent.
+Dynamics perturbation simulates stochastic perturbations in the physical dynamics that are not directly observable to the agent.
 
-\paragraph{EV Charging environment noise.} The MOER value used in the carbon cost component of the reward is perturbed:
+\paragraph{EV Charging dynamics perturbation.} The MOER value used in the carbon cost component of the reward is perturbed:
 \begin{equation}
-    \tilde{m}_t = \clip\!\left(m_t + \epsilon, \, 0, \, 1\right), \quad \epsilon \sim \mathcal{N}(0, \sigma_{\text{env}}^2).
+    \tilde{m}_t = \clip\!\left(m_t + \epsilon, \, 0, \, 1\right), \quad \epsilon \sim \mathcal{N}(0, \sigma_d^2).
     \label{eq:ev_env_noise}
 \end{equation}
 This models uncertainty in the carbon intensity of marginal electricity generation.
 
-\paragraph{Building environment noise.} Weather parameters fed to the RC thermal model are perturbed:
+\paragraph{Building dynamics perturbation.} Weather parameters fed to the RC thermal model are perturbed:
 \begin{align}
-    \tilde{T}_{\text{out}} &= T_{\text{out}} + \mathcal{N}(0, (1.0 \cdot \sigma_{\text{env}})^2), \label{eq:bldg_env_tout} \\
-    \tilde{T}_{\text{ground}} &= T_{\text{ground}} + \mathcal{N}(0, (0.5 \cdot \sigma_{\text{env}})^2), \label{eq:bldg_env_tgnd} \\
-    \tilde{G}_{\text{solar}} &= \max(0, \, G_{\text{solar}} + \mathcal{N}(0, (50 \cdot \sigma_{\text{env}})^2)). \label{eq:bldg_env_solar}
+    \tilde{T}_{\text{out}} &= T_{\text{out}} + \mathcal{N}(0, (1.0 \cdot \sigma_d)^2), \label{eq:bldg_env_tout} \\
+    \tilde{T}_{\text{ground}} &= T_{\text{ground}} + \mathcal{N}(0, (0.5 \cdot \sigma_d)^2), \label{eq:bldg_env_tgnd} \\
+    \tilde{G}_{\text{solar}} &= \max(0, \, G_{\text{solar}} + \mathcal{N}(0, (50 \cdot \sigma_d)^2)). \label{eq:bldg_env_solar}
 \end{align}
 The scaling factors (1.0, 0.5, 50.0) reflect the different physical scales and variabilities of each parameter. Ground temperature is more stable than outdoor temperature, while solar irradiance has the largest absolute variability.
 
-\paragraph{Cogeneration environment noise.} Ambient conditions fed to the ONNX surrogate model are perturbed:
+\paragraph{Cogeneration dynamics perturbation.} Ambient conditions fed to the ONNX surrogate model are perturbed:
 \begin{align}
-    \tilde{T}_{\text{amb}} &= T_{\text{amb}} + \mathcal{N}(0, (2.0 \cdot \sigma_{\text{env}})^2), \label{eq:cogen_env_tamb} \\
-    \tilde{P}_{\text{amb}} &= P_{\text{amb}} + \mathcal{N}(0, (0.1 \cdot \sigma_{\text{env}})^2), \label{eq:cogen_env_pamb} \\
-    \tilde{H}_{\text{amb}} &= \clip\!\left(H_{\text{amb}} + \mathcal{N}(0, (0.05 \cdot \sigma_{\text{env}})^2), 0, 1\right). \label{eq:cogen_env_hamb}
+    \tilde{T}_{\text{amb}} &= T_{\text{amb}} + \mathcal{N}(0, (2.0 \cdot \sigma_d)^2), \label{eq:cogen_env_tamb} \\
+    \tilde{P}_{\text{amb}} &= P_{\text{amb}} + \mathcal{N}(0, (0.1 \cdot \sigma_d)^2), \label{eq:cogen_env_pamb} \\
+    \tilde{H}_{\text{amb}} &= \clip\!\left(H_{\text{amb}} + \mathcal{N}(0, (0.05 \cdot \sigma_d)^2), 0, 1\right). \label{eq:cogen_env_hamb}
 \end{align}
 The scaling factors (2.0, 0.1, 0.05) reflect that ambient temperature has the largest variability, ambient pressure is relatively stable, and relative humidity is bounded to $[0, 1]$. These perturbations propagate through the ONNX model, affecting both plant outputs and the reward computation.
 
 % ------------------------------------------------------------
-\subsection{Noise Level Scales}
+\subsection{Perturbation Level Scales}
 \label{sec:noise_levels}
 
-\Cref{tab:noise_levels} summarizes the noise levels tested in each environment across all three channels.
+\Cref{tab:noise_levels} summarizes the perturbation levels tested in each environment across all three channels.
 
 \begin{table}[htbp]
 \centering
-\caption{Noise levels tested for each environment and channel.}
+\caption{Perturbation levels tested for each environment and channel.}
 \label{tab:noise_levels}
 \begin{tabular}{@{}llll@{}}
 \toprule
 \textbf{Environment} & \textbf{Channel} & \textbf{Parameter} & \textbf{Levels Tested} \\
 \midrule
-EV Charging & Observation & $\sigma_{\text{obs}}$ & 0, 0.01, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.60 \\
-EV Charging & Action & $\sigma_{\text{act}}$ & 0, 0.01, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.60 \\
-EV Charging & Environment & $\sigma_{\text{env}}$ & 0, 0.01, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.60 \\
+EV Charging & State (PS) & $\sigma_s$ & 0, 0.01, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.60 \\
+EV Charging & Action (PA) & $\sigma_a$ & 0, 0.01, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.60 \\
+EV Charging & Dynamics (PD) & $\sigma_d$ & 0, 0.01, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.60 \\
 \midrule
-Building & Observation & $\sigma_{\text{obs}}$ & 0, 0.01, 0.03, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40 \\
-Building & Action & $\sigma_{\text{act}}$ & 0, 0.01, 0.03, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40 \\
-Building & Environment & $\sigma_{\text{env}}$ & 0, 0.01, 0.03, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40 \\
+Building & State (PS) & $\sigma_s$ & 0, 0.01, 0.03, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40 \\
+Building & Action (PA) & $\sigma_a$ & 0, 0.01, 0.03, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40 \\
+Building & Dynamics (PD) & $\sigma_d$ & 0, 0.01, 0.03, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40 \\
 \midrule
-Cogeneration & Observation & $\sigma_{\text{obs}}$ & 0, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0 \\
-Cogeneration & Environment & $\sigma_{\text{env}}$ & 0, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0 \\
+Cogeneration & State (PS) & $\sigma_s$ & 0, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0 \\
+Cogeneration & Dynamics (PD) & $\sigma_d$ & 0, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The noise scales differ across environments because each environment has different physical units and sensitivities. The cogeneration environment uses larger noise values because the MyCogenEnv wrapper applies internal scaling factors (0.02, 0.05, etc.) that attenuate the base noise level.
+The perturbation scales differ across environments because each environment has different physical units and sensitivities. The cogeneration environment uses larger perturbation values because the MyCogenEnv wrapper applies internal scaling factors (0.02, 0.05, etc.) that attenuate the base perturbation level.
 
 % ============================================================
 \section{Safe RL Formulation}
@@ -590,13 +590,13 @@ The OmniSafe framework provides a standardized interface for CMDP environments. 
 \caption{OmniSafe CMDP Environment Wrapper}
 \label{alg:omnisafe_wrapper}
 \begin{algorithmic}[1]
-\Require Underlying SustainGym environment, noise parameters, cost function
+\Require Underlying SustainGym environment, perturbation parameters, cost function
 \Statex \textbf{class} SustainGymCMDP extends CMDP:
 \Statex
 \Function{Init}{env\_id, noise, noise\_action, noise\_env}
     \State Initialize underlying SustainGym environment
     \State Flatten observation space if needed (\texttt{safe\_rl=True})
-    \State Configure noise injection parameters
+    \State Configure perturbation injection parameters
 \EndFunction
 \Statex
 \Function{Step}{action}
@@ -863,7 +863,7 @@ Target noise clip & 0.5 \\
 \begin{definition}[Derived Metrics]\label{def:derived_metrics}
 \hfill
 \begin{enumerate}
-    \item \textbf{Normalized performance drop}: $\Delta_\sigma = (R_\sigma - R_0)/|R_0|$ --- relative performance change under noise level $\sigma$ compared to clean baseline $R_0$.
+    \item \textbf{Normalized performance drop}: $\Delta_\sigma = (R_\sigma - R_0)/|R_0|$ --- relative performance change under perturbation level $\sigma$ compared to clean baseline $R_0$.
     \item \textbf{Reward--cost Pareto metric}: For safe RL, we report both reward and cost, and evaluate whether the policy achieves reward close to the unconstrained optimum while satisfying the constraint budget $d$.
 \end{enumerate}
 \end{definition}
@@ -874,7 +874,7 @@ Target noise clip & 0.5 \\
 
 Informed by~\citet{agarwal2021deep}, we employ the following statistical methodology to ensure reliable evaluation.
 
-\paragraph{Evaluation episodes.} Each trained model is evaluated over $K = 1000$ episodes under deterministic policy execution (or $K = 100$ for computationally expensive configurations). The large episode count provides sufficient samples to estimate distributional properties without requiring multiple training seeds per configuration, which would be prohibitively expensive given the scale of our noise sweep (200+ unique configurations).
+\paragraph{Evaluation episodes.} Each trained model is evaluated over $K = 1000$ episodes under deterministic policy execution (or $K = 100$ for computationally expensive configurations). The large episode count provides sufficient samples to estimate distributional properties without requiring multiple training seeds per configuration, which would be prohibitively expensive given the scale of our perturbation sweep (200+ unique configurations).
 
 \paragraph{Summary statistics.} We report the mean episode return $\bar{R} = \frac{1}{K}\sum_{i=1}^K R_i$ with standard deviation $\sigma_R$ and 95\% bootstrap confidence intervals. The bootstrap CI is computed by resampling $K$ episodes with replacement $B = 10{,}000$ times:
 \begin{equation}
@@ -912,7 +912,7 @@ All experiments are conducted on the Virginia Tech Advanced Research Computing (
     \item \textbf{SLURM job management:} Automated job submission with configurable wall-time limits (1--5 days per job).
 \end{itemize}
 
-Training scripts support checkpointing and resumption for long-running jobs, and evaluation scripts load trained models for standardized testing across noise levels.
+Training scripts support checkpointing and resumption for long-running jobs, and evaluation scripts load trained models for standardized testing across perturbation levels.
 
 \begin{figure}[htbp]
 \centering
@@ -925,7 +925,7 @@ Training scripts support checkpointing and resumption for long-running jobs, and
 ]
 
 % --- Phase 1: Configuration ---
-\node[block, fill=blue!10] (config) at (0, 0) {Config\\{\scriptsize algo, env, noise}};
+\node[block, fill=blue!10] (config) at (0, 0) {Config\\{\scriptsize algo, env, pert.}};
 
 % --- Phase 2: SLURM Submission ---
 \node[block, fill=orange!10] (slurm) at (3.2, 0) {SLURM\\{\scriptsize ARC HPC}};
@@ -966,11 +966,11 @@ Training scripts support checkpointing and resumption for long-running jobs, and
 \node[phase] at (10.4, 1.3) {Save};
 \node[phase] at (13.4, 1.3) {Evaluate};
 
-% --- Noise injection annotation ---
-\draw[darrow] (config.south) -- ++(0,-0.6) node[below, font=\scriptsize, text=gray!60!black] {noise params: $\sigma_{\text{obs}}, \sigma_{\text{act}}, \sigma_{\text{env}}$};
+% --- Perturbation injection annotation ---
+\draw[darrow] (config.south) -- ++(0,-0.6) node[below, font=\scriptsize, text=gray!60!black] {perturbation params: $\sigma_s, \sigma_a, \sigma_d$};
 
 \end{tikzpicture}
-\caption{Experimental workflow. Each configuration specifies an algorithm, environment, and noise level. SLURM dispatches training jobs to ARC HPC, producing checkpoints that are evaluated over 1000 episodes. Outputs include summary statistics, distributional violin plots, and training convergence curves.}
+\caption{Experimental workflow. Each configuration specifies an algorithm, environment, and perturbation level. SLURM dispatches training jobs to ARC HPC, producing checkpoints that are evaluated over 1000 episodes. Outputs include summary statistics, distributional violin plots, and training convergence curves.}
 \label{fig:workflow}
 \end{figure}
 
@@ -982,7 +982,7 @@ Training scripts support checkpointing and resumption for long-running jobs, and
 
 \begin{table}[htbp]
 \centering
-\caption{Complete experiment matrix. Standard RL trains each algorithm under three independent noise channels (observation, action, environment) at varying intensities.}
+\caption{Complete experiment matrix. Standard RL trains each algorithm under three independent perturbation channels (state, action, dynamics) at varying intensities.}
 \label{tab:experiment_matrix}
 \begin{tabular}{@{}lllll@{}}
 \toprule
@@ -1005,4 +1005,4 @@ MARL & Cogen & PPO, APPO, IMPALA & --- & 3 \\
 \end{tabular}
 \end{table}
 
-Each configuration involves a full training run (3M--9M timesteps) followed by evaluation. TD3 baselines are trained for all three environments but excluded from systematic noise experiments due to training instability (\Cref{sec:noise_findings}). Including seed repetitions, hyperparameter sweeps, and post-training evaluation runs, the total exceeds 300 individual runs across all experimental axes.
+Each configuration involves a full training run (3M--9M timesteps) followed by evaluation. TD3 baselines are trained for all three environments but excluded from systematic perturbation experiments due to training instability (\Cref{sec:noise_findings}). Including seed repetitions, hyperparameter sweeps, and post-training evaluation runs, the total exceeds 300 individual runs across all experimental axes.
