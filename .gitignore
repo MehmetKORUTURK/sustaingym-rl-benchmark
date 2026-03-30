@@ -8,18 +8,25 @@ dist/
 build/
 *.so
 
-# Training outputs (large files)
+# Training/test outputs (large files)
 logs_std_train/
 logs_std_test/
 logs_marl_train/
+logs_marl_test/
+logs_baseline_test/
+logs_saferl_train/
 runs/
 checkpoints/
 
-# Data files (large, downloaded separately)
-data/
+# Data files — pushed to repo for reproducibility
+# data/
 
 # Graphs (generated outputs)
 graphs/
+
+# Thesis, docs, SLURM (separate from code repo)
+docs/
+scripts/slurm/
 
 # Chat/meeting notes (personal)
 chats/
@@ -36,8 +43,6 @@ _legacy/
 .DS_Store
 Thumbs.db
 
-# Misc
-*.pkl
+# Misc (trained model artifacts — data/ pkl/onnx are tracked)
 *.zip
-*.onnx
 *.npz

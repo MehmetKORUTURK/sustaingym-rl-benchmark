@@ -46,6 +46,11 @@ ENV_DEFAULTS = {
 
 OUTPUT_DIR = "./graphs/C_STDRL/"
 
+# Per (env, algo, dt) legend location overrides  — default is 'lower right'
+LEGEND_LOC = {
+    ("evcharging", "SAC", "DS"): {"loc": "center right", "bbox_to_anchor": (1.0, 0.3)},
+}
+
 
 # ============================================================================
 # EVCHARGING CONFIG
@@ -55,30 +60,30 @@ EV_CONFIG = {
     "PPO": {
         "DS": ([
             (r"logs_std_train/evcharging_PPO/2026-02-05-20-06-35_DS_0.0_DA_0.0/monitor.csv", "PPO_0.0"),
-            (r"logs_std_train/evcharging_PPO/2026-02-09-14-38-32_DS_0.1_DA_0.0/monitor.csv", "PPO_0.1"),
+            (r"logs_std_train/evcharging_PPO/2026-02-09-14-41-09_DS_0.15_DA_0.0/monitor.csv", "PPO_0.15"),
+            # (r"logs_std_train/evcharging_PPO/2026-02-09-14-38-32_DS_0.1_DA_0.0/monitor.csv", "PPO_0.1"),
             (r"logs_std_train/evcharging_PPO/2026-02-09-14-49-37_DS_0.3_DA_0.0/monitor.csv", "PPO_0.3"),
-            (r"logs_std_train/evcharging_PPO/2026-02-10-13-00-16_DS_0.6_DA_0.0/monitor.csv", "PPO_0.6"),
+            # (r"logs_std_train/evcharging_PPO/2026-02-10-13-00-16_DS_0.6_DA_0.0/monitor.csv", "PPO_0.6"),
             # (r"logs_std_train/evcharging_PPO/2026-02-09-13-32-12_DS_0.01_DA_0.0/monitor.csv", "PPO_0.01"),
             # (r"logs_std_train/evcharging_PPO/2026-02-09-14-31-24_DS_0.05_DA_0.0/monitor.csv", "PPO_0.05"),
-            # (r"logs_std_train/evcharging_PPO/2026-02-09-14-41-09_DS_0.15_DA_0.0/monitor.csv", "PPO_0.15"),
             # (r"logs_std_train/evcharging_PPO/2026-02-09-14-49-08_DS_0.2_DA_0.0/monitor.csv", "PPO_0.2"),
             # (r"logs_std_train/evcharging_PPO/2026-02-10-13-00-36_DS_0.4_DA_0.0/monitor.csv", "PPO_0.4"),
             # (r"logs_std_train/evcharging_PPO/2026-02-10-13-00-36_DS_0.5_DA_0.0/monitor.csv", "PPO_0.5"),
         ], (4.5, 8)),
         "DA": ([
             (r"logs_std_train/evcharging_PPO/2026-02-05-20-06-35_DS_0.0_DA_0.0/monitor.csv", "PPO_0.0"),
-            (r"logs_std_train/evcharging_PPO/2026-02-11-03-20-57_DS_0.0_DA_0.1/monitor.csv", "PPO_0.1"),
+            (r"logs_std_train/evcharging_PPO/2026-02-11-03-22-23_DS_0.0_DA_0.15/monitor.csv", "PPO_0.15"),
+            # (r"logs_std_train/evcharging_PPO/2026-02-11-03-20-57_DS_0.0_DA_0.1/monitor.csv", "PPO_0.1"),
             (r"logs_std_train/evcharging_PPO/2026-02-11-08-02-01_DS_0.0_DA_0.3/monitor.csv", "PPO_0.3"),
-            (r"logs_std_train/evcharging_PPO/2026-02-16-10-40-02_NOISE_0.0_ACT_0.6/monitor.csv", "PPO_0.6"),
+            # (r"logs_std_train/evcharging_PPO/2026-02-16-10-40-02_NOISE_0.0_ACT_0.6/monitor.csv", "PPO_0.6"),
             # (r"logs_std_train/evcharging_PPO/2026-02-10-13-36-28_DS_0.0_DA_0.01/monitor.csv", "PPO_0.01"),
             # (r"logs_std_train/evcharging_PPO/2026-02-10-22-42-09_DS_0.0_DA_0.05/monitor.csv", "PPO_0.05"),
-            # (r"logs_std_train/evcharging_PPO/2026-02-11-03-22-23_DS_0.0_DA_0.15/monitor.csv", "PPO_0.15"),
             # (r"logs_std_train/evcharging_PPO/2026-02-11-05-41-17_DS_0.0_DA_0.2/monitor.csv", "PPO_0.2"),
             # (r"logs_std_train/evcharging_PPO/2026-02-11-10-13-34_DS_0.0_DA_0.4/monitor.csv", "PPO_0.4"),
         ], (4.5, 8)),
         "DE": ([
             (r"logs_std_train/evcharging_PPO/2026-02-05-20-06-35_DS_0.0_DA_0.0/monitor.csv", "PPO_0.0"),
-            (r"logs_std_train/evcharging_PPO/2026-03-04-22-47-02_NOISE_0.0_ACT_0.0_ENV_0.05/monitor.csv", "PPO_0.05"),
+            # (r"logs_std_train/evcharging_PPO/2026-03-04-22-47-02_NOISE_0.0_ACT_0.0_ENV_0.05/monitor.csv", "PPO_0.05"),
             (r"logs_std_train/evcharging_PPO/2026-03-05-00-29-20_NOISE_0.0_ACT_0.0_ENV_0.15/monitor.csv", "PPO_0.15"),
             (r"logs_std_train/evcharging_PPO/2026-03-05-04-45-55_NOISE_0.0_ACT_0.0_ENV_0.3/monitor.csv", "PPO_0.3"),
             # (r"logs_std_train/evcharging_PPO/2026-03-04-22-32-05_NOISE_0.0_ACT_0.0_ENV_0.01/monitor.csv", "PPO_0.01"),
@@ -90,36 +95,36 @@ EV_CONFIG = {
     "SAC": {
         "DS": ([
             (r"logs_std_train/evcharging_SAC/2026-02-09-12-45-20_DS_0.0_DA_0.0/monitor.csv", "SAC_0.0"),
-            (r"logs_std_train/evcharging_SAC/2026-02-12-15-47-04_NOISE_0.1_ACT_0.0/monitor.csv", "SAC_0.1"),
+            (r"logs_std_train/evcharging_SAC/2026-02-12-15-47-04_NOISE_0.15_ACT_0.0/monitor.csv", "SAC_0.15"),
+            # (r"logs_std_train/evcharging_SAC/2026-02-12-15-47-04_NOISE_0.1_ACT_0.0/monitor.csv", "SAC_0.1"),
             (r"logs_std_train/evcharging_SAC/2026-02-13-18-23-14_NOISE_0.3_ACT_0.0/monitor.csv", "SAC_0.3"),
-            (r"logs_std_train/evcharging_SAC/2026-02-15-06-03-15_NOISE_0.6_ACT_0.0/monitor.csv", "SAC_0.6"),
+            # (r"logs_std_train/evcharging_SAC/2026-02-15-06-03-15_NOISE_0.6_ACT_0.0/monitor.csv", "SAC_0.6"),
             # (r"logs_std_train/evcharging_SAC/2026-02-12-15-46-22_NOISE_0.01_ACT_0.0/monitor.csv", "SAC_0.01"),
             # (r"logs_std_train/evcharging_SAC/2026-02-12-15-46-22_NOISE_0.05_ACT_0.0/monitor.csv", "SAC_0.05"),
-            # (r"logs_std_train/evcharging_SAC/2026-02-12-15-47-04_NOISE_0.15_ACT_0.0/monitor.csv", "SAC_0.15"),
             # (r"logs_std_train/evcharging_SAC/2026-02-13-18-18-09_NOISE_0.2_ACT_0.0/monitor.csv", "SAC_0.2"),
             # (r"logs_std_train/evcharging_SAC/2026-02-13-18-25-51_NOISE_0.4_ACT_0.0/monitor.csv", "SAC_0.4"),
             # (r"logs_std_train/evcharging_SAC/2026-02-13-18-45-20_NOISE_0.5_ACT_0.0/monitor.csv", "SAC_0.5"),
         ], (2.7, 7)),
         "DA": ([
             (r"logs_std_train/evcharging_SAC/2026-02-09-12-45-20_DS_0.0_DA_0.0/monitor.csv", "SAC_0.0"),
-            (r"logs_std_train/evcharging_SAC/2026-02-19-22-32-04_NOISE_0.0_ACT_0.1/monitor.csv", "SAC_0.1"),
+            (r"logs_std_train/evcharging_SAC/2026-02-19-22-13-55_NOISE_0.0_ACT_0.15/monitor.csv", "SAC_0.15"),
+            # (r"logs_std_train/evcharging_SAC/2026-02-19-22-32-04_NOISE_0.0_ACT_0.1/monitor.csv", "SAC_0.1"),
             (r"logs_std_train/evcharging_SAC/2026-02-18-18-10-06_NOISE_0.0_ACT_0.3/monitor.csv", "SAC_0.3"),
-            (r"logs_std_train/evcharging_SAC/2026-02-18-16-49-39_NOISE_0.0_ACT_0.6/monitor.csv", "SAC_0.6"),
+            # (r"logs_std_train/evcharging_SAC/2026-02-18-16-49-39_NOISE_0.0_ACT_0.6/monitor.csv", "SAC_0.6"),
             # (r"logs_std_train/evcharging_SAC/2026-02-15-06-18-46_NOISE_0.0_ACT_0.01/monitor.csv", "SAC_0.01"),
             # (r"logs_std_train/evcharging_SAC/2026-02-20-00-41-29_NOISE_0.0_ACT_0.05/monitor.csv", "SAC_0.05"),
-            # (r"logs_std_train/evcharging_SAC/2026-02-19-22-13-55_NOISE_0.0_ACT_0.15/monitor.csv", "SAC_0.15"),
             # (r"logs_std_train/evcharging_SAC/2026-02-19-19-02-28_NOISE_0.0_ACT_0.2/monitor.csv", "SAC_0.2"),
             # (r"logs_std_train/evcharging_SAC/2026-02-18-16-50-26_NOISE_0.0_ACT_0.4/monitor.csv", "SAC_0.4"),
             # (r"logs_std_train/evcharging_SAC/2026-02-18-16-50-26_NOISE_0.0_ACT_0.5/monitor.csv", "SAC_0.5"),
         ], (2.7, 7)),
         "DE": ([
             (r"logs_std_train/evcharging_SAC/2026-02-09-12-45-20_DS_0.0_DA_0.0/monitor.csv", "SAC_0.0"),
-            (r"logs_std_train/evcharging_SAC/2026-03-04-12-34-10_NOISE_0.0_ACT_0.0_ENV_0.05/monitor.csv", "SAC_0.05"),
-            (r"logs_std_train/evcharging_SAC/2026-03-04-12-35-06_NOISE_0.0_ACT_0.0_ENV_0.1/monitor.csv", "SAC_0.1"),
+            (r"logs_std_train/evcharging_SAC/2026-03-04-17-55-08_NOISE_0.0_ACT_0.0_ENV_0.15/monitor.csv", "SAC_0.15"),
+            # (r"logs_std_train/evcharging_SAC/2026-03-04-12-34-10_NOISE_0.0_ACT_0.0_ENV_0.05/monitor.csv", "SAC_0.05"),
+            # (r"logs_std_train/evcharging_SAC/2026-03-04-12-35-06_NOISE_0.0_ACT_0.0_ENV_0.1/monitor.csv", "SAC_0.1"),
             (r"logs_std_train/evcharging_SAC/2026-03-04-22-31-19_NOISE_0.0_ACT_0.0_ENV_0.3/monitor.csv", "SAC_0.3"),
             # (r"logs_std_train/evcharging_SAC/2026-03-04-12-02-50_NOISE_0.0_ACT_0.0_ENV_0.01/monitor.csv", "SAC_0.01"),
             # (r"logs_std_train/evcharging_SAC/2026-03-04-12-02-50_NOISE_0.0_ACT_0.0_ENV_0.02/monitor.csv", "SAC_0.02"),
-            # (r"logs_std_train/evcharging_SAC/2026-03-04-17-55-08_NOISE_0.0_ACT_0.0_ENV_0.15/monitor.csv", "SAC_0.15"),
             # (r"logs_std_train/evcharging_SAC/2026-03-04-22-01-04_NOISE_0.0_ACT_0.0_ENV_0.2/monitor.csv", "SAC_0.2"),
         ], (2.7, 7)),
     },
@@ -421,7 +426,7 @@ def _plot_on_ax(
     dt: str = "",
     total_steps: int = 9_000_000,
     show_ylabel: bool = True,
-    legend_loc: str = 'lower right',
+    legend_loc = 'lower right',
     zoom: Optional[Tuple[float, float, float, float]] = None,
 ):
     """Plot learning curves on a given axes object."""
@@ -500,7 +505,10 @@ def _plot_on_ax(
     if show_ylabel:
         ax.set_ylabel("Average Episode Reward")
 
-    ax.legend(loc=legend_loc, frameon=True)
+    if isinstance(legend_loc, dict):
+        ax.legend(frameon=True, **legend_loc)
+    else:
+        ax.legend(loc=legend_loc, frameon=True)
     style_axis(ax)
 
     # Inset zoom for perturbation plots
@@ -547,12 +555,13 @@ def plot_learning_curves(
     dt: str = "",
     total_steps: int = 9_000_000,
     zoom: Optional[Tuple[float, float, float, float]] = None,
+    legend_loc = 'lower right',
 ):
     """Plot learning curves (single panel)."""
     fig, ax = plt.subplots(figsize=(10, 6))
     _plot_on_ax(ax, experiments, ylim, xlim, title, window, max_steps,
                 skip_initial, auto_xlim, auto_ylim, std_band, dt, total_steps,
-                zoom=zoom)
+                zoom=zoom, legend_loc=legend_loc)
     plt.tight_layout()
 
 
@@ -570,6 +579,7 @@ def plot_learning_curves_all_dt(
     ylim_override: Optional[Tuple[float, float]] = None,
     xlim_override: Optional[Tuple[float, float]] = None,
     zoom: Optional[Tuple[float, float, float, float]] = None,
+    env: str = "",
 ):
     """Plot DS, DA, DE side by side in 1x3 subplots."""
     fig, axes = plt.subplots(1, 3, figsize=(24, 6), sharey=True)
@@ -582,11 +592,12 @@ def plot_learning_curves_all_dt(
         paths, default_ylim = env_config[algo][dt]
         ylim = ylim_override if ylim_override else default_ylim
         xlim = xlim_override
+        loc = LEGEND_LOC.get((env, algo, dt), 'lower right')
 
         _plot_on_ax(
             axes[i], paths, ylim, xlim, DT_SUBFIG[dt], window, max_steps,
             skip_initial, auto_xlim, auto_ylim, std_band, dt, total_steps,
-            show_ylabel=(i == 0), zoom=zoom,
+            show_ylabel=(i == 0), zoom=zoom, legend_loc=loc,
         )
 
     fig.suptitle(f"{env_title} — {algo}", fontsize=14, fontweight='bold', y=1.02)
@@ -838,6 +849,7 @@ def main():
             ylim_override=ylim,
             xlim_override=xlim,
             zoom=tuple(args.zoom) if args.zoom else None,
+            env=args.env,
         )
         save_plot(args.env, args.algo, "DS_DA_DE", OUTPUT_DIR, args.pdf)
         plt.show()
@@ -858,6 +870,7 @@ def main():
     if not args.ylim and not args.auto_ylim:
         ylim = default_ylim
 
+    loc = LEGEND_LOC.get((args.env, args.algo, args.dt), 'lower right')
     plot_learning_curves(
         experiments=paths,
         ylim=ylim,
@@ -872,6 +885,7 @@ def main():
         dt=args.dt,
         total_steps=env_def["total_steps"],
         zoom=tuple(args.zoom) if args.zoom else None,
+        legend_loc=loc,
     )
 
     save_plot(args.env, args.algo, args.dt, OUTPUT_DIR, args.pdf)
