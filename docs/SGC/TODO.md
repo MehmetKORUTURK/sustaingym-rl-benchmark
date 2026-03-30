@@ -30,187 +30,362 @@ Three possible papers from the thesis. Pick **one** for SmartGridComm:
 Current thesis: single seed (42). Paper requires minimum 3, ideally 5 seeds.
 Seeds: `{42, 43, 44, 45, 46}` (seed 42 already done — reuse existing models).
 
-### EVCharging — PPO (4 new seeds x 4 configs = 16 runs)
+**Training steps for SGC paper** (different from thesis defaults):
+- EVCharging: `--evcharging_train_steps 9000000` (9M, same as thesis)
+- Building: `--building_train_steps 6000000` (6M, reduced from thesis 9M)
+- Cogen: `--cogen_train_steps 2000000` (2M, reduced from thesis 3M)
+
+### EVCharging — PPO (4 new seeds x 6 configs = 24 runs)
+
+Unified noise levels for SGC paper: PS={0.00, 0.15, 0.30}, PA={0.00, 0.15, 0.30}, PD={0.00, 0.15, 0.30}
 
 ```bash
 # Baseline (clean) — seeds 43-46 only (42 exists)
-python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --seed 43
-python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --seed 44
-python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --seed 45
-python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --seed 46
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --seed 43
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --seed 44
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --seed 45
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --seed 46
 
-# Obs noise 0.1 — seeds 43-46
-python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --noise 0.1 --seed 43
-python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --noise 0.1 --seed 44
-python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --noise 0.1 --seed 45
-python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --noise 0.1 --seed 46
+# Obs noise 0.15 — seeds 43-46
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise 0.15 --seed 43
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise 0.15 --seed 44
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise 0.15 --seed 45
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise 0.15 --seed 46
 
-# Obs noise 0.3 — seeds 43-46
-python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --noise 0.3 --seed 43
-python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --noise 0.3 --seed 44
-python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --noise 0.3 --seed 45
-python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --noise 0.3 --seed 46
+# Obs noise 0.30 — seeds 43-46
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise 0.30 --seed 43
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise 0.30 --seed 44
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise 0.30 --seed 45
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise 0.30 --seed 46
 
-# Act noise 0.1 — seeds 43-46
-python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --noise-action 0.1 --seed 43
-python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --noise-action 0.1 --seed 44
-python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --noise-action 0.1 --seed 45
-python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --noise-action 0.1 --seed 46
+# Act noise 0.15 — seeds 43-46
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise-action 0.15 --seed 43
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise-action 0.15 --seed 44
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise-action 0.15 --seed 45
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise-action 0.15 --seed 46
+
+# Act noise 0.30 — seeds 43-46
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise-action 0.30 --seed 43
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise-action 0.30 --seed 44
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise-action 0.30 --seed 45
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise-action 0.30 --seed 46
+
+# Env noise 0.15 — seeds 43-46
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise-env 0.15 --seed 43
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise-env 0.15 --seed 44
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise-env 0.15 --seed 45
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise-env 0.15 --seed 46
+
+# Env noise 0.30 — seeds 43-46
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise-env 0.30 --seed 43
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise-env 0.30 --seed 44
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise-env 0.30 --seed 45
+python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnormalize --evcharging_train_steps 9000000 --noise-env 0.30 --seed 46
 ```
 
-### EVCharging — SAC (4 new seeds x 4 configs = 16 runs)
+### EVCharging — SAC (4 new seeds x 6 configs = 24 runs)
+
+Unified noise levels for SGC paper: PS={0.00, 0.15, 0.30}, PA={0.00, 0.15, 0.30}, PD={0.00, 0.15, 0.30}
 
 ```bash
 # Baseline (clean)
-python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --seed 43
-python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --seed 44
-python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --seed 45
-python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --seed 46
-
-# Obs noise 0.1
-python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --noise 0.1 --seed 43
-python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --noise 0.1 --seed 44
-python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --noise 0.1 --seed 45
-python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --noise 0.1 --seed 46
-
-# Obs noise 0.3
-python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --noise 0.3 --seed 43
-python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --noise 0.3 --seed 44
-python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --noise 0.3 --seed 45
-python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --noise 0.3 --seed 46
-
-# Act noise 0.1
-python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --noise-action 0.1 --seed 43
-python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --noise-action 0.1 --seed 44
-python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --noise-action 0.1 --seed 45
-python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --noise-action 0.1 --seed 46
-```
-
-### Building — PPO (4 new seeds x 4 configs = 16 runs)
-
-```bash
-# Baseline (clean)
-python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --seed 43
-python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --seed 44
-python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --seed 45
-python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --seed 46
-
-# Obs noise 0.05
-python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --noise 0.05 --seed 43
-python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --noise 0.05 --seed 44
-python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --noise 0.05 --seed 45
-python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --noise 0.05 --seed 46
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --seed 43
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --seed 44
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --seed 45
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --seed 46
 
 # Obs noise 0.15
-python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --noise 0.15 --seed 43
-python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --noise 0.15 --seed 44
-python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --noise 0.15 --seed 45
-python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --noise 0.15 --seed 46
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise 0.15 --seed 43
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise 0.15 --seed 44
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise 0.15 --seed 45
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise 0.15 --seed 46
 
-# Act noise 0.05
-python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --noise-action 0.05 --seed 43
-python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --noise-action 0.05 --seed 44
-python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --noise-action 0.05 --seed 45
-python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --noise-action 0.05 --seed 46
+# Obs noise 0.30
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise 0.30 --seed 43
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise 0.30 --seed 44
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise 0.30 --seed 45
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise 0.30 --seed 46
+
+# Act noise 0.15
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise-action 0.15 --seed 43
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise-action 0.15 --seed 44
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise-action 0.15 --seed 45
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise-action 0.15 --seed 46
+
+# Act noise 0.30
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise-action 0.30 --seed 43
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise-action 0.30 --seed 44
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise-action 0.30 --seed 45
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise-action 0.30 --seed 46
+
+# Env noise 0.15
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise-env 0.15 --seed 43
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise-env 0.15 --seed 44
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise-env 0.15 --seed 45
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise-env 0.15 --seed 46
+
+# Env noise 0.30
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise-env 0.30 --seed 43
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise-env 0.30 --seed 44
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise-env 0.30 --seed 45
+python scripts/train/stdrl_training.py --env evcharging --algo SAC --use-vecnormalize --evcharging_train_steps 9000000 --noise-env 0.30 --seed 46
 ```
 
-### Building — SAC (4 new seeds x 4 configs = 16 runs)
+### Building — PPO (4 new seeds x 6 configs = 24 runs)
+
+Unified noise levels for SGC paper: PS={0.00, 0.05, 0.15}, PA={0.00, 0.05, 0.15}, PD={0.00, 0.05, 0.15}
 
 ```bash
 # Baseline (clean)
-python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --seed 43
-python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --seed 44
-python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --seed 45
-python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --seed 46
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --seed 43
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --seed 44
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --seed 45
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --seed 46
 
 # Obs noise 0.05
-python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --noise 0.05 --seed 43
-python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --noise 0.05 --seed 44
-python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --noise 0.05 --seed 45
-python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --noise 0.05 --seed 46
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise 0.05 --seed 43
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise 0.05 --seed 44
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise 0.05 --seed 45
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise 0.05 --seed 46
 
 # Obs noise 0.15
-python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --noise 0.15 --seed 43
-python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --noise 0.15 --seed 44
-python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --noise 0.15 --seed 45
-python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --noise 0.15 --seed 46
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise 0.15 --seed 43
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise 0.15 --seed 44
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise 0.15 --seed 45
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise 0.15 --seed 46
 
 # Act noise 0.05
-python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --noise-action 0.05 --seed 43
-python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --noise-action 0.05 --seed 44
-python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --noise-action 0.05 --seed 45
-python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --noise-action 0.05 --seed 46
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise-action 0.05 --seed 43
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise-action 0.05 --seed 44
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise-action 0.05 --seed 45
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise-action 0.05 --seed 46
+
+# Act noise 0.15
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise-action 0.15 --seed 43
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise-action 0.15 --seed 44
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise-action 0.15 --seed 45
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise-action 0.15 --seed 46
+
+# Env noise 0.05
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise-env 0.05 --seed 43
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise-env 0.05 --seed 44
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise-env 0.05 --seed 45
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise-env 0.05 --seed 46
+
+# Env noise 0.15
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise-env 0.15 --seed 43
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise-env 0.15 --seed 44
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise-env 0.15 --seed 45
+python scripts/train/stdrl_training.py --env building --algo PPO --use-vecnormalize --building_train_steps 6000000 --noise-env 0.15 --seed 46
 ```
 
-### Cogen — PPO (4 new seeds x 4 configs = 16 runs, conda: stdrl_train_co)
+### Building — SAC (4 new seeds x 6 configs = 24 runs)
+
+Unified noise levels for SGC paper: PS={0.00, 0.05, 0.15}, PA={0.00, 0.05, 0.15}, PD={0.00, 0.05, 0.15}
 
 ```bash
 # Baseline (clean)
-python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --rm 300 --seed 43
-python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --rm 300 --seed 44
-python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --rm 300 --seed 45
-python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --rm 300 --seed 46
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --seed 43
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --seed 44
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --seed 45
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --seed 46
 
-# Obs noise 1.0
-python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --rm 300 --noise 1.0 --seed 43
-python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --rm 300 --noise 1.0 --seed 44
-python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --rm 300 --noise 1.0 --seed 45
-python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --rm 300 --noise 1.0 --seed 46
+# Obs noise 0.05
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise 0.05 --seed 43
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise 0.05 --seed 44
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise 0.05 --seed 45
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise 0.05 --seed 46
 
-# Obs noise 3.0
-python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --rm 300 --noise 3.0 --seed 43
-python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --rm 300 --noise 3.0 --seed 44
-python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --rm 300 --noise 3.0 --seed 45
-python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --rm 300 --noise 3.0 --seed 46
+# Obs noise 0.15
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise 0.15 --seed 43
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise 0.15 --seed 44
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise 0.15 --seed 45
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise 0.15 --seed 46
 
-# Env noise 1.0
-python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --rm 300 --noise-env 1.0 --seed 43
-python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --rm 300 --noise-env 1.0 --seed 44
-python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --rm 300 --noise-env 1.0 --seed 45
-python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --rm 300 --noise-env 1.0 --seed 46
+# Act noise 0.05
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise-action 0.05 --seed 43
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise-action 0.05 --seed 44
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise-action 0.05 --seed 45
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise-action 0.05 --seed 46
+
+# Act noise 0.15
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise-action 0.15 --seed 43
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise-action 0.15 --seed 44
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise-action 0.15 --seed 45
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise-action 0.15 --seed 46
+
+# Env noise 0.05
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise-env 0.05 --seed 43
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise-env 0.05 --seed 44
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise-env 0.05 --seed 45
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise-env 0.05 --seed 46
+
+# Env noise 0.15
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise-env 0.15 --seed 43
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise-env 0.15 --seed 44
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise-env 0.15 --seed 45
+python scripts/train/stdrl_training.py --env building --algo SAC --use-vecnormalize --building_train_steps 6000000 --noise-env 0.15 --seed 46
 ```
 
-### Cogen — SAC (4 new seeds x 4 configs = 16 runs, conda: stdrl_train_co)
+### Cogen — PPO (4 new seeds x 6 configs = 24 runs, conda: stdrl_train_co)
+
+Unified noise levels for SGC paper: PS={0, 10, 20}, PA={0, 0.10, 0.20}, PD={0, 0.30, 0.50}
 
 ```bash
 # Baseline (clean)
-python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --rm 300 --seed 43
-python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --rm 300 --seed 44
-python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --rm 300 --seed 45
-python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --rm 300 --seed 46
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --seed 46
 
-# Obs noise 1.0
-python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --rm 300 --noise 1.0 --seed 43
-python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --rm 300 --noise 1.0 --seed 44
-python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --rm 300 --noise 1.0 --seed 45
-python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --rm 300 --noise 1.0 --seed 46
+# Obs noise 10.0
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 10.0 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 10.0 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 10.0 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 10.0 --seed 46
 
-# Obs noise 3.0
-python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --rm 300 --noise 3.0 --seed 43
-python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --rm 300 --noise 3.0 --seed 44
-python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --rm 300 --noise 3.0 --seed 45
-python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --rm 300 --noise 3.0 --seed 46
+# Obs noise 20.0
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 20.0 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 20.0 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 20.0 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 20.0 --seed 46
 
-# Env noise 1.0
-python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --rm 300 --noise-env 1.0 --seed 43
-python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --rm 300 --noise-env 1.0 --seed 44
-python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --rm 300 --noise-env 1.0 --seed 45
-python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --rm 300 --noise-env 1.0 --seed 46
+# Act noise 0.10
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.10 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.10 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.10 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.10 --seed 46
+
+# Act noise 0.20
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.20 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.20 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.20 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.20 --seed 46
+
+# Env noise 0.30
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.30 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.30 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.30 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.30 --seed 46
+
+# Env noise 0.50
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.50 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.50 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.50 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo PPO --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.50 --seed 46
+```
+
+### Cogen — SAC (4 new seeds x 6 configs = 24 runs, conda: stdrl_train_co)
+
+Unified noise levels for SGC paper: PS={0, 10, 20}, PA={0, 0.10, 0.20}, PD={0, 0.30, 0.50}
+
+```bash
+# Baseline (clean)
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --seed 46
+
+# Obs noise 10.0
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 10.0 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 10.0 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 10.0 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 10.0 --seed 46
+
+# Obs noise 20.0
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 20.0 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 20.0 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 20.0 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 20.0 --seed 46
+
+# Act noise 0.10
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.10 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.10 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.10 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.10 --seed 46
+
+# Act noise 0.20
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.20 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.20 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.20 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.20 --seed 46
+
+# Env noise 0.30
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.30 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.30 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.30 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.30 --seed 46
+
+# Env noise 0.50
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.50 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.50 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.50 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo SAC --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.50 --seed 46
+```
+
+### Cogen — TD3 (4 new seeds x 6 configs = 24 runs, conda: stdrl_train_co)
+
+TD3 has interesting noise-as-regularization finding in Cogen (mid-training crash in clean, stable with noise).
+Unified noise levels for SGC paper: PS={0, 10, 20}, PA={0, 0.10, 0.20}, PD={0, 0.30, 0.50}
+
+```bash
+# Baseline (clean)
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --seed 46
+
+# Obs noise 10.0
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 10.0 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 10.0 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 10.0 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 10.0 --seed 46
+
+# Obs noise 20.0
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 20.0 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 20.0 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 20.0 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise 20.0 --seed 46
+
+# Act noise 0.10
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.10 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.10 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.10 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.10 --seed 46
+
+# Act noise 0.20
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.20 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.20 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.20 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-action 0.20 --seed 46
+
+# Env noise 0.30
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.30 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.30 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.30 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.30 --seed 46
+
+# Env noise 0.50
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.50 --seed 43
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.50 --seed 44
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.50 --seed 45
+python scripts/train/stdrl_training.py --env cogen --algo TD3 --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env 0.50 --seed 46
 ```
 
 ### Multi-Seed Training Summary
 
-| Env | Algo | Configs | New seeds | Runs | Approx hours/run | Total hours |
-|-----|------|---------|-----------|------|-------------------|-------------|
-| EV  | PPO  | 4       | 4         | 16   | ~8h (9M steps)    | 128h        |
-| EV  | SAC  | 4       | 4         | 16   | ~6h (9M steps)    | 96h         |
-| BU  | PPO  | 4       | 4         | 16   | ~8h (9M steps)    | 128h        |
-| BU  | SAC  | 4       | 4         | 16   | ~6h (9M steps)    | 96h         |
-| CO  | PPO  | 4       | 4         | 16   | ~3h (3M steps)    | 48h         |
-| CO  | SAC  | 4       | 4         | 16   | ~3h (3M steps)    | 48h         |
-| **Total** | | | | **96** | | **~544h CPU** |
+| Env | Algo | Configs (clean+noise) | New seeds | Runs | Steps | Approx hours/run | Total hours |
+|-----|------|-----------------------|-----------|------|-------|-------------------|-------------|
+| EV  | PPO  | 7 (1+2ps+2pa+2pd)    | 4         | 28   | 9M    | ~8h               | 224h        |
+| EV  | SAC  | 7 (1+2ps+2pa+2pd)    | 4         | 28   | 9M    | ~6h               | 168h        |
+| BU  | PPO  | 7 (1+2ps+2pa+2pd)    | 4         | 28   | 6M    | ~5h               | 140h        |
+| BU  | SAC  | 7 (1+2ps+2pa+2pd)    | 4         | 28   | 6M    | ~4h               | 112h        |
+| CO  | PPO  | 7 (1+2ps+2pa+2pd)    | 4         | 28   | 2M    | ~1.5h             | 42h         |
+| CO  | SAC  | 7 (1+2ps+2pa+2pd)    | 4         | 28   | 2M    | ~1.5h             | 42h         |
+| CO  | TD3  | 7 (1+2ps+2pa+2pd)    | 4         | 28   | 2M    | ~1.5h             | 42h         |
+| **Total** | | | | **196** | | | **~882h CPU** |
 
-On ARC normal_q (48 CPUs): ~12 parallel jobs reasonable -> ~45h wall-clock.
+On ARC normal_q (48 CPUs): ~14 parallel jobs reasonable -> ~63h wall-clock.
 
 ---
 
@@ -287,73 +462,7 @@ python scripts/test/stdrl_testing.py --env cogen --algo SAC --model_path $MODEL_
 
 ---
 
-## 1.3 CRITICAL — Noise-Trained vs Clean-Trained Cross-Evaluation
-
-Key question: Does training under noise improve deployment robustness?
-TD3 Cogen already shows noise-as-regularization. Systematically test this.
-
-### Cross-Evaluation Matrix Testing Commands
-
-Test noise-trained models at **different** noise levels than they were trained on.
-
-```bash
-# ── EVCharging: model trained at obs=0.1, test at obs=0.0 / 0.05 / 0.2 / 0.3 ──
-MODEL_EV_PPO_N01="logs_std_train/evcharging_PPO/<TIMESTAMP>_NOISE_0.1_ACT_0.0_ENV_0.0/best_model.zip"
-
-python scripts/test/stdrl_testing.py --env evcharging --algo PPO --model_path $MODEL_EV_PPO_N01 --noise 0.0 --n-eval 200
-python scripts/test/stdrl_testing.py --env evcharging --algo PPO --model_path $MODEL_EV_PPO_N01 --noise 0.05 --n-eval 200
-python scripts/test/stdrl_testing.py --env evcharging --algo PPO --model_path $MODEL_EV_PPO_N01 --noise 0.2 --n-eval 200
-python scripts/test/stdrl_testing.py --env evcharging --algo PPO --model_path $MODEL_EV_PPO_N01 --noise 0.3 --n-eval 200
-python scripts/test/stdrl_testing.py --env evcharging --algo PPO --model_path $MODEL_EV_PPO_N01 --noise 0.5 --n-eval 200
-
-# ── EVCharging: model trained at obs=0.3, test at other levels ──
-MODEL_EV_PPO_N03="logs_std_train/evcharging_PPO/<TIMESTAMP>_NOISE_0.3_ACT_0.0_ENV_0.0/best_model.zip"
-
-python scripts/test/stdrl_testing.py --env evcharging --algo PPO --model_path $MODEL_EV_PPO_N03 --noise 0.0 --n-eval 200
-python scripts/test/stdrl_testing.py --env evcharging --algo PPO --model_path $MODEL_EV_PPO_N03 --noise 0.1 --n-eval 200
-python scripts/test/stdrl_testing.py --env evcharging --algo PPO --model_path $MODEL_EV_PPO_N03 --noise 0.5 --n-eval 200
-
-# ── Building: model trained at obs=0.05, test at obs=0.0 / 0.1 / 0.15 / 0.3 ──
-MODEL_BU_PPO_N005="logs_std_train/building_PPO/<TIMESTAMP>_NOISE_0.05_ACT_0.0_ENV_0.0/best_model.zip"
-
-python scripts/test/stdrl_testing.py --env building --algo PPO --model_path $MODEL_BU_PPO_N005 --noise 0.0 --n-eval 200
-python scripts/test/stdrl_testing.py --env building --algo PPO --model_path $MODEL_BU_PPO_N005 --noise 0.1 --n-eval 200
-python scripts/test/stdrl_testing.py --env building --algo PPO --model_path $MODEL_BU_PPO_N005 --noise 0.15 --n-eval 200
-python scripts/test/stdrl_testing.py --env building --algo PPO --model_path $MODEL_BU_PPO_N005 --noise 0.3 --n-eval 200
-
-# ── Building: model trained at obs=0.15, test at other levels ──
-MODEL_BU_PPO_N015="logs_std_train/building_PPO/<TIMESTAMP>_NOISE_0.15_ACT_0.0_ENV_0.0/best_model.zip"
-
-python scripts/test/stdrl_testing.py --env building --algo PPO --model_path $MODEL_BU_PPO_N015 --noise 0.0 --n-eval 200
-python scripts/test/stdrl_testing.py --env building --algo PPO --model_path $MODEL_BU_PPO_N015 --noise 0.05 --n-eval 200
-python scripts/test/stdrl_testing.py --env building --algo PPO --model_path $MODEL_BU_PPO_N015 --noise 0.3 --n-eval 200
-
-# ── Cogen: model trained at obs=1.0, test at other levels ──
-MODEL_CO_SAC_N1="logs_std_train/cogen_SAC/<TIMESTAMP>_NOISE_1.0_ACT_0.0_ENV_0.0/best_model.zip"
-
-python scripts/test/stdrl_testing.py --env cogen --algo SAC --model_path $MODEL_CO_SAC_N1 --rm 300 --noise 0.0 --n-eval 200
-python scripts/test/stdrl_testing.py --env cogen --algo SAC --model_path $MODEL_CO_SAC_N1 --rm 300 --noise 3.0 --n-eval 200
-python scripts/test/stdrl_testing.py --env cogen --algo SAC --model_path $MODEL_CO_SAC_N1 --rm 300 --noise 5.0 --n-eval 200
-
-# ── Cogen: TD3 noise-as-regularization confirmation ──
-MODEL_CO_TD3_N10="logs_std_train/cogen_TD3/<TIMESTAMP>_NOISE_10.0_ACT_0.0_ENV_0.0/best_model.zip"
-MODEL_CO_TD3_CLEAN="logs_std_train/cogen_TD3/<TIMESTAMP>_NOISE_0.0_ACT_0.0_ENV_0.0/best_model.zip"
-
-# Compare clean-trained vs noise-trained at various test noise levels
-python scripts/test/stdrl_testing.py --env cogen --algo TD3 --model_path $MODEL_CO_TD3_CLEAN --rm 300 --noise 0.0 --n-eval 200
-python scripts/test/stdrl_testing.py --env cogen --algo TD3 --model_path $MODEL_CO_TD3_CLEAN --rm 300 --noise 5.0 --n-eval 200
-python scripts/test/stdrl_testing.py --env cogen --algo TD3 --model_path $MODEL_CO_TD3_N10 --rm 300 --noise 0.0 --n-eval 200
-python scripts/test/stdrl_testing.py --env cogen --algo TD3 --model_path $MODEL_CO_TD3_N10 --rm 300 --noise 5.0 --n-eval 200
-python scripts/test/stdrl_testing.py --env cogen --algo TD3 --model_path $MODEL_CO_TD3_N10 --rm 300 --noise 15.0 --n-eval 200
-```
-
-**Total cross-eval tests**: ~30 runs (minutes each, CPU only)
-
-**Expected output**: Cross-evaluation heatmap (train_noise x test_noise -> reward). Key insight: diagonal = matched, off-diagonal = generalization.
-
----
-
-## 1.4 IMPORTANT — Statistical Significance Tests
+## 1.3 IMPORTANT — Statistical Significance Tests
 
 No formal hypothesis testing exists. Need p-values for algorithm comparisons.
 
@@ -374,7 +483,7 @@ No formal hypothesis testing exists. Need p-values for algorithm comparisons.
 
 ---
 
-## 1.5 IMPORTANT — Computation Cost Reporting
+## 1.4 IMPORTANT — Computation Cost Reporting
 
 Reviewer will ask "how much compute?". Need wall-clock and CPU-hour numbers.
 
@@ -419,8 +528,7 @@ Paper needs exactly 5-6 figures:
 | Fig 2 | Degradation curves: 3 envs x 2 algos, IQM + CI bands | Multi-seed test results |
 | Fig 3 | Cross-env heatmap: algo x env x noise_type -> degradation % | `noise_heatmap.py` exists |
 | Fig 4 | Combined vs individual perturbation interaction | Combined test results (Sec 1.2) |
-| Fig 5 | Noise-trained vs clean-trained cross-eval matrix | Cross-eval results (Sec 1.3) |
-| Fig 6 | (Optional) Safe RL dual-panel Cogen PPOLag | Existing saferl logs |
+| Fig 5 | (Optional) Safe RL dual-panel Cogen PPOLag | Existing saferl logs |
 
 ### Script to Create: `scripts/plot/sgc_degradation.py`
 
@@ -435,8 +543,8 @@ python scripts/plot/sgc_degradation.py --seeds 42,43,44,45,46 --output docs/SGC/
 
 Define and compute:
 - **Normalized Performance**: `R_norm = (R - R_random) / (R_best_baseline - R_random)` per env
-- **Degradation Ratio**: `D(sigma) = (R(sigma) - R(0)) / |R(0)|`
-- **Sensitivity Coefficient**: `kappa = -dD/d_sigma |_{sigma=0}` (linear fit at low noise)
+- **Degradation Ratio**: `D(n) = (R(n) - R(0)) / |R(0)|`
+- **Sensitivity Coefficient**: `kappa = -dD/dn |_{n=0}` (linear fit at low noise)
 
 ---
 
@@ -464,17 +572,9 @@ python scripts/train/stdrl_training.py --env evcharging --algo PPO --use-vecnorm
 - **Mitigation**: Phase 1.2 (test-time only, no new training needed)
 
 ## Q4: "No domain randomization / robust RL baseline"
-- **Mitigation**: Phase 1.3 noise-trained cross-eval = "poor man's domain randomization"
-- **Talking points**:
-  - Training at fixed noise level is a point sample of domain randomization
-  - Cross-eval matrix shows whether noise-trained agents generalize
-  - If they do, this motivates full domain randomization as future work
-- **Optional**: If time allows, train with uniform-sampled noise per episode
-
-```bash
-# Requires code change in stdrl_training.py to sample noise ~ Uniform(0, sigma_max) per episode
-# Not implemented yet — mark as future work if no time
-```
+- **Mitigation**: Out of scope — we characterize degradation, not propose solutions. Noise-trained models in our experiments already serve as a point sample of domain randomization.
+- **Talking point**: "We provide the degradation baseline that robust RL methods should be evaluated against"
+- **Future work**: Domain randomization (uniform noise sampling per episode), RARL adversarial training
 
 ## Q5: "No comparison with robust RL methods (RARL, etc.)"
 - **Mitigation**: Out of scope for 6-page paper. Cite Pinto (2017) RARL and Gu (2025) Robust-Gymnasium. Position our work as "characterization" not "solution".
@@ -543,8 +643,7 @@ V. Results (2.5 pages)
    V-B. Per-channel degradation curves (Fig 2 — key figure)
    V-C. Cross-environment comparison (Fig 3 — heatmap)
    V-D. Combined perturbation (Fig 4 — interaction analysis)
-   V-E. Noise-trained generalization (Fig 5 — cross-eval)
-   V-F. Key findings (numbered list, 4-5 findings)
+   V-E. Key findings (numbered list, 4-5 findings)
 
 VI. Conclusion (0.5 page)
    - Summary: env structure > algorithm choice
@@ -561,7 +660,7 @@ References (~0.25 page, ~20-25 refs)
 | Table I | Environment specs (obs/act dim, episode length, reward range, noise model) |
 | Table II | Baseline performance: IQM +/- CI, 5 seeds, with non-RL baselines |
 | Table III | Degradation summary: % degradation at moderate noise per env x algo x channel |
-| Table IV | Cross-eval matrix: train_noise x test_noise -> reward (Building PPO, most interesting) |
+| Table IV | Non-RL baselines: Random, Greedy, MPC, DoNothing per env |
 
 ## Key Figures (5-6 figures max)
 
@@ -571,8 +670,7 @@ References (~0.25 page, ~20-25 refs)
 | Fig 2 | Line plot (3x1 panel) | Degradation curves: noise level vs normalized reward, 2 algos, 3 channels |
 | Fig 3 | Heatmap (3x3 grid) | env x algo -> degradation %, colored cells, 3 sub-heatmaps per channel |
 | Fig 4 | Bar chart | Combined vs sum-of-individual degradation (super/sub-additive analysis) |
-| Fig 5 | Heatmap (NxN) | Cross-eval: train_noise x test_noise -> reward for Building PPO |
-| Fig 6 | (Optional) Violin | Reward distributions at key noise levels (most informative single figure) |
+| Fig 5 | (Optional) Violin | Reward distributions at key noise levels (most informative single figure) |
 
 ---
 
@@ -580,7 +678,6 @@ References (~0.25 page, ~20-25 refs)
 
 - [ ] All experiments use 5 seeds with IQM reporting
 - [ ] Combined perturbation results included
-- [ ] Cross-evaluation (noise-trained vs clean-trained) included
 - [ ] Statistical significance tests (Welch t-test + Bonferroni) for all algo comparisons
 - [ ] Computation cost reported (CPU-hours, hardware specs)
 - [ ] Non-RL baselines in comparison table
@@ -620,10 +717,12 @@ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export PYTHONUNBUFFERED=1
 
 # ── Run 4 configs sequentially (1 seed, all noise levels) ──
-python scripts/train/stdrl_training.py --env {ENV} --algo {ALGO} --use-vecnormalize --seed {SEED}
-python scripts/train/stdrl_training.py --env {ENV} --algo {ALGO} --use-vecnormalize --noise {N1} --seed {SEED}
-python scripts/train/stdrl_training.py --env {ENV} --algo {ALGO} --use-vecnormalize --noise {N2} --seed {SEED}
-python scripts/train/stdrl_training.py --env {ENV} --algo {ALGO} --use-vecnormalize --noise-action {A1} --seed {SEED}
+# For EV: --evcharging_train_steps 9000000   For BU: --building_train_steps 6000000
+STEPS_FLAG="--evcharging_train_steps 9000000"  # or --building_train_steps 6000000
+python scripts/train/stdrl_training.py --env {ENV} --algo {ALGO} --use-vecnormalize $STEPS_FLAG --seed {SEED}
+python scripts/train/stdrl_training.py --env {ENV} --algo {ALGO} --use-vecnormalize $STEPS_FLAG --noise {N1} --seed {SEED}
+python scripts/train/stdrl_training.py --env {ENV} --algo {ALGO} --use-vecnormalize $STEPS_FLAG --noise {N2} --seed {SEED}
+python scripts/train/stdrl_training.py --env {ENV} --algo {ALGO} --use-vecnormalize $STEPS_FLAG --noise-action {A1} --seed {SEED}
 ```
 
 ## Template: Multi-Seed Training (Cogen)
@@ -652,10 +751,10 @@ export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:$LD_LIBRARY_PATH"
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export PYTHONUNBUFFERED=1
 
-python scripts/train/stdrl_training.py --env cogen --algo {ALGO} --use-vecnormalize --rm 300 --seed {SEED}
-python scripts/train/stdrl_training.py --env cogen --algo {ALGO} --use-vecnormalize --rm 300 --noise {N1} --seed {SEED}
-python scripts/train/stdrl_training.py --env cogen --algo {ALGO} --use-vecnormalize --rm 300 --noise {N2} --seed {SEED}
-python scripts/train/stdrl_training.py --env cogen --algo {ALGO} --use-vecnormalize --rm 300 --noise-env {E1} --seed {SEED}
+python scripts/train/stdrl_training.py --env cogen --algo {ALGO} --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --seed {SEED}
+python scripts/train/stdrl_training.py --env cogen --algo {ALGO} --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise {N1} --seed {SEED}
+python scripts/train/stdrl_training.py --env cogen --algo {ALGO} --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise {N2} --seed {SEED}
+python scripts/train/stdrl_training.py --env cogen --algo {ALGO} --use-vecnormalize --cogen_train_steps 2000000 --rm 300 --noise-env {E1} --seed {SEED}
 ```
 
 ## Concrete SLURM Submission Plan (24 jobs)
@@ -699,6 +798,12 @@ sbatch scripts/slurm/sgc_co_sac_s43.sh
 sbatch scripts/slurm/sgc_co_sac_s44.sh
 sbatch scripts/slurm/sgc_co_sac_s45.sh
 sbatch scripts/slurm/sgc_co_sac_s46.sh
+
+# CO TD3 seeds 43-46 (4 jobs, stdrl_train_co)
+sbatch scripts/slurm/sgc_co_td3_s43.sh
+sbatch scripts/slurm/sgc_co_td3_s44.sh
+sbatch scripts/slurm/sgc_co_td3_s45.sh
+sbatch scripts/slurm/sgc_co_td3_s46.sh
 ```
 
 ---
@@ -708,7 +813,7 @@ sbatch scripts/slurm/sgc_co_sac_s46.sh
 | Week | Task | Deliverable |
 |------|------|-------------|
 | Week 1 | Submit 24 SLURM jobs for multi-seed training | 96 new training runs on ARC |
-| Week 1 | Run combined perturbation tests (Sec 1.2) + cross-eval (Sec 1.3) | ~60 test runs (CPU, fast) |
+| Week 1 | Run combined perturbation tests (Sec 1.2) | ~30 test runs (CPU, fast) |
 | Week 2 | Collect results, run IQM analysis, stat tests | Tables + p-values |
 | Week 2 | Create paper figures (sgc_figures.py) | 5-6 publication-quality figures |
 | Week 3 | Write paper draft | 6-page IEEE format |

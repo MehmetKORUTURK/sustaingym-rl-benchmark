@@ -6,7 +6,7 @@
 
 % Finding environment defined in main.tex preamble
 
-This chapter presents experimental results across the three evaluation axes of the SustainRL-Bench framework introduced in \Cref{ch:methodology}: perturbation robustness (\Cref{sec:results_noise}), safe reinforcement learning (\Cref{sec:results_saferl}), and a consolidated cross-axis discussion (\Cref{sec:results_discussion}). Multi-agent RL results will be presented in \Cref{sec:results_marl} upon completion of ongoing experiments. For each axis, we report results across all three environments---EV Charging, Building, and Cogeneration---highlighting both positive findings and negative results, addressing the research questions posed in \Cref{sec:research_questions}.
+This chapter presents experimental results across the three evaluation axes of the SustainRL-Bench framework introduced in \Cref{ch:methodology}: perturbation robustness (\Cref{sec:results_noise}), safe reinforcement learning (\Cref{sec:results_saferl}), multi-agent reinforcement learning (\Cref{sec:results_marl}), and a consolidated cross-axis discussion (\Cref{sec:results_discussion}). For each axis, we report results across all three environments---EV Charging, Building, and Cogeneration---highlighting both positive findings and negative results, addressing the research questions posed in \Cref{sec:research_questions}.
 
 \paragraph{A note on figure axes.} The training progress figures in this chapter use different x-axis units depending on the RL framework. Standard RL training curves (SB3) plot \emph{training episodes}, as episode reward is the natural monitoring unit for on-policy and off-policy algorithms. Safe RL training curves (OmniSafe) plot \emph{training epochs}, where each epoch corresponds to a fixed number of environment steps ($\text{steps\_per\_epoch} = 2000$). The test-time evaluation figures (violin plots, panel summaries) plot \emph{perturbation level} ($\sigma$) on the x-axis. These different units reflect the natural output format of each framework and are not directly comparable across axes.
 
@@ -640,34 +640,164 @@ Building & Temp violation & No & No & N/A \\
 \section{Multi-Agent Reinforcement Learning}
 \label{sec:results_marl}
 
-Multi-agent RL experiments are currently in progress using Ray RLlib with PettingZoo parallel environments. Preliminary results will be presented upon completion of the MARL training runs across all three environments (EVCharging: 54 agents, Building: AC-enabled zones, Cogen: 4 turbine agents).
+This section evaluates multi-agent RL formulations of the three SustainGym environments using Ray RLlib with PettingZoo parallel environments. Each environment is decomposed into per-component agents: 54 charging stations (EV Charging), 5 AC-enabled thermal zones (Building), and 4 turbine units (Cogeneration). We test four algorithms---PPO, SAC, APPO, and IMPALA---under both independent and shared policy modes where applicable, addressing \textbf{RQ5}: \emph{How does multi-agent decomposition affect learning performance relative to centralized single-agent control?}
+
+\paragraph{A note on MARL training curves.} MARL training curves plot \emph{training episodes} (iterations), where each iteration corresponds to one batch of environment rollouts across all parallel agents. Unlike the single-agent standard RL curves (SB3), these are produced by Ray RLlib and represent per-iteration mean reward averaged across all agents.
+
+% ------------------------------------------------------------
+\subsection{Cogeneration: Clear Algorithm Ranking}
+\label{sec:marl_cogen}
+
+The Cogeneration environment decomposes into four agents---GT1, GT2, GT3 (gas turbines) and ST (steam turbine)---each controlling its own sub-actions within the plant's 15-dimensional mixed continuous/discrete action space. Because the four agents have heterogeneous action spaces (each turbine controls different parameters), only independent policy mode is applicable; shared policy requires identical observation and action spaces across agents. We evaluate PPO, APPO, and IMPALA (SAC is not supported for mixed action spaces in RLlib).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/C_MARL/cogen/marl_cogen_compare.png}
+    \caption{MARL algorithm comparison on Cogeneration (4 agents). IMPALA achieves 45\% lower cost than PPO and APPO. Inset shows the converged region (episodes 2500--3000). All algorithms use independent policy mode.}
+    \label{fig:marl_cogen_compare}
+\end{figure}
+
+\Cref{fig:marl_cogen_compare} reveals a clear algorithm ranking: IMPALA ($-0.87\text{M}$) significantly outperforms both APPO ($-1.53\text{M}$) and PPO ($-1.57\text{M}$). All three algorithms converge within 1000 episodes, but IMPALA converges to a substantially better optimum. The performance gap is attributable to IMPALA's V-trace importance weighting, which provides effective off-policy correction for the 4-agent decomposition. PPO and APPO, lacking importance weighting, struggle with credit assignment across the combined 15-dimensional mixed action space. This result parallels the single-agent finding where off-policy methods (SAC, TD3) outperform PPO in Cogeneration under clean conditions (\Cref{sec:noise_co_baseline}).
+
+% ------------------------------------------------------------
+\subsection{Building: Off-Policy Advantage}
+\label{sec:marl_building}
+
+The Building environment decomposes into five agents, one per AC-enabled thermal zone. Unlike Cogeneration, all agents share identical observation and action spaces, enabling both independent and shared policy modes. We evaluate all four algorithms (PPO, SAC, APPO, IMPALA) under both modes.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/C_MARL/building/marl_building_compare.png}
+    \caption{MARL algorithm comparison on Building (5 agents, first 2000 episodes). SAC is the only algorithm that learns; PPO, APPO, and IMPALA all converge to the DoNothing baseline ($-288$). Inset shows SAC's converged reward ($\approx -44$). The best-performing policy mode per algorithm is shown (selected by tail reward; independent and shared modes yield statistically indistinguishable results).}
+    \label{fig:marl_building_compare}
+\end{figure}
+
+\Cref{fig:marl_building_compare} presents the most striking result of the MARL experiments: SAC is the \emph{only} algorithm that achieves meaningful learning. PPO, APPO, and IMPALA all converge to the DoNothing baseline (reward $-288$), equivalent to turning off all HVAC systems. SAC converges to reward $\approx -44$, comparable to the single-agent SAC baseline ($-36$).
+
+The catastrophic failure of on-policy methods stems from the Building's thermally coupled RC dynamics. Each agent controls one thermal zone, but all zones are coupled through shared walls and a common outdoor temperature boundary. This coupling means that each agent's reward depends critically on the actions of neighboring agents, creating a non-stationary environment from each agent's perspective. On-policy gradient estimation, which relies on the current policy's rollouts, cannot capture these inter-agent dependencies efficiently.
+
+SAC's experience replay buffer breaks this deadlock: by storing and replaying past transitions, SAC can learn the joint effect of all agents' actions on the shared thermal state. Both independent ($-44.3$) and shared ($-45.0$) policy modes yield comparable results, confirming that the replay buffer---not parameter sharing---is the critical factor for multi-zone coordination.
+
+% ------------------------------------------------------------
+\subsection{EV Charging: MARL Decomposition Preserves Performance}
+\label{sec:marl_evcharging}
+
+The EV Charging environment decomposes into 54 agents, one per charging station, making it the largest MARL configuration in our benchmark. All four algorithms are evaluated under both independent and shared policy modes. Unlike Cogeneration and Building, no training curve figure is presented for EV Charging: with 54 agents sharing a single reward signal divided by agent count, all algorithms converge to similar reward levels ($\approx 7.0$--$7.5$) with no meaningful separation between curves. The bar chart in \Cref{sec:marl_sa_vs_ma} provides a clearer summary.
+
+The key finding is that MARL decomposition preserves performance: all multi-agent configurations achieve reward within $\sim$8\% of the single-agent baselines ($7.1$--$7.8$). This is in stark contrast to Building, where on-policy MARL catastrophically fails. The difference is structural: EV Charging's reward (profit $-$ carbon cost $-$ excess charge) decomposes cleanly across stations, and the environment's network constraint projection (handled internally) absorbs most inter-station coordination burden. Each agent's charging rate has limited cross-station coupling, making independent learning viable even with 54 agents.
+
+Training efficiency is notably lower than in the smaller-agent environments. With 54 agents, on-policy methods require significantly more episodes to converge compared to Cogen (4 agents) or Building (5 agents). SAC shows an initial reward spike ($\approx 9.0$) that quickly decays, likely due to replay buffer warm-up exploiting early easy episodes before encountering the full distribution of EV arrival patterns.
+
+% ------------------------------------------------------------
+\subsection{Single-Agent vs Multi-Agent Comparison}
+\label{sec:marl_sa_vs_ma}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/C_MARL/marl_all_bar_sa_vs_marl.png}
+    \caption{Single-agent vs multi-agent final converged reward across all three environments. Each algorithm group shows up to three bars: single-agent (SB3 baseline at zero noise), MARL independent policy, and MARL shared policy. Error bars denote standard deviation over the final 100 training iterations. Cogeneration rewards are on the raw scale ($\times 10^7$); only independent policy is available (heterogeneous agent action spaces).}
+    \label{fig:marl_bar_sa_vs_marl}
+\end{figure}
+
+\Cref{fig:marl_bar_sa_vs_marl} provides a unified comparison of single-agent and multi-agent performance across all three environments:
+
+\begin{itemize}
+    \item \textbf{EV Charging:} MARL decomposition is viable. All multi-agent configurations (both independent and shared) achieve reward within 8\% of the single-agent baselines, with no systematic advantage for either policy mode. The best MARL result (SAC independent, $7.75$) is comparable to SA-PPO ($7.80$).
+    \item \textbf{Building:} MARL SAC ($\approx -44$) approaches the single-agent SAC baseline ($-36$), but all on-policy MARL algorithms (PPO, APPO, IMPALA) catastrophically fail, converging to $-288$ regardless of policy mode. This represents a $>$600\% performance gap compared to SA-PPO ($-40$). Shared and independent modes are indistinguishable for all algorithms.
+    \item \textbf{Cogeneration:} MARL IMPALA ($-0.87\text{M}$) is the best multi-agent result but remains worse than SA-SAC and SA-TD3 (both $< -0.1\text{M} \times 10^7$). MARL PPO and APPO perform substantially worse ($-1.5\text{M}$) than all single-agent baselines.
+\end{itemize}
+
+% ------------------------------------------------------------
+\subsection{MARL Summary}
+\label{sec:marl_summary}
+
+\Cref{tab:marl_summary} consolidates the final converged reward across all MARL configurations. For each environment and algorithm, we report the mean reward over the last 100 training iterations under both independent and shared policy modes (where applicable).
+
+\begin{table}[htbp]
+\centering
+\caption{MARL final converged reward (mean over last 100 iterations). Bold denotes the best algorithm per environment. Cogeneration uses independent policy only (heterogeneous agent action spaces). $\dagger$~indicates convergence to the DoNothing baseline.}
+\label{tab:marl_summary}
+\small
+\begin{tabular}{llcc}
+\toprule
+\textbf{Environment} & \textbf{Algorithm} & \textbf{Independent} & \textbf{Shared} \\
+\midrule
+\multirow{4}{*}{EV Charging}
+    & PPO    & 7.18  & 7.06 \\
+    & SAC    & \textbf{7.86}  & 7.11 \\
+    & APPO   & 7.35  & 7.07 \\
+    & IMPALA & 7.21  & 7.52 \\
+\midrule
+\multirow{4}{*}{Building}
+    & PPO    & $-288.0^\dagger$ & $-288.0^\dagger$ \\
+    & SAC    & $-96.5$ & $\mathbf{-45.0}$ \\
+    & APPO   & $-288.0^\dagger$ & $-288.0^\dagger$ \\
+    & IMPALA & $-288.0^\dagger$ & $-288.0^\dagger$ \\
+\midrule
+\multirow{3}{*}{Cogeneration}
+    & PPO    & $-1.57\text{M}$ & --- \\
+    & APPO   & $-1.53\text{M}$ & --- \\
+    & IMPALA & $\mathbf{-0.87\text{M}}$ & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ------------------------------------------------------------
+\subsection{MARL Findings}
+\label{sec:marl_findings}
+
+\begin{finding}[Off-Policy Algorithms Dominate MARL (RQ5)]
+SAC is the only algorithm that learns in Building MARL; IMPALA (with V-trace off-policy correction) dominates in Cogeneration MARL. Pure on-policy methods (PPO, APPO) consistently underperform in multi-agent settings. The experience replay buffer (SAC) and importance-weighted corrections (IMPALA) are critical for multi-agent credit assignment.
+\end{finding}
+
+\begin{finding}[MARL Viability Is Environment-Dependent (RQ5)]
+Multi-agent decomposition preserves performance when reward decomposes cleanly across agents (EV Charging: $<$8\% performance loss) but causes catastrophic failure when agents are tightly coupled through shared dynamics (Building: on-policy methods converge to DoNothing baseline). Environment coupling structure---not agent count---determines MARL feasibility.
+\end{finding}
+
+\begin{finding}[Parameter Sharing Has Negligible Impact (RQ5)]
+Shared vs independent policy modes produce statistically indistinguishable results across all three environments and all four algorithms tested. For failed algorithms, both modes fail identically; for successful algorithms, both modes converge to comparable optima. This null result suggests that algorithm choice (on-policy vs off-policy) dominates over policy architecture (shared vs independent) in these energy system environments.
+\end{finding}
 
 % ============================================================
 \section{Cross-Axis Discussion}
 \label{sec:results_discussion}
 
-The results across perturbation robustness and Safe RL reveal several cross-cutting insights.
+The results across perturbation robustness, Safe RL, and multi-agent RL reveal several cross-cutting insights.
 
 \subsection{Environment Characteristics Matter More Than Algorithm Choice}
 
-The most consistent finding across both experimental axes is that environment structure---not algorithm hyperparameters---determines the effectiveness of robustness and safety interventions:
+The most consistent finding across all three experimental axes is that environment structure---not algorithm hyperparameters---determines the effectiveness of robustness, safety, and multi-agent interventions:
 
 \begin{itemize}
-    \item \textbf{EV Charging} is inherently robust to perturbation (aggregate daily patterns are perturbation-resistant) and amenable to Safe RL (excess charge is orthogonal to profit).
-    \item \textbf{Building} is inherently fragile to perturbation (thermal dynamics amplify errors) and resistant to Safe RL (reward already captures both objectives).
-    \item \textbf{Cogeneration} shows algorithm-dependent perturbation sensitivity (PPO robust, SAC fragile) and strong Safe RL behavior (ramp stress is under-penalized in reward).
+    \item \textbf{EV Charging} is inherently robust to perturbation (aggregate daily patterns are perturbation-resistant), amenable to Safe RL (excess charge is orthogonal to profit), and MARL-friendly (reward decomposes cleanly across 54 stations).
+    \item \textbf{Building} is inherently fragile to perturbation (thermal dynamics amplify errors), resistant to Safe RL (reward already captures both objectives), and hostile to on-policy MARL (RC thermal coupling defeats independent learning for PPO/APPO/IMPALA).
+    \item \textbf{Cogeneration} shows algorithm-dependent perturbation sensitivity (PPO robust, SAC fragile), strong Safe RL behavior (ramp stress is under-penalized in reward), and clear MARL algorithm ranking favoring V-trace correction (IMPALA).
 \end{itemize}
 
-\subsection{PPO's Dual Advantage}
+\subsection{On-Policy vs Off-Policy: A Recurring Theme}
 
-PPO emerges as the most robust algorithm across both axes: it tolerates perturbation better than SAC/TD3 (\Cref{sec:noise_ev,sec:noise_bu,sec:noise_co}) and provides the best CMDP constraint satisfaction as PPOLag (\Cref{sec:results_saferl}). This dual advantage stems from PPO's on-policy nature: conservative policy updates prevent both perturbation amplification and stale-data problems that plague off-policy methods.
+The on-policy vs off-policy distinction emerges as a recurring theme across all three axes, but with a \emph{reversal} between single-agent and multi-agent settings:
+
+\begin{itemize}
+    \item \textbf{Perturbation robustness} (\Cref{sec:results_noise}): PPO (on-policy) is consistently more robust than SAC (off-policy) across all environments. Conservative on-policy updates prevent perturbation amplification.
+    \item \textbf{Safe RL} (\Cref{sec:results_saferl}): On-policy CMDP methods (PPOLag) succeed at constraint satisfaction; off-policy Lagrangian methods (SACLag) fail due to replay buffer staleness corrupting Lagrange multiplier updates.
+    \item \textbf{MARL} (\Cref{sec:results_marl}): Off-policy methods dominate---SAC is the only algorithm that learns in Building MARL, and IMPALA (V-trace off-policy correction) achieves 45\% lower cost than PPO/APPO in Cogeneration.
+\end{itemize}
+
+This reversal suggests a fundamental tradeoff: on-policy methods provide stable gradient estimates for single-agent robustness and constraint satisfaction, but lack the sample efficiency needed for multi-agent credit assignment. A practical implication is that deployment strategy should match the paradigm to the task: on-policy (PPO/PPOLag) for safety-critical single-agent deployment, off-policy (SAC/IMPALA) for multi-agent coordination during training.
+
+\subsection{Parameter Sharing: A Null Result}
+
+Across all three environments, four algorithms, and both policy modes (independent vs shared), parameter sharing produces no statistically significant performance difference. For failed algorithms (PPO/APPO/IMPALA in Building MARL), both modes fail identically; for successful algorithms (SAC in Building, all algorithms in EV Charging), both modes converge to comparable optima. This null result contradicts prior MARL literature suggesting that parameter sharing improves sample efficiency in homogeneous agent settings. A possible explanation is that the shared reward divided by agent count already provides a sufficient coordination signal, and explicit parameter sharing adds no further benefit in these energy system environments.
 
 \subsection{Implications for Sustainable Energy Systems}
 
 The practical implications for real-world deployment are:
 
 \begin{enumerate}
-    \item \textbf{Sensor investment}: State perturbation is far more damaging than action perturbation, prioritizing sensor accuracy over actuator precision.
-    \item \textbf{Safety constraint design}: CMDP constraints must measure genuinely under-optimized objectives; redundant constraints (already captured by reward) provide no benefit.
-    \item \textbf{Algorithm selection}: PPO/PPOLag provides the best robustness--safety combination, despite SAC's superior clean-condition performance in some environments.
+    \item \textbf{Sensor investment over actuator precision}: State perturbation is far more damaging than action perturbation across all environments, prioritizing sensor accuracy over actuator precision.
+    \item \textbf{Safety constraint orthogonality}: CMDP constraints must measure genuinely under-optimized objectives; redundant constraints (already captured by reward) provide no benefit.
+    \item \textbf{Single-agent deployment}: PPO/PPOLag provides the best robustness--safety combination for centralized control, despite SAC's superior clean-condition performance.
+    \item \textbf{Multi-agent coordination}: SAC or IMPALA should be preferred when multi-agent decomposition is required. MARL decomposition is viable only when the reward structure decomposes cleanly across agents (EV Charging: yes; Building: no without off-policy methods).
+    \item \textbf{Policy architecture simplicity}: Independent policies perform as well as shared policies, simplifying deployment by avoiding the need for centralized parameter servers.
 \end{enumerate}

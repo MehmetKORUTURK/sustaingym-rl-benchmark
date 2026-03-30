@@ -24,8 +24,7 @@ checkpoints/
 # Graphs (generated outputs)
 graphs/
 
-# Thesis, docs, SLURM (separate from code repo)
-docs/
+# SLURM scripts (HPC-specific)
 scripts/slurm/
 
 # Chat/meeting notes (personal)
