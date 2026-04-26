@@ -1,6 +1,11 @@
 # SustainGym RL Benchmark
 
-A comprehensive reinforcement learning benchmark on [SustainGym](https://github.com/chrisyeh96/sustaingym) environments, evaluating RL algorithms across three experimental axes: **noise robustness**, **safe RL**, and **multi-agent RL**.
+[![Project Page](https://img.shields.io/badge/Project-Page-861f41?style=flat-square&logo=githubpages)](https://mehmetkoruturk.github.io/sustaingym-rl-benchmark/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+
+🌐 **Project page:** [mehmetkoruturk.github.io/sustaingym-rl-benchmark](https://mehmetkoruturk.github.io/sustaingym-rl-benchmark/)
+
+A comprehensive reinforcement learning benchmark on [SustainGym](https://github.com/chrisyeh96/sustaingym) environments, evaluating RL algorithms across three experimental axes: **perturbation robustness**, **safe RL**, and **multi-agent RL**.
 
 > Master's thesis research, Virginia Tech — [RoleLab](https://rolelab.org/)
 
