@@ -104,6 +104,81 @@ def load_baselines():
     return out
 
 
+# ---------- noise sweep (C_POST panel.png data) ------------------------
+import re
+
+CHANNEL_FROM_DIRNAME = re.compile(
+    r"NOISE_(?P<obs>[\d.]+)_ACT_(?P<act>[\d.]+)_ENV_(?P<env>[\d.]+)"
+)
+
+def _classify_run(run_dir_name):
+    """Return (channel, level) where channel is 'PS'/'PA'/'PD' and level is float.
+
+    Matches the convention in stdrl_post_plot.py: a run sweeps exactly one channel.
+    Returns (None, 0.0) for the all-zero baseline run.
+    """
+    m = CHANNEL_FROM_DIRNAME.search(run_dir_name)
+    if not m:
+        return None, None
+    obs = float(m.group("obs"))
+    act = float(m.group("act"))
+    env = float(m.group("env"))
+    nz = [(c, v) for c, v in (("PS", obs), ("PA", act), ("PD", env)) if v > 0]
+    if not nz:
+        return "baseline", 0.0
+    if len(nz) > 1:
+        return None, None  # combined-perturbation — ignored for the panel
+    return nz[0][0], nz[0][1]
+
+
+def load_noise_sweep():
+    """Mirror C_POST/<env>/<algo>/panel.png: per-channel reward vs noise level."""
+    out = {}
+    for env in ENVS:
+        out[env] = {}
+        for algo in ("PPO", "SAC", "TD3"):
+            algo_root = LOGS / "logs_std_test" / f"{env}_{algo}"
+            if not algo_root.exists():
+                continue
+            buckets = {"PS": [], "PA": [], "PD": []}
+            baseline_stats = None
+            for run_dir in algo_root.iterdir():
+                if not run_dir.is_dir():
+                    continue
+                channel, level = _classify_run(run_dir.name)
+                if channel is None:
+                    continue
+                csv_path = run_dir / "episode_results.csv"
+                if not csv_path.exists():
+                    continue
+                stats = csv_stats(csv_path, "total_reward")
+                if stats is None:
+                    continue
+                if channel == "baseline":
+                    baseline_stats = stats
+                    continue
+                buckets[channel].append({
+                    "level": level,
+                    "mean": stats["mean"],
+                    "std":  stats["std"],
+                    "n":    stats["n"],
+                })
+            for ch in buckets:
+                buckets[ch].sort(key=lambda r: r["level"])
+            if baseline_stats:
+                # prepend the zero baseline to each channel for plotting
+                for ch in buckets:
+                    buckets[ch].insert(0, {
+                        "level": 0.0,
+                        "mean":  baseline_stats["mean"],
+                        "std":   baseline_stats["std"],
+                        "n":     baseline_stats["n"],
+                    })
+            if any(buckets.values()):
+                out[env][algo] = buckets
+    return out
+
+
 # ---------- MARL training curves ---------------------------------------
 MARL_ALGOS = ["PPO", "SAC", "APPO", "IMPALA"]
 
@@ -323,6 +398,7 @@ META = {
 # ---------- assemble ---------------------------------------------------
 def main():
     perturbation = load_perturbation()
+    noise_sweep  = load_noise_sweep()
     baselines    = load_baselines()
     marl         = load_marl_curves()
     saferl       = load_saferl()
@@ -334,6 +410,7 @@ def main():
             "meta":          META[env],
             "hyperparams":   HYPERPARAMS[env],
             "perturbation":  perturbation.get(env, {}),
+            "noise_sweep":   noise_sweep.get(env, {}),
             "baselines":     baselines.get(env, {}),
             "clean_rl":      clean_rl.get(env, {}),
             "marl_curves":   marl.get(env, {}),
@@ -345,7 +422,12 @@ def main():
     print(f"wrote {OUT}  ({size_kb:.1f} KB)")
     for env in ENVS:
         e = out[env]
+        sweep_summary = ", ".join(
+            f"{a}: {sum(len(v) for v in ch.values())}"
+            for a, ch in e["noise_sweep"].items()
+        )
         print(f"  {env:11s}  perturb={len(e['perturbation'])} algos  "
+              f"sweep=[{sweep_summary}]  "
               f"baselines={len(e['baselines'])}  marl={len(e['marl_curves'])}  "
               f"saferl_runs={len(e['saferl_curves'])}")
 
