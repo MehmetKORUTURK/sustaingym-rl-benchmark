@@ -2,6 +2,204 @@
    SustainRL-Bench  --  pastel academic project page
    ============================================================ */
 
+/* ----- Top nav (env page) ----- */
+.topnav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: var(--shadow-sm);
+}
+.topnav .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+.topnav-back {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.topnav-back:hover { color: var(--rose-deep); }
+.topnav-tabs { display: flex; gap: 4px; }
+.topnav-tab {
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  transition: background 0.15s, color 0.15s;
+}
+.topnav-tab:hover { background: var(--surface-alt); color: var(--ink); text-decoration: none; }
+.topnav-tab.active { background: var(--ink); color: white; }
+.topnav-tab.active:hover { color: white; }
+
+/* ----- Env page hero ----- */
+.env-hero {
+  position: relative;
+  padding: 64px 0 56px 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--bg) 0%, var(--surface-alt) 100%);
+  border-bottom: 1px solid var(--line);
+}
+.env-hero-label {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+}
+.env-hero-label.rose     { background: var(--rose-soft);     color: var(--rose-deep); }
+.env-hero-label.mint     { background: var(--mint-soft);     color: var(--mint-deep); }
+.env-hero-label.lavender { background: var(--lavender-soft); color: var(--lavender-deep); }
+.env-hero-title {
+  font-family: 'Fraunces', serif;
+  font-size: 56px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin-bottom: 14px;
+  color: var(--ink);
+}
+.env-hero-sub {
+  font-size: 17px;
+  color: var(--ink-soft);
+  margin-bottom: 28px;
+}
+.env-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.env-hero-stat {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.khv {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  font-weight: 500;
+}
+.khn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  word-break: break-all;
+}
+
+/* ----- Algorithm group block (deep-dive) ----- */
+.algo-group-block {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.algo-group-block-head {
+  padding: 20px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid var(--line-soft);
+}
+.algo-group-block-head.rose     { background: var(--rose-soft); }
+.algo-group-block-head.mint     { background: var(--mint-soft); }
+.algo-group-block-head.lavender { background: var(--lavender-soft); }
+.algo-group-block-head h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  margin: 0;
+}
+.algo-group-block-head.rose     h3 { color: var(--rose-deep); }
+.algo-group-block-head.mint     h3 { color: var(--mint-deep); }
+.algo-group-block-head.lavender h3 { color: var(--lavender-deep); }
+.algo-group-block-head span {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+.algo-cards {
+  padding: 24px 28px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+.algo-card {
+  background: var(--surface-alt);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+}
+.algo-card-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.algo-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+}
+.algo-param {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12px;
+}
+.algo-param-key {
+  color: var(--ink-light);
+  font-weight: 500;
+}
+.algo-param-val {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 500;
+}
+.algo-card-note {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+/* ----- Dual chart layout (safe RL reward + cost) ----- */
+.dual-chart {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 24px;
+}
+@media (max-width: 960px) {
+  .dual-chart { grid-template-columns: 1fr; }
+  .env-hero-stats { grid-template-columns: 1fr 1fr; }
+  .env-hero-title { font-size: 38px; }
+  .topnav .container { flex-direction: column; gap: 8px; }
+}
+
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -523,6 +721,15 @@ p { color: var(--ink-soft); margin-bottom: 16px; }
   line-height: 1.55;
 }
 .env-note strong { color: var(--rose-deep); }
+
+.env-deep-link {
+  margin-top: 4px;
+  font-size: 14px;
+  padding: 10px 18px;
+  text-align: center;
+  width: 100%;
+  justify-content: center;
+}
 
 /* ============================================================
    ALGORITHM LINEUP
