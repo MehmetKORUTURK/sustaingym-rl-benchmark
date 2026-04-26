@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SustainRL-Bench &mdash; Benchmarking RL on SustainGym</title>
+<meta name="description" content="A unified RL benchmark on SustainGym environments evaluating perturbation robustness, safe RL, and multi-agent RL across EV charging, building HVAC, and cogeneration." />
+<meta property="og:title" content="SustainRL-Bench: Benchmarking RL on SustainGym" />
+<meta property="og:description" content="Master's thesis project: three-axis RL benchmark across EV charging, building HVAC, and cogeneration." />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="static/css/style.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="container">
+    <div class="affiliation">Virginia Tech &middot; RoleLab &middot; Master&rsquo;s Thesis</div>
+    <h1 class="title">SustainRL-Bench</h1>
+    <p class="subtitle">Benchmarking Reinforcement Learning on SustainGym across<br />Perturbation Robustness, Safe RL, and Multi-Agent RL</p>
+    <div class="authors">
+      <span class="author">Mehmet Koruturk<sup>1</sup></span>
+    </div>
+    <div class="affiliations-line">
+      <sup>1</sup>Virginia Polytechnic Institute and State University
+    </div>
+    <div class="links">
+      <a class="btn" href="https://github.com/MehmetKORUTURK/sustaingym-rl-benchmark" target="_blank" rel="noopener">
+        <span class="icon">&#9881;</span> Code
+      </a>
+      <a class="btn" href="#paper" >
+        <span class="icon">&#128196;</span> Paper
+      </a>
+      <a class="btn" href="#bibtex">
+        <span class="icon">&#128221;</span> Cite
+      </a>
+    </div>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container narrow">
+    <h2>Abstract</h2>
+    <p>
+      Reinforcement learning has shown promise across sustainable energy domains, yet existing
+      studies typically evaluate a single algorithm on a single environment under idealized
+      conditions, leaving robustness, scalability, and comparative performance largely uncharted.
+      We introduce <strong>SustainRL-Bench</strong>, a unified study evaluating RL algorithms
+      along three orthogonal axes: <em>perturbation robustness</em> via systematic injection of
+      state, action, and dynamics noise; <em>safe RL</em> via Constrained MDP formulations with
+      environment-specific cost signals; and <em>multi-agent RL</em> via physically motivated
+      decompositions. We study three SustainGym environments &mdash; EV charging coordination,
+      building HVAC control, and cogeneration plant dispatch &mdash; under three single-agent
+      algorithms (PPO, SAC, TD3), four CMDP algorithms (PPOLag, CPO, OnCRPO, FOCOPS), and four
+      MARL algorithms (PPO, SAC, APPO, IMPALA). Our results challenge the assumption that a
+      single RL approach can serve as a universal controller for sustainable energy systems and
+      underscore the need for domain-specific algorithm selection guided by systematic
+      benchmarking.
+    </p>
+  </div>
+</section>
+
+<section class="section alt">
+  <div class="container">
+    <h2 class="centered">Three Experimental Axes</h2>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-icon">&#128266;</div>
+        <h3>Perturbation Robustness</h3>
+        <p>Systematic injection of state (PS), action (PA), and dynamics (PD) perturbation across nine intensity levels per channel. Reveals algorithm-specific sensitivity profiles.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">&#128737;</div>
+        <h3>Safe RL (CMDP)</h3>
+        <p>Each environment formulated as a Constrained MDP with an environment-specific cost. Four on-policy CMDP algorithms (PPOLag, CPO, OnCRPO, FOCOPS) under varying cost limits.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">&#129309;</div>
+        <h3>Multi-Agent RL</h3>
+        <p>Physically motivated decompositions: 54 charging stations, 6 thermal zones, 4 turbines. Single vs. shared-policy MARL via Ray RLlib + PettingZoo.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2 class="centered">Three Sustainable Energy Environments</h2>
+    <div class="grid-3 envs">
+      <div class="env">
+        <h3>EV Charging</h3>
+        <div class="env-meta"><span>54 stations</span><span>288 steps/day</span></div>
+        <p>Coordinate charging across a station network: maximize profit while minimizing carbon emissions and network constraint violations.</p>
+        <div class="tag-row">
+          <span class="tag">Profit</span>
+          <span class="tag">Carbon</span>
+          <span class="tag">Network</span>
+        </div>
+      </div>
+      <div class="env">
+        <h3>Building HVAC</h3>
+        <div class="env-meta"><span>OfficeSmall, Tucson</span><span>RC thermal model</span></div>
+        <p>Control HVAC setpoints in a multi-zone office building: minimize energy consumption while maintaining occupant thermal comfort.</p>
+        <div class="tag-row">
+          <span class="tag">Energy</span>
+          <span class="tag">Comfort</span>
+        </div>
+      </div>
+      <div class="env">
+        <h3>Cogeneration</h3>
+        <div class="env-meta"><span>3 GT + 1 ST</span><span>ONNX surrogate</span></div>
+        <p>Dispatch a combined heat &amp; power facility: minimize fuel cost, demand shortfalls, and ramping while satisfying complex equipment constraints.</p>
+        <div class="tag-row">
+          <span class="tag">Fuel</span>
+          <span class="tag">Delivery</span>
+          <span class="tag">Ramp</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section alt">
+  <div class="container">
+    <h2 class="centered">Selected Results</h2>
+
+    <div class="result-block">
+      <h3>Perturbation Robustness Heatmap</h3>
+      <p class="caption">Reward degradation under state, action, and dynamics perturbation across all three environments and algorithms. The on-policy vs. off-policy divide dominates Cogeneration; in Building, off-policy SAC is more robust than on-policy PPO.</p>
+      <figure>
+        <img src="static/images/perturbation_heatmap.png" alt="Perturbation robustness heatmap across environments and algorithms" />
+      </figure>
+    </div>
+
+    <div class="result-block">
+      <h3>Safe RL: Reward&ndash;Cost Pareto</h3>
+      <p class="caption">Reward&ndash;cost trade-offs across cost limits with multi-seed confidence intervals. CMDP effectiveness exists on a spectrum: Building (fully aligned), EV Charging (partially overlapping), Cogeneration (fully orthogonal).</p>
+      <figure>
+        <img src="static/images/saferl_triptych.png" alt="Safe RL reward-cost Pareto across environments" />
+      </figure>
+    </div>
+
+    <div class="result-block">
+      <h3>Multi-Agent RL Comparison</h3>
+      <p class="caption">Single-agent vs. multi-agent performance across all three environments. Environment coupling structure, not agent count, determines MARL feasibility.</p>
+      <figure>
+        <img src="static/images/marl_comparison.png" alt="MARL comparison across environments" />
+      </figure>
+    </div>
+
+    <div class="result-block">
+      <h3>Cross-Environment Degradation</h3>
+      <p class="caption">Algorithm-specific degradation profiles across all three environments under the dominant perturbation channel.</p>
+      <figure>
+        <img src="static/images/cross_env_degradation.png" alt="Cross-environment degradation" />
+      </figure>
+    </div>
+
+  </div>
+</section>
+
+<section class="section">
+  <div class="container narrow">
+    <h2>Key Findings</h2>
+    <ul class="findings">
+      <li><strong>Robustness is environment-specific.</strong> The on-policy vs. off-policy divide is the dominant robustness factor in Cogeneration, but environment-specific elsewhere &mdash; SAC degrades less than PPO in Building.</li>
+      <li><strong>Reward&ndash;cost orthogonality matters.</strong> Safe RL is only as effective as the orthogonality of the cost signal: fully aligned costs make CMDP redundant; fully orthogonal costs allow precise constraint tracking.</li>
+      <li><strong>Off-policy CMDP fails.</strong> SACLag fails across all three environments due to replay buffer staleness in Lagrange multiplier tracking.</li>
+      <li><strong>Coupling, not agent count, drives MARL feasibility.</strong> Single-agent algorithm rankings can reverse in tightly coupled multi-agent settings.</li>
+      <li><strong>Greedy beats RL in EV Charging.</strong> A simple greedy heuristic outperforms all learned policies, challenging the assumption that RL training pipelines are necessary in every energy domain.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="section alt" id="paper">
+  <div class="container narrow">
+    <h2>Paper</h2>
+    <p>The full thesis is in preparation. Once available, the PDF and arXiv link will be posted here. In the meantime, the source code, data pipeline, and experimental scripts are open source on GitHub.</p>
+    <a class="btn" href="https://github.com/MehmetKORUTURK/sustaingym-rl-benchmark" target="_blank" rel="noopener">
+      Browse the Code
+    </a>
+  </div>
+</section>
+
+<section class="section" id="bibtex">
+  <div class="container narrow">
+    <h2>Citation</h2>
+    <pre class="bibtex">@mastersthesis{koruturk2026sustainrlbench,
+  author  = {Koruturk, Mehmet},
+  title   = {{SustainRL-Bench}: Benchmarking Reinforcement Learning on
+             {SustainGym} across Perturbation Robustness, Safe RL,
+             and Multi-Agent RL},
+  school  = {Virginia Polytechnic Institute and State University},
+  year    = {2026},
+  type    = {Master's Thesis}
+}</pre>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <p>
+      &copy; 2026 Mehmet Koruturk &middot;
+      <a href="https://github.com/MehmetKORUTURK/sustaingym-rl-benchmark" target="_blank" rel="noopener">GitHub</a> &middot;
+      <a href="https://rolelab.org/" target="_blank" rel="noopener">RoleLab</a>
+    </p>
+    <p class="small">
+      Built with the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank" rel="noopener">Academic Project Page</a> spirit, hosted on GitHub Pages.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

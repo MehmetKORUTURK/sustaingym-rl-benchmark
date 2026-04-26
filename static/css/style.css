@@ -1,0 +1,296 @@
+/* ----- Reset & Base ----- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --vt-maroon: #861f41;
+  --vt-orange: #e87722;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --paper: #ffffff;
+  --paper-alt: #f7f5f2;
+  --line: #e2dfd9;
+  --accent: #861f41;
+  --accent-soft: rgba(134, 31, 65, 0.08);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 400;
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.container.narrow { max-width: 780px; }
+
+/* ----- Hero ----- */
+.hero {
+  background: linear-gradient(135deg, #fff 0%, #faf6f3 100%);
+  border-bottom: 1px solid var(--line);
+  padding: 80px 0 60px 0;
+  text-align: center;
+}
+
+.affiliation {
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+.title {
+  font-size: 64px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  background: linear-gradient(135deg, var(--vt-maroon) 0%, var(--vt-orange) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 18px;
+}
+
+.subtitle {
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--ink-soft);
+  max-width: 760px;
+  margin: 0 auto 36px auto;
+  line-height: 1.45;
+}
+
+.authors {
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.author { display: inline-block; margin: 0 6px; }
+.affiliations-line {
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin-bottom: 32px;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: white;
+  font-weight: 500;
+  font-size: 15px;
+  text-decoration: none;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.btn:hover {
+  transform: translateY(-1px);
+  background: var(--vt-maroon);
+  text-decoration: none;
+  color: white;
+}
+.btn .icon { font-size: 16px; }
+
+/* ----- Sections ----- */
+.section {
+  padding: 80px 0;
+}
+.section.alt {
+  background: var(--paper-alt);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+h2 {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+  color: var(--ink);
+}
+h2.centered { text-align: center; margin-bottom: 48px; }
+
+h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--ink);
+}
+
+p { color: var(--ink-soft); margin-bottom: 16px; }
+.narrow p { font-size: 18px; line-height: 1.75; }
+
+/* ----- Grid 3 ----- */
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+.card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 32px 28px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+.card-icon {
+  font-size: 32px;
+  margin-bottom: 16px;
+}
+.card h3 { color: var(--vt-maroon); }
+.card p { font-size: 15px; line-height: 1.6; margin: 0; }
+
+/* ----- Environments ----- */
+.env {
+  background: white;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--vt-maroon);
+  border-radius: 8px;
+  padding: 24px;
+}
+.env h3 { color: var(--vt-maroon); margin-bottom: 8px; }
+.env-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 14px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.env-meta span {
+  background: var(--accent-soft);
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+.env p { font-size: 15px; margin-bottom: 14px; }
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tag {
+  font-size: 12px;
+  background: var(--ink);
+  color: white;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* ----- Result Blocks ----- */
+.result-block {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 32px;
+}
+.result-block h3 {
+  color: var(--vt-maroon);
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+.result-block .caption {
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin-bottom: 20px;
+}
+.result-block figure {
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+.result-block img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ----- Findings ----- */
+.findings {
+  list-style: none;
+  padding: 0;
+}
+.findings li {
+  position: relative;
+  padding-left: 32px;
+  margin-bottom: 16px;
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+.findings li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--vt-orange);
+  font-weight: 700;
+  font-size: 20px;
+}
+.findings strong { color: var(--ink); font-weight: 600; }
+
+/* ----- BibTeX ----- */
+.bibtex {
+  background: var(--ink);
+  color: #e8e8e8;
+  padding: 24px;
+  border-radius: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+/* ----- Footer ----- */
+.footer {
+  background: var(--ink);
+  color: #c0c0c0;
+  padding: 40px 0;
+  text-align: center;
+  font-size: 14px;
+}
+.footer p { color: #c0c0c0; margin-bottom: 8px; }
+.footer a { color: #ffffff; }
+.footer .small { font-size: 12px; color: #888; }
+
+/* ----- Responsive ----- */
+@media (max-width: 880px) {
+  .title { font-size: 44px; }
+  .subtitle { font-size: 18px; }
+  .grid-3 { grid-template-columns: 1fr; gap: 18px; }
+  .section { padding: 56px 0; }
+  h2 { font-size: 26px; }
+  .result-block { padding: 24px; }
+}
