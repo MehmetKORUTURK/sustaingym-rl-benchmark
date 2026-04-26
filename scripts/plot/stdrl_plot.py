@@ -14,15 +14,23 @@ Usage:
     python scripts/plot/stdrl_plot.py --env evcharging --compare
     python scripts/plot/stdrl_plot.py --env building --compare --auto_ylim
     python scripts/plot/stdrl_plot.py --env cogen --compare
+
+    # Multi-seed mode (cross-seed mean +/- std):
+    python scripts/plot/stdrl_plot.py --env evcharging --algo PPO --dt all --multiseed
+    python scripts/plot/stdrl_plot.py --env building --algo SAC --dt DS --multiseed
+
+    # Generate all 7 multiseed panel figures at once:
+    python scripts/plot/stdrl_plot.py --multiseed-all
 """
 
 import os
+import re
 import sys
 import argparse
 import datetime
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 
 import pandas as pd
 import numpy as np
@@ -35,13 +43,351 @@ from style import (COLORS_INDEXED, LINE_STYLES, MARKERS,
 
 
 # ============================================================================
+# MULTI-SEED CONSTANTS
+# ============================================================================
+
+MULTISEED_LOGS_BASE = Path(__file__).resolve().parents[2] / "docs" / "thesis" / "logs" / "logs_std_train"
+MULTISEED_FIGS_BASE = Path(__file__).resolve().parents[2] / "docs" / "thesis" / "figures" / "C_STDRL"
+
+MULTISEED_LEVELS: Dict[str, Dict[str, List[float]]] = {
+    "evcharging": {"PS": [0.0, 0.15, 0.30], "PA": [0.0, 0.15, 0.30], "PD": [0.0, 0.15, 0.30]},
+    "building":   {"PS": [0.0, 0.05, 0.15], "PA": [0.0, 0.05, 0.15], "PD": [0.0, 0.05, 0.15]},
+    "cogen":      {"PS": [0.0, 10.0, 20.0], "PA": [0.0, 0.10, 0.20], "PD": [0.0, 0.30, 0.50]},
+}
+
+# Which (env, algo) combos to generate in --multiseed-all
+MULTISEED_ALL_COMBOS = [
+    ("evcharging", "PPO"),
+    ("evcharging", "SAC"),
+    ("building", "PPO"),
+    ("building", "SAC"),
+    ("cogen", "PPO"),
+    ("cogen", "SAC"),
+    ("cogen", "TD3"),
+]
+
+# DT code -> (PS index, PA index, PD index) in the noise tuple
+_DT_TO_NOISE = {
+    "DS": lambda level: (level, 0.0, 0.0),
+    "DA": lambda level: (0.0, level, 0.0),
+    "DE": lambda level: (0.0, 0.0, level),
+}
+
+# Old format regex: DATE_DS_X_DA_Y
+_RE_OLD = re.compile(
+    r'^\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}_DS_([0-9.]+)_DA_([0-9.]+)$'
+)
+# New format regex: DATE_NOISE_X_ACT_Y[_ENV_Z]
+_RE_NEW = re.compile(
+    r'^\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}_NOISE_([0-9.]+)_ACT_([0-9.]+)(?:_ENV_([0-9.]+))?$'
+)
+
+
+def _parse_noise_from_dirname(dirname: str) -> Optional[Tuple[float, float, float]]:
+    """Parse (PS, PA, PD) from a run directory name. Returns None if unparseable."""
+    m = _RE_OLD.match(dirname)
+    if m:
+        return (float(m.group(1)), float(m.group(2)), 0.0)
+    m = _RE_NEW.match(dirname)
+    if m:
+        ps = float(m.group(1))
+        pa = float(m.group(2))
+        pd = float(m.group(3)) if m.group(3) is not None else 0.0
+        return (ps, pa, pd)
+    return None
+
+
+def match_run(dirname: str, ps: float, pa: float, pd: float) -> bool:
+    """Check if a directory name matches the given (PS, PA, PD) noise config."""
+    parsed = _parse_noise_from_dirname(dirname)
+    if parsed is None:
+        return False
+    return (abs(parsed[0] - ps) < 1e-6 and
+            abs(parsed[1] - pa) < 1e-6 and
+            abs(parsed[2] - pd) < 1e-6)
+
+
+def find_seed_runs(env: str, algo: str, ps: float, pa: float, pd: float) -> List[Path]:
+    """Find all matching seed run monitor.csv paths for a given noise config."""
+    base_dir = MULTISEED_LOGS_BASE / f"{env}_{algo}"
+    if not base_dir.exists():
+        print(f"  WARNING: Directory not found: {base_dir}")
+        return []
+    results = []
+    for entry in sorted(base_dir.iterdir()):
+        if not entry.is_dir():
+            continue
+        if match_run(entry.name, ps, pa, pd):
+            csv_path = entry / "monitor.csv"
+            if csv_path.exists():
+                results.append(csv_path)
+    return results
+
+
+def compute_multiseed_curve(
+    seed_paths: List[Path],
+    window: int,
+    max_steps: int,
+) -> Optional[Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+    """Load all seeds, EMA-smooth each, compute cross-seed mean and std.
+
+    Returns (episodes, mean, std) or None if no valid seeds.
+    """
+    smoothed_list = []
+    for p in seed_paths:
+        rewards = load_rewards(str(p), max_steps)
+        if rewards is None:
+            continue
+        mean_i, _ = calculate_running_stats(rewards, window)
+        smoothed_list.append(mean_i)
+
+    if not smoothed_list:
+        return None
+
+    # Align to shortest length
+    min_len = min(len(s) for s in smoothed_list)
+    aligned = np.array([s[:min_len] for s in smoothed_list])  # (n_seeds, min_len)
+
+    episodes = np.arange(min_len)
+    cross_mean = aligned.mean(axis=0)
+    cross_std = aligned.std(axis=0)
+    return episodes, cross_mean, cross_std
+
+
+def _plot_multiseed_on_ax(
+    ax,
+    env: str,
+    algo: str,
+    dt: str,
+    levels: List[float],
+    ylim: Optional[Tuple[float, float]] = None,
+    xlim: Optional[Tuple[float, float]] = None,
+    title: str = "",
+    window: int = 4000,
+    max_steps: int = 32000,
+    skip_initial: int = 250,
+    auto_xlim: bool = False,
+    auto_ylim: bool = False,
+    std_band: float = 0.5,
+    total_steps: int = 9_000_000,
+    show_ylabel: bool = True,
+    legend_loc='lower right',
+    zoom: Optional[Tuple[float, float, float, float]] = None,
+):
+    """Plot multi-seed learning curves (mean +/- std) on a given axes."""
+    noise_fn = _DT_TO_NOISE[dt]
+
+    for idx, level in enumerate(levels):
+        ps, pa, pd = noise_fn(level)
+        seed_paths = find_seed_runs(env, algo, ps, pa, pd)
+        n_seeds = len(seed_paths)
+        print(f"  {algo} {DT_SHORT[dt]}={level:.2f}: found {n_seeds} seed runs")
+
+        if n_seeds == 0:
+            continue
+
+        result = compute_multiseed_curve(seed_paths, window, max_steps)
+        if result is None:
+            continue
+
+        episodes, cross_mean, cross_std = result
+
+        # Thin data for line style visibility (~1500 points max)
+        step = max(1, len(episodes) // 1500)
+        x = episodes[::step].copy()
+        mean_t = cross_mean[::step]
+        std_t = cross_std[::step]
+
+        # Shift x so that skip_initial maps to 0
+        x = x - skip_initial
+
+        label = f"{algo}_{DT_SHORT[dt]}_{level:.2f} (n={n_seeds})"
+
+        color = COLORS_INDEXED[idx % len(COLORS_INDEXED)]
+        ls = LINE_STYLES[idx % len(LINE_STYLES)]
+        marker = MARKERS[idx % len(MARKERS)]
+        me = max(1, int(len(x) * MARK_EVERY_FRAC))
+
+        ax.plot(x, mean_t, label=label, linewidth=1.8, color=color,
+                linestyle=ls, marker=marker, markersize=5,
+                markevery=me, markeredgewidth=0.6,
+                markeredgecolor=color)
+        ax.fill_between(x, mean_t - std_band * std_t, mean_t + std_band * std_t,
+                        alpha=FILL_ALPHA, color=color, linewidth=0)
+
+    # X-axis limits (shifted so skip_initial -> 0)
+    if auto_xlim:
+        pass
+    elif xlim:
+        ax.set_xlim(xlim)
+    else:
+        ax.set_xlim(0, max_steps - skip_initial)
+
+    # Y-axis limits
+    if auto_ylim:
+        pass
+    elif ylim:
+        ax.set_ylim(ylim)
+
+    # Ensure the last x value appears as a tick, then re-apply xlim
+    x_end = max_steps - skip_initial
+    xticks = [t for t in ax.get_xticks() if 0 <= t <= x_end]
+    if x_end not in xticks:
+        xticks.append(x_end)
+    ax.set_xticks(xticks)
+    ax.set_xlim(0, x_end)
+
+    # Show total training steps (top-left corner)
+    exponent = int(np.floor(np.log10(total_steps)))
+    mantissa = total_steps / 10**exponent
+    step_str = f"Total: ~{int(round(mantissa))}e{exponent} steps"
+    ax.text(0.02, 0.97, step_str, transform=ax.transAxes,
+            fontsize=10, verticalalignment='top',
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
+
+    ax.set_title(title)
+    ax.set_xlabel("Training Episode")
+    if show_ylabel:
+        ax.set_ylabel("Average Episode Reward")
+
+    if isinstance(legend_loc, dict):
+        ax.legend(frameon=True, **legend_loc)
+    else:
+        ax.legend(loc=legend_loc, frameon=True)
+    style_axis(ax)
+
+    # Inset zoom for perturbation plots
+    if zoom:
+        zx1, zx2, zy1, zy2 = zoom
+        axins = ax.inset_axes([0.84, 0.22, 0.15, 0.20])
+        for line in ax.get_lines():
+            axins.plot(line.get_xdata(), line.get_ydata(),
+                       color=line.get_color(), linestyle=line.get_linestyle(),
+                       linewidth=1.5)
+        axins.set_xlim(zx1, zx2)
+        axins.set_ylim(zy1, zy2)
+        x_start_k = int(np.ceil(zx1 / 1000))
+        x_end_k = int(np.floor(zx2 / 1000))
+        x_range = np.arange(x_start_k, x_end_k + 1) * 1000
+        axins.set_xticks(x_range)
+        axins.set_xticklabels([f"{int(v)}" for v in x_range])
+        axins.set_xlim(zx1, zx2)
+        axins.tick_params(labelsize=7)
+        axins.grid(True, alpha=0.3)
+        for spine in axins.spines.values():
+            spine.set_edgecolor('0.4')
+            spine.set_linewidth(1.0)
+        rect, connectors = ax.indicate_inset_zoom(axins, edgecolor='#aa2222', linewidth=2.0, alpha=0.9)
+        rect.set_facecolor('#ee9999')
+        rect.set_alpha(0.35)
+        for conn in connectors:
+            conn.set_edgecolor('#aaaaaa')
+            conn.set_linewidth(1.0)
+
+
+def plot_multiseed_single(
+    env: str,
+    algo: str,
+    dt: str,
+    window: int = 4000,
+    max_steps: int = 32000,
+    skip_initial: int = 250,
+    auto_xlim: bool = False,
+    auto_ylim: bool = False,
+    std_band: float = 0.5,
+    total_steps: int = 9_000_000,
+    ylim: Optional[Tuple[float, float]] = None,
+    xlim: Optional[Tuple[float, float]] = None,
+    zoom: Optional[Tuple[float, float, float, float]] = None,
+    legend_loc='lower right',
+):
+    """Plot multi-seed learning curves (single panel, single DT)."""
+    dt_key = {"DS": "PS", "DA": "PA", "DE": "PD"}[dt]
+    levels = MULTISEED_LEVELS.get(env, {}).get(dt_key, [])
+    if not levels:
+        print(f"  No multiseed levels for {env} / {dt_key}")
+        return
+
+    env_title = ENV_DEFAULTS[env]["title"]
+    fig, ax = plt.subplots(figsize=(10, 6))
+    _plot_multiseed_on_ax(
+        ax, env, algo, dt, levels, ylim, xlim,
+        title=f"{env_title} — {algo}: {DT_FULL[dt]}",
+        window=window, max_steps=max_steps, skip_initial=skip_initial,
+        auto_xlim=auto_xlim, auto_ylim=auto_ylim, std_band=std_band,
+        total_steps=total_steps, legend_loc=legend_loc, zoom=zoom,
+    )
+    plt.tight_layout()
+    return fig
+
+
+def plot_multiseed_all_dt(
+    env: str,
+    algo: str,
+    window: int = 4000,
+    max_steps: int = 32000,
+    skip_initial: int = 250,
+    auto_xlim: bool = False,
+    auto_ylim: bool = False,
+    std_band: float = 0.5,
+    total_steps: int = 9_000_000,
+    ylim_override: Optional[Tuple[float, float]] = None,
+    xlim_override: Optional[Tuple[float, float]] = None,
+    zoom: Optional[Tuple[float, float, float, float]] = None,
+):
+    """Plot multi-seed DS, DA, DE side by side in 1x3 subplots."""
+    env_title = ENV_DEFAULTS[env]["title"]
+    env_config = ALL_CONFIGS.get(env, {})
+    fig, axes = plt.subplots(1, 3, figsize=(24, 6), sharey=True)
+
+    for i, dt in enumerate(["DS", "DA", "DE"]):
+        dt_key = {"DS": "PS", "DA": "PA", "DE": "PD"}[dt]
+        levels = MULTISEED_LEVELS.get(env, {}).get(dt_key, [])
+
+        # Use config ylim as default if available
+        ylim = ylim_override
+        if ylim is None and algo in env_config and dt in env_config[algo]:
+            _, default_ylim = env_config[algo][dt]
+            ylim = default_ylim
+
+        loc = LEGEND_LOC.get((env, algo, dt), 'lower right')
+
+        _plot_multiseed_on_ax(
+            axes[i], env, algo, dt, levels, ylim, xlim_override,
+            title=DT_SUBFIG[dt], window=window, max_steps=max_steps,
+            skip_initial=skip_initial, auto_xlim=auto_xlim,
+            auto_ylim=auto_ylim, std_band=std_band, total_steps=total_steps,
+            show_ylabel=(i == 0), legend_loc=loc, zoom=zoom,
+        )
+
+    fig.suptitle(f"{env_title} — {algo} (Multi-Seed)", fontsize=14, fontweight='bold', y=1.02)
+    plt.tight_layout()
+    return fig
+
+
+def save_multiseed_plot(env: str, algo: str, dt: str, save_pdf: bool = False):
+    """Save multiseed plot to docs/thesis/figures/C_STDRL/{env_short}/{algo}/"""
+    subdir = MULTISEED_FIGS_BASE / ENV_SHORT.get(env, env) / algo
+    subdir.mkdir(parents=True, exist_ok=True)
+
+    png_path = subdir / f"{dt}_multiseed.png"
+    plt.savefig(str(png_path), dpi=300, bbox_inches='tight')
+    print(f"\nPNG saved: {png_path}")
+
+    if save_pdf:
+        pdf_path = subdir / f"{dt}_multiseed.pdf"
+        plt.savefig(str(pdf_path), bbox_inches='tight')
+        print(f"PDF saved: {pdf_path}")
+
+
+# ============================================================================
 # PER-ENV DEFAULTS
 # ============================================================================
 
 ENV_DEFAULTS = {
     "evcharging": {"title": "EV Charging", "t_steps": 30250, "std_band": 0.03, "ylim": (5, 8), "total_steps": 9_000_000},
     "building":   {"title": "Building",   "t_steps": 20250, "std_band": 0.03, "ylim": None, "total_steps": 9_000_000},
-    "cogen":      {"title": "Cogeneration",      "t_steps": 14250, "std_band": 0.03, "ylim": None, "total_steps": 3_000_000},
+    "cogen":      {"title": "Cogeneration",      "t_steps": 10250, "std_band": 0.03, "ylim": None, "total_steps": 3_000_000},
 }
 
 OUTPUT_DIR = "./graphs/C_STDRL/"
@@ -771,9 +1117,37 @@ def save_comparison_plot(env: str, output_dir: str, save_pdf: bool = False):
 # MAIN
 # ============================================================================
 
+def _run_multiseed_all(args):
+    """Generate all 7 multiseed panel figures (1x3 each) in one run."""
+    for env, algo in MULTISEED_ALL_COMBOS:
+        env_def = ENV_DEFAULTS[env]
+        t_steps = args.t_steps if args.t_steps is not None else env_def["t_steps"]
+
+        print(f"\n{'='*70}")
+        print(f"Multi-seed 1x3: {env} / {algo}")
+        print(f"{'='*70}\n")
+
+        plot_multiseed_all_dt(
+            env=env,
+            algo=algo,
+            window=args.w_size,
+            max_steps=t_steps,
+            skip_initial=args.skip,
+            auto_xlim=False,
+            auto_ylim=args.auto_ylim,
+            std_band=1.0,  # full ±1σ cross-seed band (not the 0.03 single-seed EMA scaling)
+            total_steps=env_def["total_steps"],
+        )
+        save_multiseed_plot(env, algo, "DS_DA_DE", args.pdf)
+        plt.close()
+
+    print(f"\nDone — all {len(MULTISEED_ALL_COMBOS)} figures saved.")
+
+
 def main():
     parser = argparse.ArgumentParser(description='Unified Standard RL Training Curve Plotter')
-    parser.add_argument('--env', type=str, required=True, choices=['evcharging', 'building', 'cogen'])
+    parser.add_argument('--env', type=str, default=None, choices=['evcharging', 'building', 'cogen'],
+                        help='Environment (required except with --multiseed-all)')
     parser.add_argument('--algo', type=str, default='PPO', choices=['PPO', 'SAC', 'TD3'],
                         help='Algorithm (ignored with --compare)')
     parser.add_argument('--dt', type=str, default='DS', choices=['DS', 'DA', 'DE', 'all'],
@@ -792,8 +1166,21 @@ def main():
                         help='Compare all algorithms baseline (noise=0) for the given env')
     parser.add_argument('--zoom', nargs=4, type=float, metavar=('X1', 'X2', 'Y1', 'Y2'),
                         help='Inset zoom region (e.g., --zoom 20000 22000 -35 -25)')
+    parser.add_argument('--multiseed', action='store_true',
+                        help='Multi-seed mode: auto-discover seed runs, plot cross-seed mean +/- std')
+    parser.add_argument('--multiseed-all', action='store_true', dest='multiseed_all',
+                        help='Generate all 7 multiseed panel figures (ev PPO/SAC, bu PPO/SAC, co PPO/SAC/TD3)')
 
     args = parser.parse_args()
+
+    # ── Multiseed-all: no --env required ──
+    if args.multiseed_all:
+        _run_multiseed_all(args)
+        return
+
+    # All other modes require --env
+    if args.env is None:
+        parser.error("--env is required (unless using --multiseed-all)")
 
     # Get env defaults
     env_def = ENV_DEFAULTS[args.env]
@@ -825,6 +1212,55 @@ def main():
         )
         save_comparison_plot(args.env, OUTPUT_DIR, args.pdf)
         plt.show()
+        return
+
+    # ── Multi-seed mode ──
+    if args.multiseed:
+        if args.dt == "all":
+            print(f"\n{'='*70}")
+            print(f"Multi-seed 1x3: {args.env} / {args.algo} / DS+DA+DE")
+            print(f"{'='*70}\n")
+
+            plot_multiseed_all_dt(
+                env=args.env,
+                algo=args.algo,
+                window=args.w_size,
+                max_steps=t_steps,
+                skip_initial=args.skip,
+                auto_xlim=auto_xlim,
+                auto_ylim=args.auto_ylim,
+                std_band=1.0,  # full ±1σ cross-seed band
+                total_steps=env_def["total_steps"],
+                ylim_override=ylim,
+                xlim_override=xlim,
+                zoom=tuple(args.zoom) if args.zoom else None,
+            )
+            save_multiseed_plot(args.env, args.algo, "DS_DA_DE", args.pdf)
+            plt.show()
+        else:
+            print(f"\n{'='*70}")
+            print(f"Multi-seed: {args.env} / {args.algo} / {args.dt}")
+            print(f"{'='*70}\n")
+
+            loc = LEGEND_LOC.get((args.env, args.algo, args.dt), 'lower right')
+            plot_multiseed_single(
+                env=args.env,
+                algo=args.algo,
+                dt=args.dt,
+                window=args.w_size,
+                max_steps=t_steps,
+                skip_initial=args.skip,
+                auto_xlim=auto_xlim,
+                auto_ylim=args.auto_ylim,
+                std_band=1.0,  # full ±1σ cross-seed band
+                total_steps=env_def["total_steps"],
+                ylim=ylim,
+                xlim=xlim,
+                zoom=tuple(args.zoom) if args.zoom else None,
+                legend_loc=loc,
+            )
+            save_multiseed_plot(args.env, args.algo, args.dt, args.pdf)
+            plt.show()
         return
 
     env_config = ALL_CONFIGS[args.env]

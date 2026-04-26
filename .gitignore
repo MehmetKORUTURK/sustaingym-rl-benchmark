@@ -33,6 +33,11 @@ chats/
 # Legacy/unused files
 _legacy/
 
+# Personal / internal — kept out of public repo
+me/
+outputs/
+docs/
+
 # IDE / Tools
 .vscode/
 .idea/
