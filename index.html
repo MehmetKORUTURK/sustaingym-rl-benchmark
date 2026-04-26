@@ -7,184 +7,460 @@
 <meta name="description" content="A unified RL benchmark on SustainGym environments evaluating perturbation robustness, safe RL, and multi-agent RL across EV charging, building HVAC, and cogeneration." />
 <meta property="og:title" content="SustainRL-Bench: Benchmarking RL on SustainGym" />
 <meta property="og:description" content="Master's thesis project: three-axis RL benchmark across EV charging, building HVAC, and cogeneration." />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="static/css/style.css" />
 </head>
 <body>
 
+<!-- ================== HERO ================== -->
 <header class="hero">
-  <div class="container">
-    <div class="affiliation">Virginia Tech &middot; RoleLab &middot; Master&rsquo;s Thesis</div>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="container hero-inner">
+    <div class="affiliation">
+      <span class="dot"></span> Virginia Tech &middot; RoleLab &middot; Master&rsquo;s Thesis
+    </div>
     <h1 class="title">SustainRL-Bench</h1>
-    <p class="subtitle">Benchmarking Reinforcement Learning on SustainGym across<br />Perturbation Robustness, Safe RL, and Multi-Agent RL</p>
+    <p class="subtitle">A three-axis reinforcement learning benchmark for sustainable energy systems &mdash; perturbation robustness, safe RL, and multi-agent RL across three real-world energy environments.</p>
     <div class="authors">
-      <span class="author">Mehmet Koruturk<sup>1</sup></span>
+      <span class="author">Mehmet Koruturk</span>
+      <span class="sep">&middot;</span>
+      <span class="author">Bilgehan Sel</span>
+      <span class="sep">&middot;</span>
+      <span class="author">Ming Jin</span>
     </div>
-    <div class="affiliations-line">
-      <sup>1</sup>Virginia Polytechnic Institute and State University
-    </div>
+    <div class="affiliations-line">Virginia Polytechnic Institute and State University</div>
     <div class="links">
-      <a class="btn" href="https://github.com/MehmetKORUTURK/sustaingym-rl-benchmark" target="_blank" rel="noopener">
-        <span class="icon">&#9881;</span> Code
+      <a class="btn btn-primary" href="https://github.com/MehmetKORUTURK/sustaingym-rl-benchmark" target="_blank" rel="noopener">
+        <span class="btn-icon">&#9881;</span> Code
       </a>
-      <a class="btn" href="#paper" >
-        <span class="icon">&#128196;</span> Paper
+      <a class="btn btn-soft" href="#paper">
+        <span class="btn-icon">&#128196;</span> Paper
       </a>
-      <a class="btn" href="#bibtex">
-        <span class="icon">&#128221;</span> Cite
+      <a class="btn btn-soft" href="#bibtex">
+        <span class="btn-icon">&#128221;</span> Cite
+      </a>
+      <a class="btn btn-soft" href="#results">
+        <span class="btn-icon">&#128202;</span> Results
       </a>
     </div>
   </div>
 </header>
 
+<!-- ================== STATS STRIP ================== -->
+<section class="stats-strip">
+  <div class="container">
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num" data-target="3">0</div>
+        <div class="stat-label">Energy Environments</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" data-target="11">0</div>
+        <div class="stat-label">RL Algorithms</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" data-target="150">0</div>
+        <div class="stat-label">Configurations</div>
+        <div class="stat-plus">+</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" data-target="500">0</div>
+        <div class="stat-label">Training Runs</div>
+        <div class="stat-plus">+</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" data-target="5">0</div>
+        <div class="stat-label">Random Seeds</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================== ABSTRACT ================== -->
 <section class="section">
   <div class="container narrow">
-    <h2>Abstract</h2>
+    <span class="eyebrow">Abstract</span>
+    <h2>Environment structure beats algorithm choice.</h2>
     <p>
-      Reinforcement learning has shown promise across sustainable energy domains, yet existing
-      studies typically evaluate a single algorithm on a single environment under idealized
-      conditions, leaving robustness, scalability, and comparative performance largely uncharted.
-      We introduce <strong>SustainRL-Bench</strong>, a unified study evaluating RL algorithms
-      along three orthogonal axes: <em>perturbation robustness</em> via systematic injection of
-      state, action, and dynamics noise; <em>safe RL</em> via Constrained MDP formulations with
-      environment-specific cost signals; and <em>multi-agent RL</em> via physically motivated
-      decompositions. We study three SustainGym environments &mdash; EV charging coordination,
-      building HVAC control, and cogeneration plant dispatch &mdash; under three single-agent
-      algorithms (PPO, SAC, TD3), four CMDP algorithms (PPOLag, CPO, OnCRPO, FOCOPS), and four
-      MARL algorithms (PPO, SAC, APPO, IMPALA). Our results challenge the assumption that a
-      single RL approach can serve as a universal controller for sustainable energy systems and
-      underscore the need for domain-specific algorithm selection guided by systematic
-      benchmarking.
+      Reinforcement learning is increasingly applied to sustainable energy control, yet evaluations remain fragmented across isolated tasks. We present <strong>SustainRL-Bench</strong>, a benchmark evaluating perturbation robustness, safe RL via constrained MDPs, and multi-agent RL across three energy environments &mdash; EV charging, building HVAC, and cogeneration dispatch. Across <strong>116 configurations and 500+ training runs</strong>, the on-policy versus off-policy divide emerges as the dominant factor: PPO achieves the strongest perturbation robustness (max&nbsp;23.7% degradation versus 1380% for SAC in cogeneration) and most reliable constraint tracking via PPOLag, while off-policy methods are essential for multi-agent coordination.
+    </p>
+    <p>
+      A greedy heuristic outperforms all RL policies in EV charging (8.65 vs PPO 6.80), challenging the necessity of RL for all energy domains. To quantify the qualitative &ldquo;coupling&rdquo; descriptor used in prior work, we introduce a unified coupling score &kappa; ranging from 0.024 (EV) to 0.860 (cogeneration) that exhibits monotonic rank correlation with all three axes.
     </p>
   </div>
 </section>
 
+<!-- ================== THREE AXES ================== -->
 <section class="section alt">
   <div class="container">
+    <span class="eyebrow centered">Methodology</span>
     <h2 class="centered">Three Experimental Axes</h2>
+    <p class="lead centered">Each environment is evaluated under three orthogonal lenses, totaling 116 unique configurations.</p>
+
     <div class="grid-3">
-      <div class="card">
+      <div class="card axis-card axis-rose">
+        <div class="card-num">01</div>
         <div class="card-icon">&#128266;</div>
         <h3>Perturbation Robustness</h3>
         <p>Systematic injection of state (PS), action (PA), and dynamics (PD) perturbation across nine intensity levels per channel. Reveals algorithm-specific sensitivity profiles.</p>
+        <ul class="bullets">
+          <li>3 channels &times; 10+ levels</li>
+          <li>5-seed multi-seed validation</li>
+          <li>Combined-perturbation tests</li>
+        </ul>
       </div>
-      <div class="card">
+      <div class="card axis-card axis-mint">
+        <div class="card-num">02</div>
         <div class="card-icon">&#128737;</div>
         <h3>Safe RL (CMDP)</h3>
-        <p>Each environment formulated as a Constrained MDP with an environment-specific cost. Four on-policy CMDP algorithms (PPOLag, CPO, OnCRPO, FOCOPS) under varying cost limits.</p>
+        <p>Each environment is formulated as a Constrained MDP with an environment-specific cost. Four on-policy CMDP algorithms under varying cost limits.</p>
+        <ul class="bullets">
+          <li>PPOLag, CPO, OnCRPO, FOCOPS</li>
+          <li>4&ndash;5 cost limits per environment</li>
+          <li>Reward&ndash;cost orthogonality test</li>
+        </ul>
       </div>
-      <div class="card">
+      <div class="card axis-card axis-lavender">
+        <div class="card-num">03</div>
         <div class="card-icon">&#129309;</div>
         <h3>Multi-Agent RL</h3>
-        <p>Physically motivated decompositions: 54 charging stations, 6 thermal zones, 4 turbines. Single vs. shared-policy MARL via Ray RLlib + PettingZoo.</p>
+        <p>Physically motivated decompositions: 54 charging stations, 6 thermal zones, 4 turbines. Single vs. shared-policy MARL via Ray&nbsp;RLlib + PettingZoo.</p>
+        <ul class="bullets">
+          <li>PPO, SAC, APPO, IMPALA</li>
+          <li>Independent &amp; shared policies</li>
+          <li>Coupling-aware analysis</li>
+        </ul>
       </div>
     </div>
   </div>
 </section>
 
+<!-- ================== ENVIRONMENTS (TABS) ================== -->
 <section class="section">
   <div class="container">
-    <h2 class="centered">Three Sustainable Energy Environments</h2>
-    <div class="grid-3 envs">
-      <div class="env">
-        <h3>EV Charging</h3>
-        <div class="env-meta"><span>54 stations</span><span>288 steps/day</span></div>
-        <p>Coordinate charging across a station network: maximize profit while minimizing carbon emissions and network constraint violations.</p>
-        <div class="tag-row">
-          <span class="tag">Profit</span>
-          <span class="tag">Carbon</span>
-          <span class="tag">Network</span>
+    <span class="eyebrow centered">Three Real-World Testbeds</span>
+    <h2 class="centered">Sustainable Energy Environments</h2>
+    <p class="lead centered">Click a tab to explore each environment.</p>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" role="tab" data-target="env-ev">
+        <span class="tab-emoji">&#128268;</span> EV Charging
+      </button>
+      <button class="tab" role="tab" data-target="env-bu">
+        <span class="tab-emoji">&#127970;</span> Building HVAC
+      </button>
+      <button class="tab" role="tab" data-target="env-co">
+        <span class="tab-emoji">&#9881;&#65039;</span> Cogeneration
+      </button>
+    </div>
+
+    <div class="tab-panels">
+      <!-- EV CHARGING -->
+      <div class="tab-panel active" id="env-ev">
+        <div class="env-detail">
+          <div class="env-text">
+            <div class="env-label rose">EV Charging</div>
+            <h3>Coordinate 54 charging stations across a 24-hour horizon.</h3>
+            <p>Real arrival data from the Adaptive Charging Network at Caltech. The agent outputs normalized pilot signals mapped to <code>[0, 32]</code> Amps. Reward balances revenue, carbon cost (via marginal emissions rate forecasts), and network constraint violations enforced through convex projection.</p>
+            <div class="spec-grid">
+              <div class="spec"><span class="spec-key">Steps/episode</span><span class="spec-val">288</span></div>
+              <div class="spec"><span class="spec-key">Obs dim</span><span class="spec-val">146</span></div>
+              <div class="spec"><span class="spec-key">Action</span><span class="spec-val">[0,1]&#8311;&#8308;</span></div>
+              <div class="spec"><span class="spec-key">MARL agents</span><span class="spec-val">54</span></div>
+              <div class="spec"><span class="spec-key">CMDP cost</span><span class="spec-val">Excess charge</span></div>
+              <div class="spec"><span class="spec-key">Coupling &kappa;</span><span class="spec-val">0.024</span></div>
+            </div>
+            <div class="tag-row">
+              <span class="tag rose">Profit</span>
+              <span class="tag rose">Carbon</span>
+              <span class="tag rose">Network</span>
+            </div>
+          </div>
+          <div class="env-side">
+            <div class="env-stat">
+              <div class="env-stat-num">8.65</div>
+              <div class="env-stat-label">Greedy reward</div>
+            </div>
+            <div class="env-stat">
+              <div class="env-stat-num">6.80</div>
+              <div class="env-stat-label">PPO reward</div>
+            </div>
+            <div class="env-note">A simple greedy heuristic <strong>beats all RL policies</strong> in this environment &mdash; a key finding.</div>
+          </div>
         </div>
       </div>
-      <div class="env">
-        <h3>Building HVAC</h3>
-        <div class="env-meta"><span>OfficeSmall, Tucson</span><span>RC thermal model</span></div>
-        <p>Control HVAC setpoints in a multi-zone office building: minimize energy consumption while maintaining occupant thermal comfort.</p>
-        <div class="tag-row">
-          <span class="tag">Energy</span>
-          <span class="tag">Comfort</span>
+
+      <!-- BUILDING -->
+      <div class="tab-panel" id="env-bu">
+        <div class="env-detail">
+          <div class="env-text">
+            <div class="env-label mint">Building HVAC</div>
+            <h3>Control 6 thermal zones of an ASHRAE OfficeSmall in a hot-dry climate.</h3>
+            <p>Discretized resistance&ndash;capacitance (RC) thermal network at &Delta;t&nbsp;=&nbsp;300&nbsp;s. The agent sets HVAC setpoints per zone in <code>[-1, 1]</code>; the reward penalizes both energy consumption and thermal discomfort with &beta;&nbsp;=&nbsp;0.5.</p>
+            <div class="spec-grid">
+              <div class="spec"><span class="spec-key">Steps/episode</span><span class="spec-val">288</span></div>
+              <div class="spec"><span class="spec-key">Climate</span><span class="spec-val">Hot-Dry, Tucson</span></div>
+              <div class="spec"><span class="spec-key">Action</span><span class="spec-val">[-1,1]&#8310;</span></div>
+              <div class="spec"><span class="spec-key">MARL agents</span><span class="spec-val">6</span></div>
+              <div class="spec"><span class="spec-key">CMDP cost</span><span class="spec-val">Temp violation</span></div>
+              <div class="spec"><span class="spec-key">Coupling &kappa;</span><span class="spec-val">0.145</span></div>
+            </div>
+            <div class="tag-row">
+              <span class="tag mint">Energy</span>
+              <span class="tag mint">Comfort</span>
+            </div>
+          </div>
+          <div class="env-side">
+            <div class="env-stat">
+              <div class="env-stat-num">SAC</div>
+              <div class="env-stat-label">Most robust</div>
+            </div>
+            <div class="env-stat">
+              <div class="env-stat-num">&beta;=0.5</div>
+              <div class="env-stat-label">Reward weight</div>
+            </div>
+            <div class="env-note">Off-policy SAC degrades less than on-policy PPO under dynamics perturbation &mdash; the inverse of cogeneration.</div>
+          </div>
         </div>
       </div>
-      <div class="env">
-        <h3>Cogeneration</h3>
-        <div class="env-meta"><span>3 GT + 1 ST</span><span>ONNX surrogate</span></div>
-        <p>Dispatch a combined heat &amp; power facility: minimize fuel cost, demand shortfalls, and ramping while satisfying complex equipment constraints.</p>
-        <div class="tag-row">
-          <span class="tag">Fuel</span>
-          <span class="tag">Delivery</span>
-          <span class="tag">Ramp</span>
+
+      <!-- COGEN -->
+      <div class="tab-panel" id="env-co">
+        <div class="env-detail">
+          <div class="env-text">
+            <div class="env-label lavender">Cogeneration</div>
+            <h3>Dispatch 3 gas turbines + 1 steam turbine over a 96-step day.</h3>
+            <p>An ONNX surrogate model trained on operational data drives the dynamics. The 15-dimensional action space mixes continuous turbine controls with discrete cooling-tower bay decisions; reward penalizes fuel cost, ramping, demand shortfalls, and constraint violations.</p>
+            <div class="spec-grid">
+              <div class="spec"><span class="spec-key">Steps/episode</span><span class="spec-val">96</span></div>
+              <div class="spec"><span class="spec-key">&Delta;t</span><span class="spec-val">15 min</span></div>
+              <div class="spec"><span class="spec-key">Action</span><span class="spec-val">&#8477;&#185;&#8309;</span></div>
+              <div class="spec"><span class="spec-key">MARL agents</span><span class="spec-val">4</span></div>
+              <div class="spec"><span class="spec-key">CMDP cost</span><span class="spec-val">Turbine ramp</span></div>
+              <div class="spec"><span class="spec-key">Coupling &kappa;</span><span class="spec-val">0.860</span></div>
+            </div>
+            <div class="tag-row">
+              <span class="tag lavender">Fuel</span>
+              <span class="tag lavender">Delivery</span>
+              <span class="tag lavender">Ramp</span>
+            </div>
+          </div>
+          <div class="env-side">
+            <div class="env-stat">
+              <div class="env-stat-num">23.7%</div>
+              <div class="env-stat-label">PPO max degradation</div>
+            </div>
+            <div class="env-stat">
+              <div class="env-stat-num">1380%</div>
+              <div class="env-stat-label">SAC max degradation</div>
+            </div>
+            <div class="env-note">Tightly-coupled dynamics expose a 58&times; gap between on- and off-policy methods.</div>
+          </div>
         </div>
       </div>
+
     </div>
   </div>
 </section>
 
+<!-- ================== ALGORITHM LINEUP ================== -->
 <section class="section alt">
   <div class="container">
-    <h2 class="centered">Selected Results</h2>
+    <span class="eyebrow centered">Algorithms</span>
+    <h2 class="centered">11 RL Algorithms Across 3 Categories</h2>
 
-    <div class="result-block">
-      <h3>Perturbation Robustness Heatmap</h3>
-      <p class="caption">Reward degradation under state, action, and dynamics perturbation across all three environments and algorithms. The on-policy vs. off-policy divide dominates Cogeneration; in Building, off-policy SAC is more robust than on-policy PPO.</p>
-      <figure>
-        <img src="static/images/perturbation_heatmap.png" alt="Perturbation robustness heatmap across environments and algorithms" />
-      </figure>
+    <div class="algo-groups">
+      <div class="algo-group">
+        <div class="algo-group-head rose">
+          <h4>Standard RL</h4>
+          <span>Stable-Baselines3</span>
+        </div>
+        <div class="algo-list">
+          <div class="algo-pill">PPO</div>
+          <div class="algo-pill">SAC</div>
+          <div class="algo-pill">TD3</div>
+        </div>
+      </div>
+      <div class="algo-group">
+        <div class="algo-group-head mint">
+          <h4>Safe RL (CMDP)</h4>
+          <span>OmniSafe</span>
+        </div>
+        <div class="algo-list">
+          <div class="algo-pill">PPOLag</div>
+          <div class="algo-pill">CPO</div>
+          <div class="algo-pill">OnCRPO</div>
+          <div class="algo-pill">FOCOPS</div>
+        </div>
+      </div>
+      <div class="algo-group">
+        <div class="algo-group-head lavender">
+          <h4>Multi-Agent RL</h4>
+          <span>Ray RLlib + PettingZoo</span>
+        </div>
+        <div class="algo-list">
+          <div class="algo-pill">PPO</div>
+          <div class="algo-pill">SAC</div>
+          <div class="algo-pill">APPO</div>
+          <div class="algo-pill">IMPALA</div>
+        </div>
+      </div>
     </div>
-
-    <div class="result-block">
-      <h3>Safe RL: Reward&ndash;Cost Pareto</h3>
-      <p class="caption">Reward&ndash;cost trade-offs across cost limits with multi-seed confidence intervals. CMDP effectiveness exists on a spectrum: Building (fully aligned), EV Charging (partially overlapping), Cogeneration (fully orthogonal).</p>
-      <figure>
-        <img src="static/images/saferl_triptych.png" alt="Safe RL reward-cost Pareto across environments" />
-      </figure>
-    </div>
-
-    <div class="result-block">
-      <h3>Multi-Agent RL Comparison</h3>
-      <p class="caption">Single-agent vs. multi-agent performance across all three environments. Environment coupling structure, not agent count, determines MARL feasibility.</p>
-      <figure>
-        <img src="static/images/marl_comparison.png" alt="MARL comparison across environments" />
-      </figure>
-    </div>
-
-    <div class="result-block">
-      <h3>Cross-Environment Degradation</h3>
-      <p class="caption">Algorithm-specific degradation profiles across all three environments under the dominant perturbation channel.</p>
-      <figure>
-        <img src="static/images/cross_env_degradation.png" alt="Cross-environment degradation" />
-      </figure>
-    </div>
-
   </div>
 </section>
 
+<!-- ================== COUPLING SCORE ================== -->
 <section class="section">
   <div class="container narrow">
+    <span class="eyebrow centered">Cross-Cutting Diagnostic</span>
+    <h2 class="centered">Coupling Score &kappa;</h2>
+    <p class="lead centered">A unified inter-agent coupling score that quantifies the qualitative &ldquo;loosely/tightly coupled&rdquo; descriptor used in prior energy RL literature. Across our three environments, &kappa; correlates monotonically with all three benchmark axes.</p>
+
+    <div class="kappa-bars">
+      <div class="kappa-bar">
+        <div class="kappa-meta">
+          <span class="kappa-env rose-text">EV Charging</span>
+          <span class="kappa-val">0.024</span>
+        </div>
+        <div class="kappa-track"><div class="kappa-fill rose-bg" data-pct="2.4"></div></div>
+      </div>
+      <div class="kappa-bar">
+        <div class="kappa-meta">
+          <span class="kappa-env mint-text">Building HVAC</span>
+          <span class="kappa-val">0.145</span>
+        </div>
+        <div class="kappa-track"><div class="kappa-fill mint-bg" data-pct="14.5"></div></div>
+      </div>
+      <div class="kappa-bar">
+        <div class="kappa-meta">
+          <span class="kappa-env lavender-text">Cogeneration</span>
+          <span class="kappa-val">0.860</span>
+        </div>
+        <div class="kappa-track"><div class="kappa-fill lavender-bg" data-pct="86.0"></div></div>
+      </div>
+    </div>
+    <p class="kappa-note">Spearman &rho;&nbsp;=&nbsp;&plusmn;1 across perturbation degradation, MARL performance gap, and CMDP cost reduction.</p>
+  </div>
+</section>
+
+<!-- ================== RESULTS (CLICK TO REVEAL) ================== -->
+<section class="section alt" id="results">
+  <div class="container">
+    <span class="eyebrow centered">Selected Results</span>
+    <h2 class="centered">Click a card to draw the figure</h2>
+    <p class="lead centered">Each result panel reveals on click with a left-to-right wipe animation.</p>
+
+    <div class="result-grid">
+      <div class="result-card" data-figure="static/images/perturbation_heatmap.png">
+        <div class="result-card-head">
+          <div class="result-num">R1</div>
+          <h3>Perturbation Robustness Heatmap</h3>
+          <p>Reward degradation under state, action, and dynamics perturbation across all three environments and algorithms.</p>
+          <div class="reveal-prompt">
+            <span class="reveal-icon">&#9658;</span> Click to reveal
+          </div>
+        </div>
+        <div class="result-figure">
+          <img src="" data-src="static/images/perturbation_heatmap.png" alt="Perturbation heatmap" />
+        </div>
+      </div>
+
+      <div class="result-card" data-figure="static/images/saferl_triptych.png">
+        <div class="result-card-head">
+          <div class="result-num">R2</div>
+          <h3>Safe RL: Reward&ndash;Cost Pareto</h3>
+          <p>Reward&ndash;cost trade-offs across cost limits with multi-seed confidence intervals (4 seeds &times; 7 envs).</p>
+          <div class="reveal-prompt">
+            <span class="reveal-icon">&#9658;</span> Click to reveal
+          </div>
+        </div>
+        <div class="result-figure">
+          <img src="" data-src="static/images/saferl_triptych.png" alt="Safe RL Pareto" />
+        </div>
+      </div>
+
+      <div class="result-card" data-figure="static/images/marl_comparison.png">
+        <div class="result-card-head">
+          <div class="result-num">R3</div>
+          <h3>MARL vs Single-Agent</h3>
+          <p>Single-agent vs. multi-agent performance. Environment coupling structure, not agent count, determines MARL feasibility.</p>
+          <div class="reveal-prompt">
+            <span class="reveal-icon">&#9658;</span> Click to reveal
+          </div>
+        </div>
+        <div class="result-figure">
+          <img src="" data-src="static/images/marl_comparison.png" alt="MARL comparison" />
+        </div>
+      </div>
+
+      <div class="result-card" data-figure="static/images/cross_env_degradation.png">
+        <div class="result-card-head">
+          <div class="result-num">R4</div>
+          <h3>Cross-Environment Degradation</h3>
+          <p>Algorithm-specific degradation profiles across all three environments under the dominant perturbation channel.</p>
+          <div class="reveal-prompt">
+            <span class="reveal-icon">&#9658;</span> Click to reveal
+          </div>
+        </div>
+        <div class="result-figure">
+          <img src="" data-src="static/images/cross_env_degradation.png" alt="Cross-environment degradation" />
+        </div>
+      </div>
+
+      <div class="result-card" data-figure="static/images/coupling_matrices.png">
+        <div class="result-card-head">
+          <div class="result-num">R5</div>
+          <h3>Coupling Matrices</h3>
+          <p>Per-environment coupling matrices used to compute the &kappa; score above. Visualizes inter-agent dependence.</p>
+          <div class="reveal-prompt">
+            <span class="reveal-icon">&#9658;</span> Click to reveal
+          </div>
+        </div>
+        <div class="result-figure">
+          <img src="" data-src="static/images/coupling_matrices.png" alt="Coupling matrices" />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================== KEY FINDINGS ================== -->
+<section class="section">
+  <div class="container narrow">
+    <span class="eyebrow">Takeaways</span>
     <h2>Key Findings</h2>
     <ul class="findings">
-      <li><strong>Robustness is environment-specific.</strong> The on-policy vs. off-policy divide is the dominant robustness factor in Cogeneration, but environment-specific elsewhere &mdash; SAC degrades less than PPO in Building.</li>
-      <li><strong>Reward&ndash;cost orthogonality matters.</strong> Safe RL is only as effective as the orthogonality of the cost signal: fully aligned costs make CMDP redundant; fully orthogonal costs allow precise constraint tracking.</li>
-      <li><strong>Off-policy CMDP fails.</strong> SACLag fails across all three environments due to replay buffer staleness in Lagrange multiplier tracking.</li>
-      <li><strong>Coupling, not agent count, drives MARL feasibility.</strong> Single-agent algorithm rankings can reverse in tightly coupled multi-agent settings.</li>
-      <li><strong>Greedy beats RL in EV Charging.</strong> A simple greedy heuristic outperforms all learned policies, challenging the assumption that RL training pipelines are necessary in every energy domain.</li>
+      <li><strong>Robustness is environment-specific.</strong> The on-policy vs. off-policy divide dominates Cogeneration; in Building, off-policy SAC is more robust than on-policy PPO &mdash; the inverse pattern.</li>
+      <li><strong>Reward&ndash;cost orthogonality matters.</strong> Safe RL is only as effective as the orthogonality of the cost signal: Building (aligned, redundant), EV (partial), Cogen (orthogonal, precise).</li>
+      <li><strong>Off-policy CMDP fails.</strong> SACLag fails across all three environments due to replay buffer staleness driving oscillatory Lagrange multiplier dynamics.</li>
+      <li><strong>Coupling, not agent count, drives MARL.</strong> 54 stations (low coupling) &gt; 6 zones (medium) &gt; 4 turbines (high) for MARL feasibility &mdash; the inverse of agent count.</li>
+      <li><strong>Greedy beats RL in EV Charging.</strong> A simple greedy heuristic outperforms all learned policies (8.65 vs 6.80), challenging the assumption that RL is always necessary.</li>
     </ul>
   </div>
 </section>
 
+<!-- ================== PAPER ================== -->
 <section class="section alt" id="paper">
   <div class="container narrow">
+    <span class="eyebrow">Publications</span>
     <h2>Paper</h2>
-    <p>The full thesis is in preparation. Once available, the PDF and arXiv link will be posted here. In the meantime, the source code, data pipeline, and experimental scripts are open source on GitHub.</p>
-    <a class="btn" href="https://github.com/MehmetKORUTURK/sustaingym-rl-benchmark" target="_blank" rel="noopener">
-      Browse the Code
-    </a>
+    <p>The full thesis and accompanying conference paper are in preparation. The PDF and arXiv link will be posted here once available. In the meantime, the source code, data pipeline, and experimental scripts are open-source on GitHub.</p>
+    <div class="links">
+      <a class="btn btn-primary" href="https://github.com/MehmetKORUTURK/sustaingym-rl-benchmark" target="_blank" rel="noopener">Browse the Code</a>
+      <a class="btn btn-soft" href="#bibtex">BibTeX</a>
+    </div>
   </div>
 </section>
 
+<!-- ================== BIBTEX ================== -->
 <section class="section" id="bibtex">
   <div class="container narrow">
-    <h2>Citation</h2>
-    <pre class="bibtex">@mastersthesis{koruturk2026sustainrlbench,
+    <span class="eyebrow">Citation</span>
+    <h2>BibTeX</h2>
+    <div class="bibtex-wrap">
+      <pre class="bibtex" id="bibtex-block">@mastersthesis{koruturk2026sustainrlbench,
   author  = {Koruturk, Mehmet},
   title   = {{SustainRL-Bench}: Benchmarking Reinforcement Learning on
              {SustainGym} across Perturbation Robustness, Safe RL,
@@ -193,21 +469,25 @@
   year    = {2026},
   type    = {Master's Thesis}
 }</pre>
+      <button class="copy-btn" data-copy-target="bibtex-block">Copy</button>
+    </div>
   </div>
 </section>
 
+<!-- ================== FOOTER ================== -->
 <footer class="footer">
   <div class="container">
+    <p class="footer-title">SustainRL-Bench</p>
     <p>
       &copy; 2026 Mehmet Koruturk &middot;
       <a href="https://github.com/MehmetKORUTURK/sustaingym-rl-benchmark" target="_blank" rel="noopener">GitHub</a> &middot;
-      <a href="https://rolelab.org/" target="_blank" rel="noopener">RoleLab</a>
+      <a href="https://rolelab.org/" target="_blank" rel="noopener">RoleLab</a> &middot;
+      <a href="https://vt.edu/" target="_blank" rel="noopener">Virginia Tech</a>
     </p>
-    <p class="small">
-      Built with the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank" rel="noopener">Academic Project Page</a> spirit, hosted on GitHub Pages.
-    </p>
+    <p class="small">Hosted on GitHub Pages &middot; Hand-built with vanilla HTML, CSS &amp; JavaScript &mdash; no framework, &lt;30&nbsp;KB.</p>
   </div>
 </footer>
 
+<script src="static/js/main.js"></script>
 </body>
 </html>
