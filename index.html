@@ -9,6 +9,7 @@
 <meta property="og:description" content="A three-axis RL benchmark across EV charging, building HVAC, and cogeneration." />
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="static/css/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -345,81 +346,96 @@
   </div>
 </section>
 
-<!-- ================== RESULTS (CLICK TO REVEAL) ================== -->
+<!-- ================== RESULTS (INTERACTIVE) ================== -->
 <section class="section alt" id="results">
   <div class="container">
     <span class="eyebrow centered">Selected Results</span>
-    <h2 class="centered">Click a card to draw the figure</h2>
-    <p class="lead centered">Each result panel reveals on click with a left-to-right wipe animation.</p>
+    <h2 class="centered">Interactive Charts</h2>
+    <p class="lead centered">Click any card to reveal a fully interactive chart &mdash; hover over points and bars for exact values.</p>
 
     <div class="result-grid">
-      <div class="result-card" data-figure="static/images/perturbation_heatmap.png">
+      <div class="result-card" data-chart="perturbation">
         <div class="result-card-head">
           <div class="result-num">R1</div>
-          <h3>Perturbation Robustness Heatmap</h3>
-          <p>Reward degradation under state, action, and dynamics perturbation across all three environments and algorithms.</p>
+          <h3>Perturbation Robustness</h3>
+          <p>Maximum reward degradation under each perturbation channel (state, action, dynamics) across the three environments.</p>
           <div class="reveal-prompt">
-            <span class="reveal-icon">&#9658;</span> Click to reveal
+            <span class="reveal-icon">&#9658;</span> Click to draw chart
           </div>
         </div>
         <div class="result-figure">
-          <img src="" data-src="static/images/perturbation_heatmap.png" alt="Perturbation heatmap" />
+          <div class="chart-wrap">
+            <canvas></canvas>
+          </div>
+          <div class="chart-caption">Bars show maximum percentage degradation observed across PS / PA / PD perturbation channels for each algorithm. Cogeneration with SAC (off-screen, ~1380%) clipped at 200% for readability.</div>
         </div>
       </div>
 
-      <div class="result-card" data-figure="static/images/saferl_triptych.png">
+      <div class="result-card" data-chart="saferl">
         <div class="result-card-head">
           <div class="result-num">R2</div>
-          <h3>Safe RL: Reward&ndash;Cost Pareto</h3>
-          <p>Reward&ndash;cost trade-offs across cost limits with multi-seed confidence intervals (4 seeds &times; 7 envs).</p>
+          <h3>Safe RL: Reward&ndash;Cost Tradeoff</h3>
+          <p>Achieved reward as a function of operator-specified cost limit, on Cogeneration. All four CMDP algorithms shown.</p>
           <div class="reveal-prompt">
-            <span class="reveal-icon">&#9658;</span> Click to reveal
+            <span class="reveal-icon">&#9658;</span> Click to draw chart
           </div>
         </div>
         <div class="result-figure">
-          <img src="" data-src="static/images/saferl_triptych.png" alt="Safe RL Pareto" />
+          <div class="chart-wrap">
+            <canvas></canvas>
+          </div>
+          <div class="chart-caption">Tighter cost limits (left) sacrifice reward; loose limits (right) allow higher reward. OnCRPO and CPO converge most reliably; PPOLag/FOCOPS are slower but stable.</div>
         </div>
       </div>
 
-      <div class="result-card" data-figure="static/images/marl_comparison.png">
+      <div class="result-card" data-chart="marl">
         <div class="result-card-head">
           <div class="result-num">R3</div>
-          <h3>MARL vs Single-Agent</h3>
-          <p>Single-agent vs. multi-agent performance. Environment coupling structure, not agent count, determines MARL feasibility.</p>
+          <h3>MARL vs Single-Agent (normalized)</h3>
+          <p>MARL performance as a fraction of single-agent baseline, plotted against the coupling score &kappa;.</p>
           <div class="reveal-prompt">
-            <span class="reveal-icon">&#9658;</span> Click to reveal
+            <span class="reveal-icon">&#9658;</span> Click to draw chart
           </div>
         </div>
         <div class="result-figure">
-          <img src="" data-src="static/images/marl_comparison.png" alt="MARL comparison" />
+          <div class="chart-wrap">
+            <canvas></canvas>
+          </div>
+          <div class="chart-caption">MARL performance ratio decays as coupling &kappa; grows. Loose coupling (EV) preserves MARL viability; tight coupling (Cogen) collapses it.</div>
         </div>
       </div>
 
-      <div class="result-card" data-figure="static/images/cross_env_degradation.png">
+      <div class="result-card" data-chart="kappa">
         <div class="result-card-head">
           <div class="result-num">R4</div>
-          <h3>Cross-Environment Degradation</h3>
-          <p>Algorithm-specific degradation profiles across all three environments under the dominant perturbation channel.</p>
+          <h3>Coupling &kappa; Predicts Sensitivity</h3>
+          <p>Scatter of &kappa; vs. average reward degradation. A clean monotonic relationship across the three environments.</p>
           <div class="reveal-prompt">
-            <span class="reveal-icon">&#9658;</span> Click to reveal
+            <span class="reveal-icon">&#9658;</span> Click to draw chart
           </div>
         </div>
         <div class="result-figure">
-          <img src="" data-src="static/images/cross_env_degradation.png" alt="Cross-environment degradation" />
+          <div class="chart-wrap">
+            <canvas></canvas>
+          </div>
+          <div class="chart-caption">Each marker is one environment. Higher &kappa; (right) corresponds to higher worst-case sensitivity (top). Spearman &rho; = +1 across n=3.</div>
         </div>
       </div>
 
-      <div class="result-card" data-figure="static/images/coupling_matrices.png">
+      <div class="result-card" data-chart="ranking">
         <div class="result-card-head">
           <div class="result-num">R5</div>
-          <h3>Coupling Matrices</h3>
-          <p>Per-environment coupling matrices used to compute the &kappa; score above. Visualizes inter-agent dependence.</p>
+          <h3>EV Charging: Greedy Beats RL</h3>
+          <p>End-to-end episode reward by controller on the EV Charging environment &mdash; including non-RL baselines.</p>
           <div class="reveal-prompt">
-            <span class="reveal-icon">&#9658;</span> Click to reveal
+            <span class="reveal-icon">&#9658;</span> Click to draw chart
           </div>
         </div>
         <div class="result-figure">
-          <img src="" data-src="static/images/coupling_matrices.png" alt="Coupling matrices" />
+          <div class="chart-wrap">
+            <canvas></canvas>
+          </div>
+          <div class="chart-caption">A simple greedy heuristic (8.65) outperforms PPO (6.80) and SAC (6.20). Random achieves only 4.62. RL is not always necessary.</div>
         </div>
       </div>
     </div>

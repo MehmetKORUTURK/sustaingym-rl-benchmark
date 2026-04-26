@@ -689,25 +689,35 @@ p { color: var(--ink-soft); margin-bottom: 16px; }
 .result-figure {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  background: white;
+  transition: max-height 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-alt) 100%);
   border-top: 1px solid transparent;
+  opacity: 0;
 }
 .result-card.revealed .result-figure {
-  max-height: 1200px;
+  max-height: 720px;
   border-top: 1px solid var(--line-soft);
+  opacity: 1;
+  transition: max-height 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.4s ease 0.15s;
 }
-.result-figure img {
-  display: block;
+.chart-wrap {
   width: 100%;
-  height: auto;
-  padding: 24px;
-  /* draw-in wipe */
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+  height: 380px;
+  padding: 24px 28px 8px 28px;
+  position: relative;
 }
-.result-card.revealed .result-figure img {
-  clip-path: inset(0 0 0 0);
+.chart-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+.chart-caption {
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-style: italic;
+  padding: 0 32px 24px 32px;
+  line-height: 1.55;
+  text-align: center;
 }
 
 /* ============================================================
