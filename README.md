@@ -7,7 +7,7 @@
 
 A comprehensive reinforcement learning benchmark on [SustainGym](https://github.com/chrisyeh96/sustaingym) environments, evaluating RL algorithms across three experimental axes: **perturbation robustness**, **safe RL**, and **multi-agent RL**.
 
-> Master's thesis research, Virginia Tech — [RoleLab](https://rolelab.org/)
+> Virginia Tech — [RoleLab](https://rolelab.org/)
 
 ## Environments
 
@@ -228,11 +228,14 @@ sustaingym-rl-benchmark/
 If you use this benchmark in your research, please cite:
 
 ```bibtex
-@mastersthesis{koruturk2026sustaingym,
-    title={Benchmarking Reinforcement Learning on SustainGym: Noise Robustness, Safe RL, and Multi-Agent Approaches},
-    author={Koruturk, Mehmet},
-    school={Virginia Tech},
-    year={2026}
+@misc{koruturk2026sustainrlbench,
+    title={{SustainRL-Bench}: Benchmarking Reinforcement Learning on
+           {SustainGym} across Perturbation Robustness, Safe RL,
+           and Multi-Agent RL},
+    author={Koruturk, Mehmet and Sel, Bilgehan and Jin, Ming},
+    year={2026},
+    institution={Virginia Polytechnic Institute and State University},
+    url={https://mehmetkoruturk.github.io/sustaingym-rl-benchmark/}
 }
 ```
 

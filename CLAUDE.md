@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Master's thesis** by Mehmet Koruturk (Virginia Tech, RoleLab) benchmarking RL on three SustainGym environments across three axes:
+Project by Mehmet Koruturk (Virginia Tech, RoleLab) benchmarking RL on three SustainGym environments across three axes:
 
 1. **Perturbation Robustness** — state (PS), action (PA), dynamics (PD) noise channels
 2. **Safe RL** — constrained optimization via OmniSafe (CMDP formulation)
