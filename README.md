@@ -1,6 +1,6 @@
 # SustainRL-Bench &mdash; Project Page
 
-This branch (`gh-pages`) hosts the public project page for **SustainRL-Bench**, a master's thesis by Mehmet Koruturk (Virginia Tech, RoleLab) benchmarking reinforcement learning on SustainGym environments.
+This branch (`gh-pages`) hosts the public project page for **SustainRL-Bench** by Mehmet Koruturk (Virginia Tech, RoleLab) &mdash; a benchmark of reinforcement learning on SustainGym environments across perturbation robustness, safe RL, and multi-agent RL.
 
 The page is automatically served by GitHub Pages at:
 
