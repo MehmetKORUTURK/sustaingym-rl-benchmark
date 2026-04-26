@@ -81,6 +81,7 @@
         renderHero(envId, data);
         renderAlgorithms(data);
         renderPerturbationChart(envId, data);
+        renderNoisePanel(envId, data);
         renderMarlChart(envId, data);
         renderSaferlCharts(envId, data);
         renderBaselineChart(envId, data);
@@ -336,6 +337,128 @@
     var n = (datasets[0]._n || []).find(function (x) { return x; }) || 5;
     document.getElementById('perturbCaption').innerHTML =
       'Multi-seed test (n=' + n + ' per cell). Channel codes: <strong>PS</strong> = state, <strong>PA</strong> = action, <strong>PD</strong> = dynamics.';
+  }
+
+  /* ============================================================
+     CHART 1.5: NOISE PANEL (C_POST/<env>/<algo>/panel.png mirror)
+     Three subplots: PS / PA / PD.  Lines = algorithms.
+     ============================================================ */
+  function renderNoisePanel(envId, data) {
+    var sweep = data.noise_sweep || {};
+    var algos = Object.keys(sweep);
+    if (!algos.length) {
+      document.getElementById('noisePanel').style.display = 'none';
+      return;
+    }
+
+    var palette = [C.roseDeep, C.mintDeep, C.lavenderDeep, C.peachDeep, '#9b6b9b'];
+    var channels = [
+      { key: 'PS', canvasId: 'noiseChartPS', xTitle: 'State noise level' },
+      { key: 'PA', canvasId: 'noiseChartPA', xTitle: 'Action noise level' },
+      { key: 'PD', canvasId: 'noiseChartPD', xTitle: 'Dynamics noise level' }
+    ];
+
+    function buildDatasets(channelKey) {
+      return algos.map(function (algo, i) {
+        var rows = (sweep[algo] && sweep[algo][channelKey]) || [];
+        var col = ALGO_COLORS[algo] || palette[i % palette.length];
+        return {
+          label: algo,
+          data: rows.map(function (r) { return { x: r.level, y: r.mean }; }),
+          _stds: rows.map(function (r) { return r.std; }),
+          _ns:   rows.map(function (r) { return r.n; }),
+          borderColor: col,
+          backgroundColor: col,
+          tension: 0.25,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#ffffff',
+          pointBorderColor: col,
+          pointBorderWidth: 1.5,
+          borderWidth: 2.2
+        };
+      }).filter(function (ds) { return ds.data.length > 0; });
+    }
+
+    channels.forEach(function (ch) {
+      var datasets = buildDatasets(ch.key);
+      if (!datasets.length) return;
+
+      // Compute a sensible y range across all algos for this channel so the
+      // three panels share scales (matches panel.png in the thesis).
+      var allMeans = [];
+      datasets.forEach(function (ds) {
+        ds.data.forEach(function (p) { allMeans.push(p.y); });
+      });
+
+      new Chart(document.getElementById(ch.canvasId), {
+        type: 'line',
+        data: { datasets: datasets },
+        options: {
+          maintainAspectRatio: false,
+          responsive: true,
+          animation: { duration: 1100, easing: 'easeOutQuart' },
+          interaction: { intersect: false, mode: 'nearest', axis: 'x' },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { boxWidth: 8, padding: 10, font: { size: 11 } }
+            },
+            tooltip: {
+              callbacks: {
+                title: function (items) {
+                  return ch.xTitle + ' = ' + items[0].parsed.x;
+                },
+                label: function (ctx) {
+                  var ds = ctx.dataset;
+                  var i = ctx.dataIndex;
+                  var s = ds._stds && ds._stds[i] !== undefined ? ds._stds[i] : null;
+                  var n = ds._ns   && ds._ns[i]   !== undefined ? ds._ns[i]   : null;
+                  return ds.label + ': ' + ctx.parsed.y.toFixed(3) +
+                    (s !== null ? ' \u00b1 ' + s.toFixed(3) : '') +
+                    (n !== null ? '  (n=' + n + ')' : '');
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: 'linear',
+              grid: { color: C.line, drawBorder: false },
+              ticks: { color: C.inkSoft, font: { size: 11 } },
+              border: { display: false },
+              title: {
+                display: true,
+                text: ch.xTitle,
+                color: C.inkSoft,
+                font: { size: 11, weight: '500' }
+              }
+            },
+            y: gridY({
+              ticks: { color: C.inkSoft, font: { size: 11 }, padding: 6 },
+              title: {
+                display: true,
+                text: 'Mean reward',
+                color: C.inkSoft,
+                font: { size: 11, weight: '500' }
+              }
+            })
+          }
+        }
+      });
+    });
+
+    var nMax = 0;
+    algos.forEach(function (a) {
+      ['PS', 'PA', 'PD'].forEach(function (ch) {
+        (sweep[a][ch] || []).forEach(function (r) {
+          if (r.n && r.n > nMax) nMax = r.n;
+        });
+      });
+    });
+    document.getElementById('noiseCaption').innerHTML =
+      'Each marker is a 100-episode test run (n&nbsp;=&nbsp;' + nMax +
+      ' per cell). Source: <code>logs_std_test/&lt;env&gt;_&lt;algo&gt;/...episode_results.csv</code>.';
   }
 
   /* ============================================================
