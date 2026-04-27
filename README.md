@@ -1,4 +1,4 @@
-# SustainGym RL Benchmark
+# SustainRL Benchmark
 
 [![Project Page](https://img.shields.io/badge/Project-Page-861f41?style=flat-square&logo=githubpages)](https://mehmetkoruturk.github.io/sustaingym-rl-benchmark/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
